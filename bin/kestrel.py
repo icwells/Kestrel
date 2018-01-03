@@ -64,7 +64,7 @@ help = "Number of threads for identifying taxa (default = 1).")
 		args.t = cpu_count()
 	keys = apiKeys()
 	misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.txt"
-	header = "Query,Kingdom,Phylum,Class,Order,Family,Genus,Species,URL\n"
+	header = "Query,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
 	done = checkOutput(args.o, header)
 	missed = checkOutput(misses, "Query")
 	done.extend(missed)

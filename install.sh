@@ -5,6 +5,7 @@
 ##############################################################################
 
 KT="kestrelTools"
+SP="scrapePages"
 TS="taxaSearch"
 
 cd src/
@@ -14,4 +15,5 @@ rm *.c
 cd ../
 
 mv src/$KT.*.so bin/$KT.so
+mv src/$SP.*.so bin/$SP.so
 mv src/$TS.*.so bin/$TS.so

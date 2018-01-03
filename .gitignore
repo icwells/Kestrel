@@ -1,0 +1,5 @@
+# All cython binaries
+bin/*.so
+
+# Renamed API file
+bin/API.txt

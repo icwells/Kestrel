@@ -5,8 +5,9 @@ import nltk
 import gzip
 from random import shuffle
 
-EOL= "http://eol.org/api/"
-WIKI = "https://en.wikipedia.org/wiki/"
+cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+cdef str EOL= "http://eol.org/api/"
+cdef str WIKI = "https://en.wikipedia.org/wiki/"
 
 cdef float L = 0.1
 
@@ -61,6 +62,8 @@ def apiKeys():
 			splt = line.split("=")
 			if splt[0].strip() == "EOL":
 				keys[EOL] = splt[1].strip()
+			elif splt[0].strip() == "NCBI":
+				keys[NCBI] = splt[1].strip()
 	return keys
 
 def speciesList(infile, c, done=[]):
