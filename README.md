@@ -27,7 +27,7 @@ sudo pip install -U nltk
 Kestrel comes with it’s own training dataset, so you do not need to download any additional data from NLTK. 
 
 ### BeautifulSoup4
-Kestrel the BeautifulSoup module, and the lxml parser, to parse hmtl and xml pages.
+Kestrel also uses the BeautifulSoup module, and the lxml parser, to parse hmtl and xml pages.
 
 apt-get install python3-bs4
 apt-get install python-lxml
