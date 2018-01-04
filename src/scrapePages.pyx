@@ -5,7 +5,6 @@ import codecs
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 from urllib import request, error
-from taxaSearch import getPage
 
 cdef str EOL= "http://eol.org/api/"
 cdef str SEARCH = "search/1.0."
@@ -85,9 +84,12 @@ def searchWiki(query):
 	result, url = getPage(WIKI, query)
 	if result:
 		t = scrapeWiki(BeautifulSoup(result, "lxml"))
-	if ret and ret.count("NA") <= 1:
-		# Save query, taxonomy and source url
-		return ret, url
+		if t and t.count("NA") <= 1:
+			# Save query, taxonomy and source url
+			t.append(url)
+			return t
+		else:
+			return None
 	else:
 		return None
 
@@ -117,11 +119,12 @@ def searchGBIF(query):
 		reader = codecs.getreader("utf-8")
 		ret = scrapeGBIF(json.load(reader(result)))
 		if ret and ret.count("NA") <= 1:
-			return ret, url
+			ret.append(url)
+			return ret
 		else:
-			return None, ""
+			return None
 	else:
-		return None, ""
+		return None
 
 #------------------------------NCBI-------------------------------------------
 
@@ -136,7 +139,7 @@ def efetch(query, key):
 		result = request.urlopen(url)
 	except:
 		return None, url
-	soup = BeautifulSoup(result, "lxml"), url
+	soup = BeautifulSoup(result, "lxml")
 	# Extract Linnaean taxonomy from NCBI taonomy page
 	for i in soup.find_all("taxon"):
 		if i.scientificname and i.rank:
@@ -185,16 +188,21 @@ def espell(source, term, key):
 
 def searchNCBI(term, key):
 	# Searches NCBI
-	query = espell(NCBI, term, keys)
-	idx = esearch(NCBI, query, keys)
+	idx = None
+	if term:
+		query = espell(NCBI, term, key)
+	if query:
+		idx = esearch(NCBI, query, key)
 	if idx:
-		ret, url = efetch(idx, keys[NCBI])
+		ret, url = efetch(idx, key)
 		if ret and ret.count("NA") <= 1:
-			return ret, url
+			# Append url without api key
+			ret.append(url[:url.rfind("&")])
+			return ret
 		else:
-			return None, "NA"
+			return None
 	else:
-		return None, "NA"
+		return None
 
 #------------------------------EOL--------------------------------------------
 
@@ -294,18 +302,19 @@ def getTID(query, key):
 def searchEOL(term, key):
 	# Searches EOL for taxonomy
 	# Get page id for species and extract page
-	taxonid = getTID(query, key)
+	taxonid = getTID(term, key)
 	if taxonid:
 		hierid = getHID(taxonid, key)
 		if hierid:
-			result, url = getPage(source, hierid, key)
+			result, url = getPage(EOL, hierid, key)
 			if result:
 				# Remove api key
 				url = url[:url.find("&")]
 				ret = scrapeEOL(BeautifulSoup(result, "lxml"))
 				if ret and ret.count("NA") <= 1:
-					return ret, url
+					ret.append(url)
+					return ret
 				else:
-					return None, ""
+					return None
 	else:
-		return None, ""
+		return None

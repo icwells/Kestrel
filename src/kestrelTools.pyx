@@ -81,8 +81,10 @@ def speciesList(infile, c, done=[]):
 				if delim:
 					splt = line.split(delim)
 					if len(splt) >= c:
-						if splt[c] not in done:
-							q.add(splt[c])
+						if len(splt[c].replace(" ", "")) > 2:
+							# Only store if there are at least three characters
+							if splt[c] not in done:
+								q.add(splt[c])
 				else:
 					q.add(line)
 			else:
