@@ -24,9 +24,6 @@ def getPage(source, term, key=None):
 	if source == EOL:
 		url = ("{}{}{}?id={}&vetted=1&key={}").format(source, HIER, FORMAT, term, key)
 	else:
-		# Check caps
-		t = term[0].upper()
-		term = t + term[1:].lower()
 		if source == GBIF:
 			if " " in term:
 				# Percent encode spaces

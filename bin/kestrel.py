@@ -63,10 +63,10 @@ help = "Number of threads for identifying taxa (default = 1).")
 	if args.t > cpu_count():
 		args.t = cpu_count()
 	keys = apiKeys()
-	misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.txt"
-	header = "Query,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
+	misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.csv"
+	header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
 	done = checkOutput(args.o, header)
-	missed = checkOutput(misses, "Query")
+	missed = checkOutput(misses, "Query,Reason\n")
 	done.extend(missed)
 	# Read in query and target names
 	query = speciesList(args.i, args.c, done)
@@ -74,9 +74,9 @@ help = "Number of threads for identifying taxa (default = 1).")
 	l = float(len(query)) + d
 	pool = Pool(processes = args.t)
 	if args.common:
-		func = partial(searchTerms, args.o, misses, keys, True)
+		func = partial(searchCommon, args.o, misses, keys)
 	elif args.scientific:
-		func = partial(searchTerms, args.o, misses, keys, False)
+		func = partial(searchSci, args.o, misses, keys)
 	else:
 		classifier = getSequenceClassifier()
 		func = partial(assignQuery, args.o, misses, keys, classifier)
