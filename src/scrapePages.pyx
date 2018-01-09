@@ -15,7 +15,7 @@ cdef str FORMAT = "xml"
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
-TAXONOMY = OrderedDict([("Kingdom",""),("Phylum",""),("Class",""),("Order",""),("Family",""),("Genus",""),("Species","")])
+TAXONOMY = OrderedDict([("Kingdom","NA"),("Phylum","NA"),("Class","NA"),("Order","NA"),("Family","NA"),("Genus","NA"),("Species","NA"),("url","NA")])
 
 def getPage(source, term, key=None):
 	# Returns soup instance
@@ -40,11 +40,31 @@ def getPage(source, term, key=None):
 	except:
 		return None, url
 
-def scrapeWiki(soup):
+def checkTaxa(t):
+	# Checks dict content before returning
+	cdef list v
+	v = list(t.values())
+	if v.count("NA") <= 2 and t["Genus"] != "NA":
+		# Convert to list if genus is present
+		for i in t.keys():
+			# Correct improper formatting before appending
+			if "," in t[i]:
+				t[i] = t[i].replace(",", "")
+			if i == "Species":
+				# Assemble binomial name
+				t[i] = ("{} {}").format(t["Genus"], t[i][t[i].find(" "):])
+			elif i != "Species" and " " in t[i]:
+				t[i] = t[i][:t[i].find(" ")]
+		return t
+	else:
+		return {}
+
+def scrapeWiki(soup, url):
 	# Extract taxonomy data from Wikipedia entry
 	cdef list ret = []
 	cdef str k
 	t = OrderedDict(TAXONOMY)
+	t["url"] = url
 	for i in soup.find_all("tr"):
 		# Iterate through template fields
 		if i.td:
@@ -67,46 +87,28 @@ def scrapeWiki(soup):
 							t[k] = j.a.string
 							k = ""
 							break
-	if t["Genus"]:
-		for k in t.keys():
-			# Convert to list if genus is present
-			if t[k] and t[k] != " ":
-				ret.append(t[k])
-			else:
-				ret.append("NA")
-	return ret
+	return checkTaxa(t)
 
 def searchWiki(query):
 	# Searches Wikipedia
 	result, url = getPage(WIKI, query)
 	if result:
-		t = scrapeWiki(BeautifulSoup(result, "lxml"))
-		if t and t.count("NA") <= 1:
-			# Save query, taxonomy and source url
-			t.append(url)
-			return t
-		else:
-			return None
+		return scrapeWiki(BeautifulSoup(result, "lxml"), url)
 	else:
 		return None
 
-def scrapeGBIF(js):
+def scrapeGBIF(js, url):
 	# Scrapes taxonomy from JSON output from GBIF
 	cdef str i
 	cdef list ret = []
 	t = OrderedDict(TAXONOMY)
+	t["url"] = url
 	if js["results"]:
 		j = js["results"][0]
 		for i in t.keys():
 			if i.lower() in j.keys():
 				t[i] = j[i.lower()]
-	if t["Genus"]:
-		for i in t.keys():
-			if t[i]:
-				ret.append(t[i])
-			else:
-				ret.append("NA")
-	return ret
+	return checkTaxa(t)
 
 def searchGBIF(query):
 	# Searches GBIF for synonyms
@@ -114,12 +116,7 @@ def searchGBIF(query):
 	if result:
 		# Convert http bytes object to string before loading into json
 		reader = codecs.getreader("utf-8")
-		ret = scrapeGBIF(json.load(reader(result)))
-		if ret and ret.count("NA") <= 1:
-			ret.append(url)
-			return ret
-		else:
-			return None
+		return scrapeGBIF(json.load(reader(result)), url)
 	else:
 		return None
 
@@ -132,10 +129,11 @@ def efetch(query, key):
 	cdef list ret = []
 	t = OrderedDict(TAXONOMY)
 	url = ("{}efetch.fcgi?db=Taxonomy&id={}$retmode={}&key={}").format(NCBI, query, FORMAT, key)
+	t["url"] = url
 	try:
 		result = request.urlopen(url)
 	except:
-		return None, url
+		return None
 	soup = BeautifulSoup(result, "lxml")
 	# Extract Linnaean taxonomy from NCBI taonomy page
 	for i in soup.find_all("taxon"):
@@ -146,14 +144,7 @@ def efetch(query, key):
 				rank = rank[0].upper() + rank[1:].lower()
 				if rank in t.keys():
 					t[rank] = i.scientificname.string
-	if t["Genus"]:
-		for k in t.keys():
-			# Convert to list if genus is present
-			if t[k] and t[k] != " ":
-				ret.append(t[k])
-			else:
-				ret.append("NA")
-	return ret, url
+	return checkTaxa(t)
 
 def esearch(source, query, key):
 	# Searches for species ID
@@ -185,25 +176,20 @@ def espell(source, term, key):
 
 def searchNCBI(term, key):
 	# Searches NCBI
-	idx = None
+	query = ""
+	idx = ""
 	if term:
 		query = espell(NCBI, term, key)
 	if query:
 		idx = esearch(NCBI, query, key)
 	if idx:
-		ret, url = efetch(idx, key)
-		if ret and ret.count("NA") <= 1:
-			# Append url without api key
-			ret.append(url[:url.rfind("&")])
-			return ret
-		else:
-			return None
+		return efetch(idx, key)
 	else:
 		return None
 
 #------------------------------EOL--------------------------------------------
 
-def scrapeEOL(soup):
+def scrapeEOL(soup, url):
 	# Scrapes EOL page for taxonomy
 	cdef str b
 	cdef list block
@@ -214,6 +200,7 @@ def scrapeEOL(soup):
 	cdef int next = 0
 	cdef list ret = []
 	t = OrderedDict(TAXONOMY)
+	t["url"] = url
 	b = "".join(soup.prettify())
 	block = b.split("\n")
 	for line in block:
@@ -247,18 +234,7 @@ def scrapeEOL(soup):
 				t[rank] = name
 			rank = ""
 			name = ""
-	if t["Genus"]:
-		for i in t.keys():
-			if t[i] and t[i] != " ":
-				# Correct improper formatting before appending
-				if i != "Species" and " " in t[i]:
-					t[i] = t[i][:t[i].find(" ")]
-				if "," in t[i]:
-					t[i] = t[i].replace(",", "")
-				ret.append(t[i])
-			else:
-				ret.append("NA")
-	return ret
+	return checkTaxa(t)
 
 def getHID(query, key):
 	# Gets hierarchy entry id from EOL
@@ -307,11 +283,6 @@ def searchEOL(term, key):
 			if result:
 				# Remove api key
 				url = url[:url.find("&")]
-				ret = scrapeEOL(BeautifulSoup(result, "lxml"))
-				if ret and ret.count("NA") <= 1:
-					ret.append(url)
-					return ret
-				else:
-					return None
+				return scrapeEOL(BeautifulSoup(result, "lxml"), url)
 	else:
 		return None
