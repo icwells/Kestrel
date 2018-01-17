@@ -25,14 +25,11 @@ def getPage(source, term, key=None):
 		url = ("{}{}{}?id={}&vetted=1&key={}").format(source, HIER, FORMAT, term, key)
 	else:
 		if source == GBIF:
-			if " " in term:
-				# Percent encode spaces
-				term = term.replace(" ", "%20")
 			url = ("{}species?name={}").format(source, term)
 		elif source == WIKI:
-			if " " in term:
+			if "%20" in term:
 				# Replace spaces with underscores
-				term = term.replace(" ", "_")
+				term = term.replace("%20", "_")
 			url = source + term
 	try:
 		result = request.urlopen(url)
@@ -48,11 +45,14 @@ def checkTaxa(t):
 		# Convert to list if genus is present
 		for i in t.keys():
 			# Correct improper formatting before appending
+			t[i] = str(t[i])
 			if "," in t[i]:
 				t[i] = t[i].replace(",", "")
 			if i == "Species":
-				# Assemble binomial name
-				t[i] = ("{} {}").format(t["Genus"], t[i][t[i].find(" "):])
+				if t[i] != "NA":
+					# Enforce binomial name
+					if " " not in t[i]:
+						t[i] = ("{} {}").format(t["Genus"], t[i])
 			elif i != "Species" and " " in t[i]:
 				t[i] = t[i][:t[i].find(" ")]
 		return t
@@ -80,13 +80,16 @@ def scrapeWiki(soup, url):
 						if k == "Species":
 							if j.span and j.span.i:
 								if j.span.i.b and j.span.i.b.string:
-									t[k] = j.span.i.b.string
+									t[k] = str(j.span.i.b.string)
 									k = ""
 									break
 						elif j.a and j.a.string:
 							t[k] = j.a.string
 							k = ""
 							break
+	if t["Species"] != "NA":
+		# Remove genus abbreviation (full genus name added later)
+		t["Species"] = t["Species"][3:]
 	return checkTaxa(t)
 
 def searchWiki(query):

@@ -3,6 +3,7 @@
 import os
 import nltk
 import gzip
+from string import punctuation, digits
 from random import shuffle
 
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -66,12 +67,38 @@ def apiKeys():
 				keys[NCBI] = splt[1].strip()
 	return keys
 
+def speciesDict(infile, done=[]):
+	# Reads formatted species names in as a dict
+	cdef str line
+	cdef list splt
+	cdef int first = 1
+	terms = {}
+	t = []
+	with open(infile, "r") as f:
+		for line in f:
+			if first == 0:
+				splt = line.strip().split(",")
+				if len(splt) == 3:
+					if splt[0] not in done:
+						if splt[1] in terms.keys():
+							terms[splt[1]].append(splt[0])
+						else:
+							# {search term: [term, type, query name]}
+							terms[splt[1]] = [splt[1], splt[2], splt[0]]
+			else:
+				first = 0
+	# Convert to list
+	for i in terms.keys():
+		t.append(terms[i])
+	return t
+
 def speciesList(infile, c, done=[]):
 	# Extracts list of query sequences from input file
 	cdef int first = 1
 	cdef str line
 	cdef str delim
 	cdef list splt
+	cdef int length
 	q = set()
 	print("\tReading input file...")
 	with open(infile, "r") as f:
@@ -80,7 +107,9 @@ def speciesList(infile, c, done=[]):
 				line = line.strip()
 				if delim:
 					splt = line.split(delim)
-					if len(splt) >= c:
+					if len(splt) >= length:
+						# Skip improperly formatted lines
+						splt[c] = splt[c].strip()
 						if len(splt[c].replace(" ", "")) > 2:
 							# Only store if there are at least three characters
 							if splt[c] not in done:
@@ -94,10 +123,13 @@ def speciesList(infile, c, done=[]):
 					delim = ","
 				else:
 					delim = None
+					length = 1
+				if delim:
+					length = len(line.split(delim))
 				first = 0
 	return list(q)
 
-def checkOutput(outfile, header):
+def checkOutput(outfile, header=""):
 	# Makes output file if needed and reads in any completed queries
 	cdef int first = 1
 	cdef str line
@@ -117,5 +149,155 @@ def checkOutput(outfile, header):
 		print("\tGenerating new output file...")
 		with open(outfile, "w") as output:
 			# Initialize file and write header
-			output.write(header)
+			if header:
+				output.write(header)
 	return list(done)
+
+def writeResults(outfile, line):
+	# Writes match to outfile and no match to misses
+	with open(outfile, "a") as output:
+		output.write(line)
+
+#-----------------------------------------------------------------------------
+
+def sliceTerm(term, p1, p2):
+	# Removes item from between 2 punctuation marks
+	cdef int idx
+	cdef int ind
+	idx = term.find(p1)
+	if p1 == p2:
+		ind = term.rfind(p2)
+	else:
+		ind = term.find(p2)
+	if idx < ind:
+		# Drop item in parentheses/quotes
+		if ind == len(term)-1:
+			term = term[:idx]
+		elif idx == 0:
+			term = term[ind+1:]
+		else:
+			term = term[:idx] + term[ind+1:]
+	else:
+		# Remove puntuation
+		term = term.replace(p1, "")
+		term = term.replace(p2, "")
+	return term
+
+def checkName(query):
+	# Check query format
+	cdef int idx
+	cdef int ind
+	cdef str term = query.lower()
+	if "?" in term or "not " in term or "unknown" in term:
+		# Skip uncertain entries
+		return term, "uncertainEntry"
+	if term[-2:] == " x" or term[-4:] == " mix" or "mix " in term or "hybrid " in term or " hybrid" in term: 
+		return term, "hybrid"
+	if "(" in term or ")" in term:
+		term = sliceTerm(term, "(", ")")
+	if "/" in term:
+		# Subset from longer side of slash
+		idx = term.find("/")
+		if idx <= len(term)/2:
+			term = term[idx+1:]
+		else:
+			term = term [:idx]
+	if '"' in term:
+		term = sliceTerm(term, '"', '"')
+	if "&" in term:
+		# Replace ampersand and add spaces if needed
+		idx = term.find("&")
+		if term[idx+1] != " ":
+			# Check second space first so index remains accurate
+			term = term[:idx+1] + " " + term[idx+1:]
+		if term[idx-1] != " ":
+			term = term[:idx] + " " + term[idx:]
+		term = term.replace("&", "and")
+	if "#" in term:
+		idx = term.find("#")
+		if idx < len(term)-1:
+			# Drop symbol and any numbers
+			if idx < len(term)/2:
+				ind = term[idx:].find(" ") + idx
+				term = term[ind+1:]
+			else:
+				ind = term.rfind(" ")
+				term = term[:ind]			
+	return term, ""
+
+def checkForNum(query):
+	# Determines if a query is primarily letters
+	cdef int count = 0
+	cdef int c
+	cdef str j
+	cdef str i
+	cdef list splt
+	cdef str term = query
+	if " " in term:
+		# Attempt to remove numbers
+		splt = term.split()
+		term = ""
+		for j in splt:
+			for i in digits:
+				c = j.count(i)
+			if c < len(j)/4.0:
+				term += j + " "
+		term = term.strip()
+	# Calculate total number content after trimming
+	for i in digits:
+		count += term.count(i)	
+	if term and count < len(query)/4.0:
+		return term, ""
+	else:
+		return term, "numberContent"
+
+def filterNames(outfile, misses, t, query):
+	# Filters queries and attmepts to correct formatting
+	cdef str head
+	cdef str reas = ""
+	cdef str term = ""
+	cdef int np = 1
+	if len(query) >= 3:
+		# Filter names by type
+		if t == "common":
+			term, reas = checkForNum(query)
+			if not reas:
+				term, reas = checkName(term)
+				if len(term) < 3:
+					reas = "formatting"
+		elif t == "scienific":
+			term, reas = checkForNum(query)
+			if not reas:
+				for i in punctuation:
+					if i != "." and i in term:
+						# Pass if query contains punctuation other than period
+						reas = "punctuation"
+						break
+	if term and not reas:
+		# Fix caps
+		head = term[0].upper()
+		term = head + term[1:].lower()
+		writeResults(outfile, ("{},{},{}\n").format(query, term, t))
+	else:
+		writeResults(misses, ("{},{}\n").format(query, reas))
+
+def sortNames(outfile, misses, common, scientific, query):
+	# Sorts queries prior to filtering 
+	cdef str i
+	cdef str t = ""
+	print("\tFiltering species names...")
+	# Assign name type or get classifier
+	if common == True:
+		t = "common"
+	elif scientific == True:
+		t = "scienific"
+	else:
+		classifier = getSequenceClassifier()
+	for i in query:
+		if not t:
+			t = classifier.classify(nameFeatures(query))
+		# Filter sorted names
+		if "," in i:
+			# Replace commas in original name to preserve formatting
+			i = i.replace(",", " ")
+		filterNames(outfile, misses, t, i)
