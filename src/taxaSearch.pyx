@@ -129,7 +129,7 @@ def searchSci(outfile, misses, keys, query, term):
 		match = getmatches(res)
 	if not match:
 		# Search Wikipedia
-		w = searchWiki(query)
+		w = searchWiki(term)
 		res = sourceDict([g, e, n, w])
 		if res:
 			match = getmatches(res, 1)

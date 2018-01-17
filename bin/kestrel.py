@@ -63,7 +63,7 @@ help = "Number of threads for identifying taxa (default = 1).")
 		done = checkOutput(args.o, "Query,SearchTerm,Type\n")
 		misses = args.o[:args.o.rfind("/")+1] + "KestrelRejected.csv"
 		missed = checkOutput(misses, "Query,Reason\n")
-		query = speciesList(args.i, args.c, done)
+		query = speciesList(args.i, args.c, done.extend(missed))
 		sortNames(args.o, misses, args.common, args.scientific, query)
 	else:
 		print("\n\tGenerating taxonomy output...")
@@ -73,10 +73,10 @@ help = "Number of threads for identifying taxa (default = 1).")
 		misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.csv"
 		header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
 		done = checkOutput(args.o, header)
-		missed = checkOutput(misses)
+		missed = checkOutput(misses, "Query,Reason\n")
 		done.extend(missed)
 		# Read in query names
-		query = speciesDict(args.i, done)
+		query = termList(args.i, done)
 		l = float(len(query)) + float(len(done))
 		pool = Pool(processes = args.t)
 		func = partial(assignQuery, args.o, misses, keys)

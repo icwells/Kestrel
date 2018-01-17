@@ -132,7 +132,7 @@ def efetch(query, key):
 	cdef list ret = []
 	t = OrderedDict(TAXONOMY)
 	url = ("{}efetch.fcgi?db=Taxonomy&id={}$retmode={}&key={}").format(NCBI, query, FORMAT, key)
-	t["url"] = url
+	t["url"] = url[:url.rfind("&")]
 	try:
 		result = request.urlopen(url)
 	except:

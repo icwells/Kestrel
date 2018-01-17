@@ -3,6 +3,7 @@
 import os
 import nltk
 import gzip
+from sys import stdout
 from string import punctuation, digits
 from random import shuffle
 
@@ -67,7 +68,7 @@ def apiKeys():
 				keys[NCBI] = splt[1].strip()
 	return keys
 
-def speciesDict(infile, done=[]):
+def termList(infile, done=[]):
 	# Reads formatted species names in as a dict
 	cdef str line
 	cdef list splt
@@ -89,7 +90,8 @@ def speciesDict(infile, done=[]):
 				first = 0
 	# Convert to list
 	for i in terms.keys():
-		t.append(terms[i])
+		if len(terms[i]) >= 3:
+			t.append(terms[i])
 	return t
 
 def speciesList(infile, c, done=[]):
@@ -119,13 +121,13 @@ def speciesList(infile, c, done=[]):
 			else:
 				if "\t" in line:
 					delim = "\t"
+					length = len(line.split(delim))
 				elif "," in line:
 					delim = ","
+					length = len(line.split(delim))
 				else:
 					delim = None
 					length = 1
-				if delim:
-					length = len(line.split(delim))
 				first = 0
 	return list(q)
 
@@ -133,7 +135,7 @@ def checkOutput(outfile, header=""):
 	# Makes output file if needed and reads in any completed queries
 	cdef int first = 1
 	cdef str line
-	done = set()
+	done = []
 	if os.path.isfile(outfile):
 		print("\tReading previous output...")
 		with open(outfile, "r") as output:
@@ -141,7 +143,7 @@ def checkOutput(outfile, header=""):
 				if first == 0:
 					# Save query names
 					line = line.strip()
-					done.add(line.split(",")[0])
+					done.append(line.split(",")[0])
 				else:
 					# Skip header
 					first = 0
@@ -151,7 +153,7 @@ def checkOutput(outfile, header=""):
 			# Initialize file and write header
 			if header:
 				output.write(header)
-	return list(done)
+	return done
 
 def writeResults(outfile, line):
 	# Writes match to outfile and no match to misses
@@ -190,9 +192,9 @@ def checkName(query):
 	cdef str term = query.lower()
 	if "?" in term or "not " in term or "unknown" in term:
 		# Skip uncertain entries
-		return term, "uncertainEntry"
+		return "", "uncertainEntry"
 	if term[-2:] == " x" or term[-4:] == " mix" or "mix " in term or "hybrid " in term or " hybrid" in term: 
-		return term, "hybrid"
+		return "", "hybrid"
 	if "(" in term or ")" in term:
 		term = sliceTerm(term, "(", ")")
 	if "/" in term:
@@ -249,31 +251,33 @@ def checkForNum(query):
 	if term and count < len(query)/4.0:
 		return term, ""
 	else:
-		return term, "numberContent"
+		return "", "numberContent"
 
-def filterNames(outfile, misses, t, query):
+def filterNames(outfile, misses, t, query, reas=""):
 	# Filters queries and attmepts to correct formatting
 	cdef str head
-	cdef str reas = ""
 	cdef str term = ""
-	cdef int np = 1
-	if len(query) >= 3:
-		# Filter names by type
-		if t == "common":
-			term, reas = checkForNum(query)
-			if not reas:
-				term, reas = checkName(term)
-				if len(term) < 3:
-					reas = "formatting"
-		elif t == "scienific":
-			term, reas = checkForNum(query)
-			if not reas:
-				for i in punctuation:
-					if i != "." and i in term:
-						# Pass if query contains punctuation other than period
-						reas = "punctuation"
-						break
-	if term and not reas:
+	if t and not reas:
+		if len(query) >= 3:
+			# Filter names by type
+			if t == "common":
+				term, reas = checkForNum(query)
+				if not reas:
+					term, reas = checkName(term)
+					if len(term) < 3:
+						reas = "formatting"
+			elif t == "scientific":
+				term, reas = checkForNum(query)
+				if not reas:
+					for i in punctuation:
+						if i != "." and i in term:
+							# Pass if query contains punctuation other than period
+							reas = "punctuation"
+							term = ""
+							break
+		else:
+			reas = "tooShort"
+	if term:
 		# Fix caps
 		head = term[0].upper()
 		term = head + term[1:].lower()
@@ -281,23 +285,38 @@ def filterNames(outfile, misses, t, query):
 	else:
 		writeResults(misses, ("{},{}\n").format(query, reas))
 
-def sortNames(outfile, misses, common, scientific, query):
-	# Sorts queries prior to filtering 
+def assignNames(outfile, misses, query):
+	# Generates classifier and sorts names
 	cdef str i
 	cdef str t = ""
+	classifier = getSequenceClassifier()
 	print("\tFiltering species names...")
+	for i in query:
+		if len(i) >= 3:
+			t = classifier.classify(nameFeatures(i))
+			if "," in i:
+				# Replace commas in original name to preserve formatting
+				i = i.replace(",", " ")
+			filterNames(outfile, misses, t, i)
+		else:
+			# Forward to filterNames to record misses
+			filterNames(outfile, misses, t, i, "tooShort")
+
+def sortNames(outfile, misses, common, scientific, query):
+	# Determines if names must be sorted before filtering
+	cdef str i
+	cdef str t = ""
 	# Assign name type or get classifier
 	if common == True:
 		t = "common"
 	elif scientific == True:
-		t = "scienific"
+		t = "scientific"
+	if t:
+		print("\tFiltering species names...")
+		for i in query:
+			if "," in i:
+				# Replace commas in original name to preserve formatting
+				i = i.replace(",", " ")
+			filterNames(outfile, misses, t, i)
 	else:
-		classifier = getSequenceClassifier()
-	for i in query:
-		if not t:
-			t = classifier.classify(nameFeatures(query))
-		# Filter sorted names
-		if "," in i:
-			# Replace commas in original name to preserve formatting
-			i = i.replace(",", " ")
-		filterNames(outfile, misses, t, i)
+		assignNames(outfile, misses, query)
