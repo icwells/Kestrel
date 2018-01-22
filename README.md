@@ -1,4 +1,4 @@
-# Kestrel Taxonomy Finder Version 0.1
+# Kestrel Taxonomy Finder Version 0.2
 
 ## Copyright 2017 by Shawn Rupp
 
