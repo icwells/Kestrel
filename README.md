@@ -4,12 +4,12 @@
 
 ### Kestrel is a program for resolving species’ common names and synonyms with "official" scientific names and extracting taxonomies from internet databases.
 
-## Dependencies:
-###Python3
-###Cython
-###NLTK
-###BeautifulSoup4
-###Active internet connection
+## Dependencies
+Python3
+Cython
+NLTK
+BeautifulSoup4
+Active internet connection
 
 ## Installation
 
