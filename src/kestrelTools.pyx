@@ -38,7 +38,7 @@ def getSequenceClassifier():
 	cdef list test
 	cdef list train
 	cdef list features = []
-	print("\tGenerating feature classifier...")
+	print("\n\tGenerating feature classifier...")
 	labled = getNames()
 	for i in labled:
 		# Get features for classifier
@@ -101,21 +101,19 @@ def speciesList(infile, c, done=[]):
 	cdef str delim
 	cdef list splt
 	cdef int length
+	cdef int total = 0
 	q = set()
-	print("\tReading input file...")
+	print("\n\tReading input file...")
 	with open(infile, "r") as f:
 		for line in f:
 			if first == 0:
+				total += 1
 				line = line.strip()
 				if delim:
 					splt = line.split(delim)
 					if len(splt) >= length:
 						# Skip improperly formatted lines
-						splt[c] = splt[c].strip()
-						if len(splt[c].replace(" ", "")) > 2:
-							# Only store if there are at least three characters
-							if splt[c] not in done:
-								q.add(splt[c])
+						q.add(splt[c])
 				else:
 					q.add(line)
 			else:
@@ -129,6 +127,7 @@ def speciesList(infile, c, done=[]):
 					delim = None
 					length = 1
 				first = 0
+	print(("\tFound {} unique entries from {} total entries.").format(len(q), total))
 	return list(q)
 
 def checkOutput(outfile, header=""):
@@ -189,12 +188,12 @@ def checkName(query):
 	# Check query format
 	cdef int idx
 	cdef int ind
-	cdef str term = query.lower()
+	cdef str term = query.lower().replace("  ", " ")
 	if "?" in term or "not " in term or "unknown" in term:
 		# Skip uncertain entries
-		return "", "uncertainEntry"
+		return term, "uncertainEntry"
 	if term[-2:] == " x" or term[-4:] == " mix" or "mix " in term or "hybrid " in term or " hybrid" in term: 
-		return "", "hybrid"
+		return term, "hybrid"
 	if "(" in term or ")" in term:
 		term = sliceTerm(term, "(", ")")
 	if "/" in term:
@@ -254,7 +253,7 @@ def checkForNum(query):
 		return "", "numberContent"
 
 def filterNames(outfile, misses, t, query, reas=""):
-	# Filters queries and attmepts to correct formatting
+	# Filters query and attmepts to correct formatting
 	cdef str head
 	cdef str term = ""
 	if t and not reas:
@@ -264,7 +263,7 @@ def filterNames(outfile, misses, t, query, reas=""):
 				term, reas = checkForNum(query)
 				if not reas:
 					term, reas = checkName(term)
-					if len(term) < 3:
+					if not reas and len(term) < 3:
 						reas = "formatting"
 			elif t == "scientific":
 				term, reas = checkForNum(query)
@@ -282,41 +281,59 @@ def filterNames(outfile, misses, t, query, reas=""):
 		head = term[0].upper()
 		term = head + term[1:].lower()
 		writeResults(outfile, ("{},{},{}\n").format(query, term, t))
+		return 1
 	else:
 		writeResults(misses, ("{},{}\n").format(query, reas))
+		return 0
 
 def assignNames(outfile, misses, query):
 	# Generates classifier and sorts names
 	cdef str i
 	cdef str t = ""
+	cdef int x
+	cdef int p = 0
+	cdef int r = 0
 	classifier = getSequenceClassifier()
-	print("\tFiltering species names...")
+	print("\n\tFiltering species names...")
 	for i in query:
 		if len(i) >= 3:
 			t = classifier.classify(nameFeatures(i))
 			if "," in i:
 				# Replace commas in original name to preserve formatting
 				i = i.replace(",", " ")
-			filterNames(outfile, misses, t, i)
+			x = filterNames(outfile, misses, t, i)
 		else:
 			# Forward to filterNames to record misses
-			filterNames(outfile, misses, t, i, "tooShort")
+			x = filterNames(outfile, misses, t, i, "tooShort")
+		if x == 1:
+			p += 1
+		else:
+			r += 1
+	print(("\tSuccessfully formatted {} entries.\n\t{} entries failed formatting.").format(p, r))
 
 def sortNames(outfile, misses, common, scientific, query):
 	# Determines if names must be sorted before filtering
 	cdef str i
 	cdef str t = ""
+	cdef int x
+	cdef int p = 0
+	cdef int r = 0
 	# Assign name type or get classifier
 	if common == True:
 		t = "common"
 	elif scientific == True:
 		t = "scientific"
 	if t:
-		print("\tFiltering species names...")
+		print("\n\tFiltering species names...")
 		for i in query:
 			if "," in i:
 				# Replace commas in original name to preserve formatting
 				i = i.replace(",", " ")
-			filterNames(outfile, misses, t, i)
+			x = filterNames(outfile, misses, t, i)
+			if x == 1:
+				p += 1
+			else:
+				r += 1
+		print(("\tSuccessfully formatted {} entries.\n\t{} entries failed formatting.").format(p, r))
 	else:
 		assignNames(outfile, misses, query)
