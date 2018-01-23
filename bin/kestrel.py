@@ -66,6 +66,8 @@ help = "Number of threads for identifying taxa (default = 1).")
 		query = speciesList(args.i, args.c, done.extend(missed))
 		sortNames(args.o, misses, args.common, args.scientific, query)
 	else:
+		match = 0
+		miss = 0
 		print("\n\tGenerating taxonomy output...")
 		if args.t > cpu_count():
 			args.t = cpu_count()
@@ -74,6 +76,8 @@ help = "Number of threads for identifying taxa (default = 1).")
 		header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
 		done = checkOutput(args.o, header)
 		missed = checkOutput(misses, "Query,Reason\n")
+		# Store missed and done lengths
+		donelen = len(done)
 		done.extend(missed)
 		# Read in query names
 		query = termList(args.i, done)
@@ -81,10 +85,16 @@ help = "Number of threads for identifying taxa (default = 1).")
 		pool = Pool(processes = args.t)
 		func = partial(assignQuery, args.o, misses, keys)
 		print(("\n\tIdentifying species with {} threads....").format(args.t))
-		for i, _ in enumerate(pool.imap_unordered(func, query), 1):
+		for i,x in enumerate(pool.imap_unordered(func, query)):
 			stdout.write("\r\t{0:.1%} of query names have finished".format(i/l))
+			if x > 0:
+				match += x
+			else:
+				miss += abs(x)
 		pool.close()
 		pool.join()
+		print(("\n\tFound matches for {} entries.").format(match + donelen))
+		print(("\tNo match found for {} entries.").format(miss + len(missed)))
 	print(("\n\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 import os
 import nltk
 import gzip
+from re import sub
 from sys import stdout
 from string import punctuation, digits
 from random import shuffle
@@ -188,7 +189,9 @@ def checkName(query):
 	# Check query format
 	cdef int idx
 	cdef int ind
-	cdef str term = query.lower().replace("  ", " ")
+	cdef str term = query.lower()
+	# Replace multiple spaces
+	term = sub(r" +", " ", term)
 	if "?" in term or "not " in term or "unknown" in term:
 		# Skip uncertain entries
 		return term, "uncertainEntry"
@@ -276,7 +279,7 @@ def filterNames(outfile, misses, t, query, reas=""):
 							break
 		else:
 			reas = "tooShort"
-	if term:
+	if not reas:
 		# Fix caps
 		head = term[0].upper()
 		term = head + term[1:].lower()

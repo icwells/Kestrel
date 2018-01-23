@@ -86,7 +86,8 @@ def sourceDict(l):
 def searchCommon(outfile, misses, keys, query, term):
 	# Serches for mathces for common names
 	cdef str match = ""
-	cdef last = 0
+	cdef int last = 0
+	cdef int total = 0
 	while len(term.split()) >= 1:
 		# Search EOL and NCBI
 		e = searchEOL(term, keys[EOL])
@@ -111,15 +112,22 @@ def searchCommon(outfile, misses, keys, query, term):
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
 		for i in query:
+			total += 1
 			writeResults(outfile, ("{},{},{}\n").format(i, term, match))
+		# Return number of matched queries
+		return total
 	else:
 		for i in query:
+			total += 1
 			writeResults(misses, ("{},noMatch\n").format(i))
+		# Return negative to indicate failed queries
+		return 0-total
 
 def searchSci(outfile, misses, keys, query, term):
 	# Serches for mathces for scientific names
 	cdef str match = ""
 	cdef str i
+	cdef int total = 0
 	# Search GBIF
 	g = searchGBIF(term)
 	e = searchEOL(term, keys[EOL])
@@ -137,13 +145,20 @@ def searchSci(outfile, misses, keys, query, term):
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
 		for i in query:
+			total += 1
 			writeResults(outfile, ("{},{},{}\n").format(i, term, match))
+		# Return number of matched queries
+		return total
 	else:
 		for i in query:
+			total += 1
 			writeResults(misses, ("{},noMatch\n").format(i))
+		# Return negative to indicate failed queries
+		return 0-total
 
 def assignQuery(outfile, misses, keys, query):
 	# Determines whether query is a scientific or common name
+	cdef int x
 	cdef list q
 	cdef str t = query[0]
 	cdef str term = t
@@ -157,6 +172,7 @@ def assignQuery(outfile, misses, keys, query):
 			# Percent encode apsotrophes
 			term = term.replace("'", "%27")
 		if query[1] == "common":
-			searchCommon(outfile, misses, keys, q, term)
+			x = searchCommon(outfile, misses, keys, q, term)
 		elif query[1] == "scientific":
-			searchSci(outfile, misses, keys, q, term)
+			x = searchSci(outfile, misses, keys, q, term)
+	return x
