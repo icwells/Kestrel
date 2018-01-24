@@ -105,7 +105,7 @@ def speciesList(infile, c, done=[]):
 	cdef int total = 0
 	q = set()
 	print("\n\tReading input file...")
-	with open(infile, "r") as f:
+	with open(infile, "r", errors="ignore") as f:
 		for line in f:
 			if first == 0:
 				total += 1
