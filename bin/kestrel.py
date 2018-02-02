@@ -1,4 +1,4 @@
-'''This script contains functions for searching Wikipedia for taxonomy information.'''
+'''This script contains functions for searching online databases for taxonomy information.'''
 
 import argparse
 from datetime import datetime, date
@@ -53,6 +53,8 @@ species names (integer starting from 0; use with --extract)).")
 	parser.add_argument("-o", help = "Path to output csv file.")
 	parser.add_argument("-t", default = 1, type = int,
 help = "Number of threads for identifying taxa (default = 1).")
+	parser.add_argument("--firefox", action = "store_true", default = False,
+help = "Use Firefox browser for Google search (uses Chrome by default.")
 	args = parser.parse_args()
 	if args.v:
 		version()
@@ -73,7 +75,8 @@ help = "Number of threads for identifying taxa (default = 1).")
 			args.t = cpu_count()
 		keys = apiKeys()
 		misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.csv"
-		header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,EOL,NCBI,GBIF,Wikipedia\n"
+		header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,\
+EOL,NCBI,IUCN,GBIF,Wikipedia,Other\n"
 		done = checkOutput(args.o, header)
 		missed = checkOutput(misses, "Query,Reason\n")
 		# Store missed and done lengths
@@ -83,7 +86,7 @@ help = "Number of threads for identifying taxa (default = 1).")
 		query = termList(args.i, done)
 		l = float(len(query)) + float(len(done))
 		pool = Pool(processes = args.t)
-		func = partial(assignQuery, args.o, misses, keys)
+		func = partial(assignQuery, args.firefox, args.o, misses, keys)
 		print(("\n\tIdentifying species with {} threads....").format(args.t))
 		for i,x in enumerate(pool.imap_unordered(func, query)):
 			stdout.write("\r\t{0:.1%} of query names have finished".format(i/l))

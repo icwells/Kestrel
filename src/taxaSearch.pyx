@@ -3,11 +3,14 @@
 from urllib import request, error
 from kestrelTools import *
 from scrapePages import *
+from seleniumSearch import *
 
 cdef str EOL= "http://eol.org/api/"
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
+cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
+cdef str REDLIST = "http://www.iucnredlist.org"
 
 def formatMatch(d):
 	# Returns taxonomy as formatted string
@@ -23,7 +26,7 @@ def formatMatch(d):
 			hit = d[i]
 	m = list(hit.values())[:-1]
 	# Sort urls from remaining matches
-	for i in [EOL,NCBI,GBIF,WIKI]:
+	for i in [EOL,NCBI,IUCN,GBIF,WIKI, "other"]:
 		if i in d.keys():
 			m.append(d[i]["url"])
 		else:
@@ -72,40 +75,61 @@ def getmatches(d, last=0):
 
 def sourceDict(l):
 	# Converts list of dicts to dict of dicts
+	cdef int f = 0
 	d = {}
-	for i in l:
-		# Remove empty values
-		if type(i) == dict and i == {}:
-			pass
-		elif i != None:
-			for u in [EOL,NCBI,GBIF,WIKI]:
-				if u in i["url"]:
-					d[u] = i
+	if l:
+		for i in l:
+			# Remove empty values
+			if type(i) == dict and i == {}:
+				pass
+			elif i != None:
+				for u in [EOL,NCBI,GBIF,WIKI, IUCN, REDLIST]:
+					if u in i["url"]:
+						# Assign list to database
+						if u == REDLIST:
+							d[IUCN] = i
+						else:
+							d[u] = i
+						f = 1
+				if f == 0:
+					d["other"] = i
 	return d
 
-def searchCommon(outfile, misses, keys, query, term):
+def searchCommon(firefox, outfile, misses, keys, query, term):
 	# Serches for mathces for common names
 	cdef str match = ""
 	cdef int last = 0
 	cdef int total = 0
+	cdef list vals
+	cdef str Term = term
 	while len(term.split()) >= 1:
 		# Search EOL and NCBI
 		e = searchEOL(term, keys[EOL])
 		n = searchNCBI(term, keys[NCBI])
-		res = sourceDict([e, n])
+		vals = [e, n]
+		res = sourceDict(vals)
 		if res:
 			match = getmatches(res)
 		if not match:
 			# Search Wikipedia to resolve mismatch
 			w = searchWiki(term)
-			res = sourceDict([e, n, w])
+			res = sourceDict(vals.append(w))
 			if len(term.split()) == 1:
 				last = 1
 			if res:
 				match = getmatches(res, last)
-		if not match and last == 0:
-			# Remove first word and try again
-			term = term[term.find(" ")+1:]
+		if not match:
+			if last == 0:
+				# Remove first word and try again
+				term = term[term.find(" ")+1:]	
+			else:
+				# Google search
+				soup = getSearchResult(getBrowser(args.firefox), Term)
+				urls = getURLS(soup)
+				if urls:
+					ss = parseURLS(urls)
+					res = sourceDict(vals.append(ss))
+					match = getmatches(res, last)
 		else:
 			break
 	if match:
@@ -123,24 +147,37 @@ def searchCommon(outfile, misses, keys, query, term):
 		# Return negative to indicate failed queries
 		return 0-total
 
-def searchSci(outfile, misses, keys, query, term):
+def searchSci(firefox, outfile, misses, keys, query, term):
 	# Serches for mathces for scientific names
 	cdef str match = ""
 	cdef str i
 	cdef int total = 0
+	cdef list vals
 	# Search GBIF
 	g = searchGBIF(term)
 	e = searchEOL(term, keys[EOL])
 	n = searchNCBI(term, keys[NCBI])
-	res = sourceDict([g, e, n])
+	vals = [g, e, n]
+	if IUCN in keys.keys():
+		iu = searchIUCN(term, keys[IUCN])
+		vals.append(iu)
+	res = sourceDict(vals)
 	if res:
 		match = getmatches(res)
 	if not match:
 		# Search Wikipedia
 		w = searchWiki(term)
-		res = sourceDict([g, e, n, w])
+		res = sourceDict(vals.append(w))
 		if res:
 			match = getmatches(res, 1)
+		if not match:
+			# Google search
+			soup = getSearchResult(getBrowser(args.firefox), Term)
+			urls = getURLS(soup)
+			if urls:
+				ss = parseURLS(urls)
+				res = sourceDict(vals.append(ss))
+				match = getmatches(res, last)
 	if match:
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
@@ -156,7 +193,7 @@ def searchSci(outfile, misses, keys, query, term):
 		# Return negative to indicate failed queries
 		return 0-total
 
-def assignQuery(outfile, misses, keys, query):
+def assignQuery(firefox, outfile, misses, keys, query):
 	# Determines whether query is a scientific or common name
 	cdef int x
 	cdef list q
@@ -172,7 +209,7 @@ def assignQuery(outfile, misses, keys, query):
 			# Percent encode apsotrophes
 			term = term.replace("'", "%27")
 		if query[1] == "common":
-			x = searchCommon(outfile, misses, keys, q, term)
+			x = searchCommon(firefox, outfile, misses, keys, q, term)
 		elif query[1] == "scientific":
-			x = searchSci(outfile, misses, keys, q, term)
+			x = searchSci(firefox, outfile, misses, keys, q, term)
 	return x

@@ -11,6 +11,7 @@ from random import shuffle
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str EOL= "http://eol.org/api/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
+cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
 
 cdef float L = 0.1
 
@@ -67,6 +68,11 @@ def apiKeys():
 				keys[EOL] = splt[1].strip()
 			elif splt[0].strip() == "NCBI":
 				keys[NCBI] = splt[1].strip()
+			elif splt[0].strip() == "IUCN":
+				keys[IUCN] = splt[1].strip()
+	if EOL not in keys.keys() or NCBI not in keys.keys():
+		print("\n\t[Error] API keys required for EOL and NCBI. Exiting.")
+		quit()
 	return keys
 
 def termList(infile, done=[]):

@@ -5,11 +5,14 @@ from Cython.Build import cythonize
 
 KT = "kestrelTools.pyx"
 SP = "scrapePages.pyx"
+SS = "seleniumSearch.pyx"
 TS = "taxaSearch.pyx"
 
 # Print blank lines to split output
 print(("\n\tComipiling {}...\n").format(KT))
 setup(ext_modules=cythonize(KT))
+print(("\n\tComipiling {}...\n").format(SS))
+setup(ext_modules=cythonize(SS))
 print(("\n\tComipiling {}...\n").format(SP))
 setup(ext_modules=cythonize(SP))
 print(("\n\tComipiling {}...\n").format(TS))

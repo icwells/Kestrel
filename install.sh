@@ -6,6 +6,7 @@
 
 KT="kestrelTools"
 SP="scrapePages"
+SS="seleniumSearch"
 TS="taxaSearch"
 
 cd src/
@@ -16,4 +17,5 @@ cd ../
 
 mv src/$KT.*.so bin/$KT.so
 mv src/$SP.*.so bin/$SP.so
+mv src/$SS.*.so bin/$SS.so
 mv src/$TS.*.so bin/$TS.so
