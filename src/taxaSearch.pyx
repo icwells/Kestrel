@@ -95,7 +95,7 @@ def sourceDict(l):
 					d["other"] = i
 	return d
 
-def searchCommon(firefox, outfile, misses, keys, query, term):
+def searchCommon(outfile, misses, keys, query, term):
 	# Serches for mathces for common names
 	cdef str match = ""
 	cdef int last = 0
@@ -124,12 +124,13 @@ def searchCommon(firefox, outfile, misses, keys, query, term):
 				term = term[term.find(" ")+1:]	
 			else:
 				# Google search
-				soup = getSearchResult(getBrowser(args.firefox), Term)
+				soup = getSearchResult(Term)
 				urls = getURLS(soup)
 				if urls:
 					ss = parseURLS(urls)
 					res = sourceDict(vals.append(ss))
-					match = getmatches(res, last)
+					if res:
+						match = getmatches(res, last)
 		else:
 			break
 	if match:
@@ -147,12 +148,13 @@ def searchCommon(firefox, outfile, misses, keys, query, term):
 		# Return negative to indicate failed queries
 		return 0-total
 
-def searchSci(firefox, outfile, misses, keys, query, term):
+def searchSci(outfile, misses, keys, query, term):
 	# Serches for mathces for scientific names
 	cdef str match = ""
 	cdef str i
 	cdef int total = 0
 	cdef list vals
+	cdef str Term = term
 	# Search GBIF
 	g = searchGBIF(term)
 	e = searchEOL(term, keys[EOL])
@@ -172,12 +174,13 @@ def searchSci(firefox, outfile, misses, keys, query, term):
 			match = getmatches(res, 1)
 		if not match:
 			# Google search
-			soup = getSearchResult(getBrowser(args.firefox), Term)
+			soup = getSearchResult(Term)
 			urls = getURLS(soup)
 			if urls:
 				ss = parseURLS(urls)
 				res = sourceDict(vals.append(ss))
-				match = getmatches(res, last)
+				if res:
+					match = getmatches(res, last)
 	if match:
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
@@ -193,7 +196,7 @@ def searchSci(firefox, outfile, misses, keys, query, term):
 		# Return negative to indicate failed queries
 		return 0-total
 
-def assignQuery(firefox, outfile, misses, keys, query):
+def assignQuery(outfile, misses, keys, query):
 	# Determines whether query is a scientific or common name
 	cdef int x
 	cdef list q
@@ -209,7 +212,7 @@ def assignQuery(firefox, outfile, misses, keys, query):
 			# Percent encode apsotrophes
 			term = term.replace("'", "%27")
 		if query[1] == "common":
-			x = searchCommon(firefox, outfile, misses, keys, q, term)
+			x = searchCommon(outfile, misses, keys, q, term)
 		elif query[1] == "scientific":
-			x = searchSci(firefox, outfile, misses, keys, q, term)
+			x = searchSci(outfile, misses, keys, q, term)
 	return x

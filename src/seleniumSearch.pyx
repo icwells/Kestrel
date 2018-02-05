@@ -120,15 +120,16 @@ def getURLS(soup):
 			u = re.split(":(?=http)",link["href"].replace("/url?q=",""))
 			for i in u:
 				# Filter out unusable links
-				for x in [Wiki, IUCN, ITIS]:
+				for x in [WIKI, IUCN, ITIS]:
 					if x in i:
 						urls.append(i)
 		except KeyError:
 			pass
 	return urls
 
-def getSearchResult(browser, term):
+def getSearchResult(term):
 	# Searches Google for term
+	browser = webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
 	browser.get("http://www.google.com")
 	# Find the search box
 	elem = browser.find_element_by_name("q")
@@ -136,10 +137,3 @@ def getSearchResult(browser, term):
 	soup = BeautifulSoup(browser.page_source, "lxml")
 	browser.quit()
 	return soup
-
-def getBrowser(firefox):
-	# Returns selenium browser instance
-	if firefox:
-		return webdriver.Firefox()
-	else:
-		return webdriver.Chrome()

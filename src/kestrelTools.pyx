@@ -69,7 +69,9 @@ def apiKeys():
 			elif splt[0].strip() == "NCBI":
 				keys[NCBI] = splt[1].strip()
 			elif splt[0].strip() == "IUCN":
-				keys[IUCN] = splt[1].strip()
+				if len(splt) >= 2:
+					# Skip if IUCN key is not present
+					keys[IUCN] = splt[1].strip()
 	if EOL not in keys.keys() or NCBI not in keys.keys():
 		print("\n\t[Error] API keys required for EOL and NCBI. Exiting.")
 		quit()

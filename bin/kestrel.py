@@ -53,8 +53,6 @@ species names (integer starting from 0; use with --extract)).")
 	parser.add_argument("-o", help = "Path to output csv file.")
 	parser.add_argument("-t", default = 1, type = int,
 help = "Number of threads for identifying taxa (default = 1).")
-	parser.add_argument("--firefox", action = "store_true", default = False,
-help = "Use Firefox browser for Google search (uses Chrome by default.")
 	args = parser.parse_args()
 	if args.v:
 		version()
@@ -86,7 +84,7 @@ EOL,NCBI,IUCN,GBIF,Wikipedia,Other\n"
 		query = termList(args.i, done)
 		l = float(len(query)) + float(len(done))
 		pool = Pool(processes = args.t)
-		func = partial(assignQuery, args.firefox, args.o, misses, keys)
+		func = partial(assignQuery, args.o, misses, keys)
 		print(("\n\tIdentifying species with {} threads....").format(args.t))
 		for i,x in enumerate(pool.imap_unordered(func, query)):
 			stdout.write("\r\t{0:.1%} of query names have finished".format(i/l))
