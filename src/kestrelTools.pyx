@@ -145,7 +145,7 @@ def checkOutput(outfile, header=""):
 	cdef str line
 	done = []
 	if os.path.isfile(outfile):
-		print("\tReading previous output...")
+		print(("\tReading previous output from {}").format(outfile))
 		with open(outfile, "r") as output:
 			for line in output:
 				if first == 0:

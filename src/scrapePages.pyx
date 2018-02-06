@@ -57,11 +57,12 @@ def checkTaxa(t):
 						t[i] = ("{} {}").format(t["Genus"], t[i])
 			elif i != "Species" and " " in t[i]:
 				t[i] = t[i][:t[i].find(" ")]
-			# Correct caps
-			t[i] = t[i][0].upper() + t[i][1:].lower()
+			if i != "url":
+				# Correct caps
+				t[i] = t[i][0].upper() + t[i][1:].lower()
 		return t
 	else:
-		return {}
+		return None
 
 def scrapeWiki(soup, url):
 	# Extract taxonomy data from Wikipedia entry

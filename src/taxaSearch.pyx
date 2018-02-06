@@ -1,16 +1,15 @@
-'''These functions will .'''
+'''These functions will search databases for taxonomy matches to gven common or scientific names.'''
 
 from urllib import request, error
 from kestrelTools import *
 from scrapePages import *
-from seleniumSearch import *
 
 cdef str EOL= "http://eol.org/api/"
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
 cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
-cdef str REDLIST = "http://www.iucnredlist.org"
+TAXONOMY = OrderedDict([("Kingdom","NA"),("Phylum","NA"),("Class","NA"),("Order","NA"),("Family","NA"),("Genus","NA"),("Species","NA"),("url","NA")])
 
 def formatMatch(d):
 	# Returns taxonomy as formatted string
@@ -26,7 +25,7 @@ def formatMatch(d):
 			hit = d[i]
 	m = list(hit.values())[:-1]
 	# Sort urls from remaining matches
-	for i in [EOL,NCBI,IUCN,GBIF,WIKI, "other"]:
+	for i in [EOL,NCBI,WIKI,IUCN,GBIF]:
 		if i in d.keys():
 			m.append(d[i]["url"])
 		else:
@@ -75,62 +74,47 @@ def getmatches(d, last=0):
 
 def sourceDict(l):
 	# Converts list of dicts to dict of dicts
-	cdef int f = 0
 	d = {}
 	if l:
 		for i in l:
 			# Remove empty values
-			if type(i) == dict and i == {}:
-				pass
-			elif i != None:
-				for u in [EOL,NCBI,GBIF,WIKI, IUCN, REDLIST]:
+			if type(i) == OrderedDict and "url" in i.keys():
+				for u in [EOL, NCBI, WIKI, GBIF, IUCN]:
 					if u in i["url"]:
 						# Assign list to database
-						if u == REDLIST:
-							d[IUCN] = i
-						else:
-							d[u] = i
-						f = 1
-				if f == 0:
-					d["other"] = i
-	return d
+						d[u] = i
+		return d
+	else:
+		return None
 
 def searchCommon(outfile, misses, keys, query, term):
 	# Serches for mathces for common names
 	cdef str match = ""
 	cdef int last = 0
 	cdef int total = 0
-	cdef list vals
+	cdef list vals = []
 	cdef str Term = term
 	while len(term.split()) >= 1:
-		# Search EOL and NCBI
+		if len(term.split()) == 1:
+			last = 1
+		# Search EOL, NCBI, and Wikipedia
 		e = searchEOL(term, keys[EOL])
+		if e != None:
+			vals.append(e)
 		n = searchNCBI(term, keys[NCBI])
-		vals = [e, n]
-		res = sourceDict(vals)
-		if res:
-			match = getmatches(res)
-		if not match:
-			# Search Wikipedia to resolve mismatch
-			w = searchWiki(term)
-			res = sourceDict(vals.append(w))
-			if len(term.split()) == 1:
-				last = 1
+		if n != None:
+			vals.append(n)
+		w = searchWiki(term)
+		if w != None:
+			vals.append(w)
+		# Check results
+		if len(vals) >= 1:
+			res = sourceDict(vals)
 			if res:
 				match = getmatches(res, last)
-		if not match:
-			if last == 0:
+		if not match and last == 0:
 				# Remove first word and try again
-				term = term[term.find(" ")+1:]	
-			else:
-				# Google search
-				soup = getSearchResult(Term)
-				urls = getURLS(soup)
-				if urls:
-					ss = parseURLS(urls)
-					res = sourceDict(vals.append(ss))
-					if res:
-						match = getmatches(res, last)
+				term = term[term.find(" ")+1:]
 		else:
 			break
 	if match:
@@ -142,9 +126,10 @@ def searchCommon(outfile, misses, keys, query, term):
 		# Return number of matched queries
 		return total
 	else:
+		Term = Term.replace("%20", " ").replace("%27", "'")
 		for i in query:
 			total += 1
-			writeResults(misses, ("{},noMatch\n").format(i))
+			writeResults(misses, ("{},{},noMatch\n").format(i, Term))
 		# Return negative to indicate failed queries
 		return 0-total
 
@@ -172,27 +157,19 @@ def searchSci(outfile, misses, keys, query, term):
 		res = sourceDict(vals.append(w))
 		if res:
 			match = getmatches(res, 1)
-		if not match:
-			# Google search
-			soup = getSearchResult(Term)
-			urls = getURLS(soup)
-			if urls:
-				ss = parseURLS(urls)
-				res = sourceDict(vals.append(ss))
-				if res:
-					match = getmatches(res, last)
 	if match:
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
 		for i in query:
 			total += 1
-			writeResults(outfile, ("{},{},{}\n").format(i, term, match))
+			# Add extra comma for ITIS column
+			writeResults(outfile, ("{},{},{},\n").format(i, term, match))
 		# Return number of matched queries
 		return total
 	else:
 		for i in query:
 			total += 1
-			writeResults(misses, ("{},noMatch\n").format(i))
+			writeResults(misses, ("{},{},noMatch\n").format(i, Term))
 		# Return negative to indicate failed queries
 		return 0-total
 
@@ -200,8 +177,7 @@ def assignQuery(outfile, misses, keys, query):
 	# Determines whether query is a scientific or common name
 	cdef int x
 	cdef list q
-	cdef str t = query[0]
-	cdef str term = t
+	cdef str term = query[0]
 	if len(query) >= 3:
 		# Isolate and type cast list of common names mapping to search term
 		q = query[2:]

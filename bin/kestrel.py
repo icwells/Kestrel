@@ -5,8 +5,10 @@ from datetime import datetime, date
 from functools import partial
 from multiprocessing import Pool, cpu_count
 from sys import stdout
+from os import remove
 from kestrelTools import *
-from taxaSearch import *
+from taxaSearch import assignQuery
+from seleniumSearch import searchMisses
 
 def checkArgs(args):
 	# Makes sure proper arguments have been specified
@@ -53,6 +55,8 @@ species names (integer starting from 0; use with --extract)).")
 	parser.add_argument("-o", help = "Path to output csv file.")
 	parser.add_argument("-t", default = 1, type = int,
 help = "Number of threads for identifying taxa (default = 1).")
+	parser.add_argument("--firefox", action = "store_true", default = False,
+help = "Use Firefox browser (uses Chrome by default).")
 	args = parser.parse_args()
 	if args.v:
 		version()
@@ -71,23 +75,26 @@ help = "Number of threads for identifying taxa (default = 1).")
 		print("\n\tGenerating taxonomy output...")
 		if args.t > cpu_count():
 			args.t = cpu_count()
+		# Get input data
 		keys = apiKeys()
 		misses = args.o[:args.o.rfind("/")+1] + "KestrelMisses.csv"
 		header = "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,\
-EOL,NCBI,IUCN,GBIF,Wikipedia,Other\n"
+EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 		done = checkOutput(args.o, header)
-		missed = checkOutput(misses, "Query,Reason\n")
+		missed = checkOutput(misses, "Query,SearchTerm,Reason\n")
 		# Store missed and done lengths
 		donelen = len(done)
 		done.extend(missed)
+		missedlen = len(missed)
 		# Read in query names
 		query = termList(args.i, done)
 		l = float(len(query)) + float(len(done))
 		pool = Pool(processes = args.t)
 		func = partial(assignQuery, args.o, misses, keys)
+		# API search
 		print(("\n\tIdentifying species with {} threads....").format(args.t))
 		for i,x in enumerate(pool.imap_unordered(func, query)):
-			stdout.write("\r\t{0:.1%} of query names have finished".format(i/l))
+			stdout.write("\r\t{0:.1%} of query names have finished".format((i+donelen+missedlen)/l))
 			if x > 0:
 				match += x
 			else:
@@ -95,7 +102,18 @@ EOL,NCBI,IUCN,GBIF,Wikipedia,Other\n"
 		pool.close()
 		pool.join()
 		print(("\n\tFound matches for {} entries.").format(match + donelen))
-		print(("\tNo match found for {} entries.").format(miss + len(missed)))
+		print(("\tNo match found for {} entries.").format(miss + missedlen))
+		# Google search
+		print("\n\tSearching for missed terms...")
+		nomatch = args.o[:args.o.rfind("/")+1] + "KestrelNoMatch.csv"
+		nm = checkOutput(nomatch, "Query,SearchTerm,Reason\n")
+		newquery = termList(misses, done.extend(nm))
+		hits, nohit = searchMisses(args.firefox, args.o, nomatch, newquery)
+		'''if hits:
+			# Delete temp misses file
+			remove(misses)'''
+		print(("\n\tTotal matches found: {}").format(match + donelen + hits))
+		print(("\tTotal entries without matches: {}").format(nohit + missedlen))
 	print(("\n\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
 
 if __name__ == "__main__":

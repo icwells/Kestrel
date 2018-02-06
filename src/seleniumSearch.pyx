@@ -7,12 +7,30 @@ from urllib import request, error
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from sys import stdout
 from scrapePages import *
 
 WIKI = "https://en.wikipedia.org/wiki/"
 IUCN = "http://www.iucnredlist.org"
 ITIS = "https://www.itis.gov/"
 TAXONOMY = OrderedDict([("Kingdom","NA"),("Phylum","NA"),("Class","NA"),("Order","NA"),("Family","NA"),("Genus","NA"),("Species","NA"),("url","NA")])
+
+def formatHit(t):
+	# Returns taxonomy as formatted string
+	cdef int mn = 8
+	cdef str i
+	cdef int c
+	cdef str ret
+	# Convert taxonomy entries to string
+	ret = ",".join(list(hit.values())[:-1])
+	ret += ",,"
+	# Sort urls from remaining matches
+	for i in [WIKI,IUCN,ITIS]:
+		if i in d.keys():
+			ret += t["url"]
+		else:
+			ret += "NA"
+	return ret + ","
 
 def splitName(s):
 	# Removes extra info from species name line
@@ -104,7 +122,7 @@ def parseURLS(urls):
 				t = scrapeITIS(BeautifulSoup(result, "lxml"), i)
 			if IUCN in i:
 				t = scrapeIUCN(BeautifulSoup(result, "lxml"), i)
-		if t:
+		if len(list(t.values())) >= 1:
 			break
 	# Return empty if no match is found
 	return t
@@ -129,11 +147,51 @@ def getURLS(soup):
 
 def getSearchResult(term):
 	# Searches Google for term
-	browser = webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
 	browser.get("http://www.google.com")
 	# Find the search box
 	elem = browser.find_element_by_name("q")
 	elem.send_keys(term + " taxonomy" + Keys.RETURN)
 	soup = BeautifulSoup(browser.page_source, "lxml")
-	browser.quit()
 	return soup
+
+def getBrowser(firefox):
+	# Returns browser instance
+	if firefox == True:
+		browser = webdriver.Firefox()
+	else:
+		browser = webdriver.Chrome()
+	browser.set_window_size(0,0)
+	return browser
+
+def searchMisses(firefox, outfile, nomatch, missed):
+	# Performs Google search on missed terms
+	cdef list m
+	cdef list query
+	cdef str term
+	cdef int hits = 0
+	cdef int nohit = 0
+	cdef float l = float(len(missed))
+	browser = getBrowser(firefox)
+	for idx,m in enumerate(missed):
+		stdout.write(("\r\tSearched {:.1%} of missed terms").format((idx+1)/l))
+		if len(m) >= 3:
+			# Column 1 == "nomatch"
+			term = i[0]
+			query = i[2:]
+			soup = getSearchResult(term)
+			urls = getURLS(soup)
+			taxa = parseURLS(urls)
+			if taxa:
+				match = formatMatch(taxa)
+				for i in query:
+					hits += 1
+					# Add extra comma for ITIS column
+					writeResults(outfile, ("{},{},{},\n").format(i, term, match))
+			else:
+				for i in query:
+					nohit += 1
+					writeResults(nomatch, ("{},{},noMatch\n").format(i, term))
+	browser.quit()
+	print(("\tFound matches for {} entries.").format(hits))
+	print(("\tNo match found for {} entries.").format(nohit))
+	return hits, nohit
