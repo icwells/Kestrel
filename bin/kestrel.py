@@ -107,11 +107,11 @@ EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 		print("\n\tSearching for missed terms...")
 		nomatch = args.o[:args.o.rfind("/")+1] + "KestrelNoMatch.csv"
 		nm = checkOutput(nomatch, "Query,SearchTerm,Reason\n")
-		newquery = termList(misses, done.extend(nm))
+		newquery = termList(misses)
 		hits, nohit = searchMisses(args.firefox, args.o, nomatch, newquery)
-		'''if hits:
+		if hits:
 			# Delete temp misses file
-			remove(misses)'''
+			remove(misses)
 		print(("\n\tTotal matches found: {}").format(match + donelen + hits))
 		print(("\tTotal entries without matches: {}").format(nohit + missedlen))
 	print(("\n\tFinished. Runtime: {}\n").format(datetime.now()-starttime))

@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from sys import stdout
+from kestrelTools import writeResults
 from scrapePages import *
 
 WIKI = "https://en.wikipedia.org/wiki/"
@@ -22,14 +23,14 @@ def formatHit(t):
 	cdef int c
 	cdef str ret
 	# Convert taxonomy entries to string
-	ret = ",".join(list(hit.values())[:-1])
+	ret = ",".join(list(t.values())[:-1])
 	ret += ",,"
 	# Sort urls from remaining matches
 	for i in [WIKI,IUCN,ITIS]:
-		if i in d.keys():
-			ret += t["url"]
+		if i in t["url"]:
+			ret += "," + t["url"]
 		else:
-			ret += "NA"
+			ret += ",NA"
 	return ret + ","
 
 def splitName(s):
@@ -122,8 +123,9 @@ def parseURLS(urls):
 				t = scrapeITIS(BeautifulSoup(result, "lxml"), i)
 			if IUCN in i:
 				t = scrapeIUCN(BeautifulSoup(result, "lxml"), i)
-		if len(list(t.values())) >= 1:
-			break
+		if t:
+			if len(list(t.values())) >= 1:
+				break
 	# Return empty if no match is found
 	return t
 
@@ -145,7 +147,7 @@ def getURLS(soup):
 			pass
 	return urls
 
-def getSearchResult(term):
+def getSearchResult(browser, term):
 	# Searches Google for term
 	browser.get("http://www.google.com")
 	# Find the search box
@@ -176,13 +178,13 @@ def searchMisses(firefox, outfile, nomatch, missed):
 		stdout.write(("\r\tSearched {:.1%} of missed terms").format((idx+1)/l))
 		if len(m) >= 3:
 			# Column 1 == "nomatch"
-			term = i[0]
-			query = i[2:]
-			soup = getSearchResult(term)
+			term = m[0]
+			query = m[2:]
+			soup = getSearchResult(browser, term)
 			urls = getURLS(soup)
 			taxa = parseURLS(urls)
 			if taxa:
-				match = formatMatch(taxa)
+				match = formatHit(taxa)
 				for i in query:
 					hits += 1
 					# Add extra comma for ITIS column
@@ -192,6 +194,6 @@ def searchMisses(firefox, outfile, nomatch, missed):
 					nohit += 1
 					writeResults(nomatch, ("{},{},noMatch\n").format(i, term))
 	browser.quit()
-	print(("\tFound matches for {} entries.").format(hits))
+	print(("\n\tFound matches for {} entries.").format(hits))
 	print(("\tNo match found for {} entries.").format(nohit))
 	return hits, nohit

@@ -9,7 +9,6 @@ cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
 cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
-TAXONOMY = OrderedDict([("Kingdom","NA"),("Phylum","NA"),("Class","NA"),("Order","NA"),("Family","NA"),("Genus","NA"),("Species","NA"),("url","NA")])
 
 def formatMatch(d):
 	# Returns taxonomy as formatted string
