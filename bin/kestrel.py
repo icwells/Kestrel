@@ -113,7 +113,7 @@ EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 			# Delete temp misses file
 			remove(misses)
 		print(("\n\tTotal matches found: {}").format(match + donelen + hits))
-		print(("\tTotal entries without matches: {}").format(nohit + missedlen))
+		print(("\tTotal entries without matches: {}").format(nohit))
 	print(("\n\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
 
 if __name__ == "__main__":
