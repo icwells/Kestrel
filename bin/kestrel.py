@@ -114,7 +114,7 @@ EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 			remove(misses)
 		print(("\n\tTotal matches found: {}").format(match + donelen + hits))
 		print(("\tTotal entries without matches: {}").format(nohit))
-	print(("\n\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
+	print(("\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
 
 if __name__ == "__main__":
 	main()
