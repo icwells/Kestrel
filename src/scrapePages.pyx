@@ -43,7 +43,7 @@ def checkTaxa(t):
 	# Checks dict content before returning
 	cdef list v
 	v = list(t.values())
-	if v.count("NA") <= 2 and t["Species"] != "NA":
+	if v.count("NA") <= 2 and t["Genus"] != "NA":
 		# Convert to list if species is present
 		for i in t.keys():
 			# Correct improper formatting before appending
