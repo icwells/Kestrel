@@ -1,4 +1,4 @@
-'''These functions will .'''
+'''These functions will search databases for taxonomy matches to gven common or scientific names.'''
 
 from urllib import request, error
 from kestrelTools import *
@@ -8,6 +8,7 @@ cdef str EOL= "http://eol.org/api/"
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
+cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
 
 def formatMatch(d):
 	# Returns taxonomy as formatted string
@@ -23,7 +24,7 @@ def formatMatch(d):
 			hit = d[i]
 	m = list(hit.values())[:-1]
 	# Sort urls from remaining matches
-	for i in [EOL,NCBI,GBIF,WIKI]:
+	for i in [EOL,NCBI,WIKI,IUCN,GBIF]:
 		if i in d.keys():
 			m.append(d[i]["url"])
 		else:
@@ -73,80 +74,109 @@ def getmatches(d, last=0):
 def sourceDict(l):
 	# Converts list of dicts to dict of dicts
 	d = {}
-	for i in l:
-		# Remove empty values
-		if type(i) == dict and i == {}:
-			pass
-		elif i != None:
-			for u in [EOL,NCBI,GBIF,WIKI]:
-				if u in i["url"]:
-					d[u] = i
-	return d
+	if l:
+		for i in l:
+			# Remove empty values
+			if type(i) == OrderedDict and "url" in i.keys():
+				for u in [EOL, NCBI, WIKI, GBIF, IUCN]:
+					if u in i["url"]:
+						# Assign list to database
+						d[u] = i
+		return d
+	else:
+		return None
 
 def searchCommon(outfile, misses, keys, query, term):
 	# Serches for mathces for common names
 	cdef str match = ""
-	cdef last = 0
+	cdef int last = 0
+	cdef int total = 0
+	cdef list vals = []
+	cdef str Term = term
 	while len(term.split()) >= 1:
-		# Search EOL and NCBI
+		if len(term.split()) == 1:
+			last = 1
+		# Search EOL, NCBI, and Wikipedia
 		e = searchEOL(term, keys[EOL])
+		if e != None:
+			vals.append(e)
 		n = searchNCBI(term, keys[NCBI])
-		res = sourceDict([e, n])
-		if res:
-			match = getmatches(res)
-		if not match:
-			# Search Wikipedia to resolve mismatch
-			w = searchWiki(term)
-			res = sourceDict([e, n, w])
-			if len(term.split()) == 1:
-				last = 1
+		if n != None:
+			vals.append(n)
+		w = searchWiki(term)
+		if w != None:
+			vals.append(w)
+		# Check results
+		if len(vals) >= 1:
+			res = sourceDict(vals)
 			if res:
 				match = getmatches(res, last)
 		if not match and last == 0:
-			# Remove first word and try again
-			term = term[term.find(" ")+1:]
+				# Remove first word and try again
+				term = term[term.find(" ")+1:]
 		else:
 			break
 	if match:
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
 		for i in query:
+			total += 1
 			writeResults(outfile, ("{},{},{}\n").format(i, term, match))
+		# Return number of matched queries
+		return total
 	else:
+		Term = Term.replace("%20", " ").replace("%27", "'")
 		for i in query:
-			writeResults(misses, ("{},noMatch\n").format(i))
+			total += 1
+			writeResults(misses, ("{},{},noMatch\n").format(i, Term))
+		# Return negative to indicate failed queries
+		return 0-total
 
 def searchSci(outfile, misses, keys, query, term):
 	# Serches for mathces for scientific names
 	cdef str match = ""
 	cdef str i
+	cdef int total = 0
+	cdef list vals
+	cdef str Term = term
 	# Search GBIF
 	g = searchGBIF(term)
 	e = searchEOL(term, keys[EOL])
 	n = searchNCBI(term, keys[NCBI])
-	res = sourceDict([g, e, n])
+	vals = [g, e, n]
+	if IUCN in keys.keys():
+		iu = searchIUCN(term, keys[IUCN])
+		vals.append(iu)
+	res = sourceDict(vals)
 	if res:
 		match = getmatches(res)
 	if not match:
 		# Search Wikipedia
 		w = searchWiki(term)
-		res = sourceDict([g, e, n, w])
+		res = sourceDict(vals.append(w))
 		if res:
 			match = getmatches(res, 1)
 	if match:
 		# Replace percent formatting
 		term = term.replace("%20", " ").replace("%27", "'")
 		for i in query:
-			writeResults(outfile, ("{},{},{}\n").format(i, term, match))
+			total += 1
+			# Add extra comma for ITIS column
+			writeResults(outfile, ("{},{},{},\n").format(i, term, match))
+		# Return number of matched queries
+		return total
 	else:
 		for i in query:
-			writeResults(misses, ("{},noMatch\n").format(i))
+			total += 1
+			writeResults(misses, ("{},{},noMatch\n").format(i, Term))
+		# Return negative to indicate failed queries
+		return 0-total
 
 def assignQuery(outfile, misses, keys, query):
 	# Determines whether query is a scientific or common name
+	cdef int x
 	cdef list q
-	cdef str t = query[0]
-	cdef str term = t
+	cdef str term = query[0]
 	if len(query) >= 3:
 		# Isolate and type cast list of common names mapping to search term
 		q = query[2:]
@@ -157,6 +187,7 @@ def assignQuery(outfile, misses, keys, query):
 			# Percent encode apsotrophes
 			term = term.replace("'", "%27")
 		if query[1] == "common":
-			searchCommon(outfile, misses, keys, q, term)
+			x = searchCommon(outfile, misses, keys, q, term)
 		elif query[1] == "scientific":
-			searchSci(outfile, misses, keys, q, term)
+			x = searchSci(outfile, misses, keys, q, term)
+	return x

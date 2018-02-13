@@ -1,5 +1,9 @@
 # All cython binaries
 bin/*.so
 
+# Selenium server
+bin/selenium-server-standalone-*.jar
+
 # Renamed API file
 bin/API.txt
+bin/seleniumTest.py

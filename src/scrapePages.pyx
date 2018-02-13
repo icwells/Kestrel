@@ -13,6 +13,7 @@ cdef str HIER = "hierarchy_entries/1.0."
 cdef str FORMAT = "xml"
 
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
 cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
 TAXONOMY = OrderedDict([("Kingdom","NA"),("Phylum","NA"),("Class","NA"),("Order","NA"),("Family","NA"),("Genus","NA"),("Species","NA"),("url","NA")])
@@ -23,14 +24,15 @@ def getPage(source, term, key=None):
 	# Format api query
 	if source == EOL:
 		url = ("{}{}{}?id={}&vetted=1&key={}").format(source, HIER, FORMAT, term, key)
-	else:
-		if source == GBIF:
-			url = ("{}species?name={}").format(source, term)
-		elif source == WIKI:
-			if "%20" in term:
-				# Replace spaces with underscores
-				term = term.replace("%20", "_")
-			url = source + term
+	elif source == IUCN:
+		url = ("{}species/{}?token={}").format(source, term, key) 
+	elif source == GBIF:
+		url = ("{}species?name={}").format(source, term)
+	elif source == WIKI:
+		if "%20" in term:
+			# Replace spaces with underscores
+			term = term.replace("%20", "_")
+		url = source + term
 	try:
 		result = request.urlopen(url)
 		return result, url
@@ -42,7 +44,7 @@ def checkTaxa(t):
 	cdef list v
 	v = list(t.values())
 	if v.count("NA") <= 2 and t["Genus"] != "NA":
-		# Convert to list if genus is present
+		# Convert to list if species is present
 		for i in t.keys():
 			# Correct improper formatting before appending
 			t[i] = str(t[i])
@@ -55,9 +57,12 @@ def checkTaxa(t):
 						t[i] = ("{} {}").format(t["Genus"], t[i])
 			elif i != "Species" and " " in t[i]:
 				t[i] = t[i][:t[i].find(" ")]
+			if i != "url":
+				# Correct caps
+				t[i] = t[i][0].upper() + t[i][1:].lower()
 		return t
 	else:
-		return {}
+		return None
 
 def scrapeWiki(soup, url):
 	# Extract taxonomy data from Wikipedia entry
@@ -103,7 +108,6 @@ def searchWiki(query):
 def scrapeGBIF(js, url):
 	# Scrapes taxonomy from JSON output from GBIF
 	cdef str i
-	cdef list ret = []
 	t = OrderedDict(TAXONOMY)
 	t["url"] = url
 	if js["results"]:
@@ -120,6 +124,33 @@ def searchGBIF(query):
 		# Convert http bytes object to string before loading into json
 		reader = codecs.getreader("utf-8")
 		return scrapeGBIF(json.load(reader(result)), url)
+	else:
+		return None
+
+#------------------------------IUCN-------------------------------------------
+
+def scrapeIUCN(js, url):
+	# Scrapes IUCN JSON object for taxonomy
+	cdef str i
+	t = OrderedDict(TAXONOMY)
+	t["url"] = url
+	if js["results"]:
+		j = js["results"][0]
+		if j["scientific_name"]:
+			# Get species name
+			t["Species"] = j["scientific_name"]
+		for i in t.keys():
+			if i.lower() in j.keys():
+				t[i] = j[i.lower()]
+	return checkTaxa(t)
+
+def searchIUCN(query, key):
+	# Searches IUCN Red List for taxonomy
+	result, url = getPage(GBIF, query, key)
+	if result:
+	# Convert http bytes object to string before loading into json
+		reader = codecs.getreader("utf-8")
+		return scrapeIUCN(json.load(reader(result)), url)
 	else:
 		return None
 
