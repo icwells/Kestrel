@@ -8,9 +8,9 @@
 Python3  
 Cython  
 NLTK  
-BeautifulSoup4 
-Selenium 
-Chrome or Firefox 
+BeautifulSoup4  
+Selenium  
+Chrome or Firefox  
 
 ## Installation
 
@@ -23,9 +23,9 @@ Kestrel utilizes Cython to compile python code into C and drastically improve pe
 ### NLTK
 Kestrel uses python’s Natural Language Processing Toolkit to differentiate between common and scientific names in its input. To install on any Debian-based Linux platform, enter the following into a terminal:
 
-	conda install nltk
-or
-	sudo pip install -U nltk
+	conda install nltk  
+or  
+	sudo pip install -U nltk  
 
 Kestrel comes with it’s own training dataset, so you do not need to download any additional data from NLTK. 
 
