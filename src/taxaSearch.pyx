@@ -166,6 +166,7 @@ def searchSci(outfile, misses, keys, query, term):
 		# Return number of matched queries
 		return total
 	else:
+		Term = Term.replace("%20", " ").replace("%27", "'")
 		for i in query:
 			total += 1
 			writeResults(misses, ("{},{},noMatch\n").format(i, Term))

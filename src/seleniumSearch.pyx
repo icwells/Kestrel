@@ -21,16 +21,20 @@ def formatHit(t):
 	cdef int mn = 8
 	cdef str i
 	cdef int c
-	cdef str ret
+	cdef str ret = ""
 	# Convert taxonomy entries to string
-	ret = ",".join(list(t.values())[:-1])
-	ret += ",,"
+	for i in list(t.values())[:-1]:
+		ret += i.strip() + ","
+	ret += ","
 	# Sort urls from remaining matches
 	for i in [WIKI,IUCN,ITIS]:
 		if i in t["url"]:
 			ret += "," + t["url"]
 		else:
 			ret += ",NA"
+		if i == IUCN:
+			# Add comma for GBIF
+			ret += ","
 	return ret + ","
 
 def splitName(s):
