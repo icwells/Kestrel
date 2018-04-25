@@ -43,8 +43,8 @@ def checkTaxa(t):
 	# Checks dict content before returning
 	cdef list v
 	v = list(t.values())
-	if v.count("NA") <= 2 and t["Genus"] != "NA":
-		# Convert to list if species is present
+	if v.count("NA") <= 2 and t["Genus"].lower() != "na":
+		# Convert to list if genus is present
 		for i in t.keys():
 			# Correct improper formatting before appending
 			t[i] = str(t[i])
@@ -88,8 +88,18 @@ def scrapeWiki(soup, url):
 									t[k] = str(j.span.i.b.string)
 									k = ""
 									break
+						elif k == "Genus":
+							if j.i and j.i.a:
+								if j.i.a.string:
+									t[k] = str(j.i.a.string)
+									k = ""
+									break
+							elif j.a and j.a.string:
+								t[k] = str(j.a.string)
+								k = ""
+								break
 						elif j.a and j.a.string:
-							t[k] = j.a.string
+							t[k] = str(j.a.string)
 							k = ""
 							break
 	if t["Species"] != "NA":
