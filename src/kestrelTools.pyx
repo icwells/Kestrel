@@ -121,8 +121,9 @@ def speciesList(infile, c, done=[]):
 				if delim:
 					splt = line.split(delim)
 					if len(splt) >= length:
-						# Skip improperly formatted lines
-						q.add(splt[c])
+						if len(splt[c]) >=1 and splt[c] != "NA":
+							# Skip improperly formatted lines
+							q.add(splt[c])
 				else:
 					q.add(line)
 			else:
