@@ -30,7 +30,7 @@ def checkArgs(args):
 		quit()
 
 def version():
-	print("\n\tKestrel v0.4 (4/25/2018) is a program for resolving common names and synonyms with \
+	print("\n\tKestrel v0.5 (5/01/2018) is a program for resolving common names and synonyms with \
 scientific names and extracting taxonomies.")
 	print("\n\tCopyright 2017 by Shawn Rupp.")
 	print("\tThis program comes with ABSOLUTELY NO WARRANTY.\n\tThis is free \

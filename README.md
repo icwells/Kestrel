@@ -1,8 +1,9 @@
-# Kestrel Taxonomy Finder Version 0.4
+# Kestrel Taxonomy Finder Version 0.5
 
 ## Copyright 2017 by Shawn Rupp
 
 ### Kestrel is a program for resolving species’ common names and synonyms with "official" scientific names and extracting taxonomies from internet databases.
+### KEstrel is meant to reduce the amount of manual searching required for a project, but its results may still require some manual curation. 
 
 ## Dependencies
 Python3  
