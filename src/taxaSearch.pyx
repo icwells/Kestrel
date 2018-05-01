@@ -33,11 +33,9 @@ def compareMatches(d):
 	comb = combinations(keys, 2)
 	for pair in comb:
 		s = rateMatches(list(d[pair[0]].values()), list(d[pair[1]].values()))
-		if s > mx:
+		if s >= mx:
 			mx = s
 			p = list(pair)
-	if mx <= 0:
-		return None
 	for i in pair:
 		x = list(d[pair[0]].values()).count("NA")
 		y = list(d[pair[1]].values()).count("NA")
@@ -57,8 +55,6 @@ def formatMatch(d):
 		hit = d[keys[0]]
 	else:
 		hit = compareMatches(d)
-		if not hit:
-			return None
 	m = list(hit.values())[:-1]
 	# Sort urls from remaining matches
 	for i in [EOL,NCBI,WIKI,IUCN,GBIF]:
