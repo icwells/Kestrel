@@ -1,6 +1,7 @@
 '''These functions will search databases for taxonomy matches to gven common or scientific names.'''
 
 from urllib import request, error
+from itertools import combinations
 from kestrelTools import *
 from scrapePages import *
 
@@ -10,18 +11,54 @@ cdef str GBIF = "http://api.gbif.org/v1/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
 cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
 
+def rateMatches(x, y):
+	# Returns score from -7 to 7 between two taxonomy lists
+	cdef int s
+	for i in range(len(x)):
+		if x[i] != "NA" or y[i] != "NA":
+			# +1 for match, -1 for mismatch, +0 for NA
+			if x[i] == y[i]:
+				s += 1
+			else:
+				s -= 1
+	return s
+
+def compareMatches(d):
+	# Returns best hit
+	cdef list keys = list(d.keys())
+	cdef int mx = -7
+	cdef list p
+	cdef int x = 0
+	cdef int y = 0
+	comb = combinations(keys, 2)
+	for pair in comb:
+		s = rateMatches(list(d[pair[0]].values()), list(d[pair[1]].values()))
+		if s > mx:
+			mx = s
+			p = list(pair)
+	if mx <= 0:
+		return None
+	for i in pair:
+		x = list(d[pair[0]].values()).count("NA")
+		y = list(d[pair[1]].values()).count("NA")
+		# Get most complete match or choose first
+		if x > y:
+			return d[pair[1]]
+		elif x < y or x == y:
+			return d[pair[0]]
+
 def formatMatch(d):
 	# Returns taxonomy as formatted string
-	cdef int mn = 8
 	cdef str i
-	cdef int c
 	cdef list m
-	for i in d.keys():
-		# Get most complete match
-		c = list(d[i].values()).count("NA")
-		if c < mn:
-			mn = c
-			hit = d[i]
+	cdef list keys = list(d.keys())
+	if len(keys) == 1:
+		# Select only entry as hit
+		hit = d[keys[0]]
+	else:
+		hit = compareMatches(d)
+		if not hit:
+			return None
 	m = list(hit.values())[:-1]
 	# Sort urls from remaining matches
 	for i in [EOL,NCBI,WIKI,IUCN,GBIF]:
@@ -67,6 +104,7 @@ def getmatches(d, last=0):
 		# Quit if no match found
 		return ""
 	else:
+		# Proceed if there is a match or if it is the last iteration
 		return formatMatch(d)
 
 #-----------------------------------------------------------------------------
