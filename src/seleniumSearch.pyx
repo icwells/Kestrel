@@ -125,7 +125,7 @@ def parseURLS(urls):
 				t = scrapeWiki(BeautifulSoup(result, "lxml"),i)
 			elif ITIS in i:
 				t = scrapeITIS(BeautifulSoup(result, "lxml"), i)
-			if IUCN in i:
+			elif IUCN in i:
 				t = scrapeIUCN(BeautifulSoup(result, "lxml"), i)
 		if t:
 			if len(list(t.values())) >= 1:
