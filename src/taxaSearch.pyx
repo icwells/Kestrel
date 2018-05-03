@@ -13,7 +13,12 @@ cdef str IUCN = "http://apiv3.iucnredlist.org/api/v3/"
 
 def rateMatches(x, y):
 	# Returns score from -7 to 7 between two taxonomy lists
-	cdef int s
+	cdef int s = 0
+	if EOL in x[-1] or EOL in y[-1]:
+		# Penarlize EOL scrores since they appear to grab the first possible match
+		s -= 1
+	x = x[:-1]
+	y = y[:-1]
 	for i in range(len(x)):
 		if x[i] != "NA" or y[i] != "NA":
 			# +1 for match, -1 for mismatch, +0 for NA
@@ -26,7 +31,7 @@ def rateMatches(x, y):
 def compareMatches(d):
 	# Returns best hit
 	cdef list keys = list(d.keys())
-	cdef int mx = -7
+	cdef int mx = -8
 	cdef list p
 	cdef int x = 0
 	cdef int y = 0
@@ -37,6 +42,11 @@ def compareMatches(d):
 			mx = s
 			p = list(pair)
 	for i in pair:
+		# Select non-EOL result if possible
+		if EOL in d[pair[0]][-1]:
+			return d[pair[1]]
+		elif EOL in d[pair[1]][-1]:
+			return d[pair[0]]
 		x = list(d[pair[0]].values()).count("NA")
 		y = list(d[pair[1]].values()).count("NA")
 		# Get most complete match or choose first
