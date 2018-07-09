@@ -15,10 +15,9 @@ rm -r build/
 rm *.c
 cd ../
 
-mv src/$KT.so bin/$KT.so
-mv src/$SP.so bin/$SP.so
-mv src/$SS.so bin/$SS.so
-mv src/$TS.so bin/$TS.so
+for I in $KT $SP $SS $TS; do
+	mv src/$I*so bin/$I*so
+done
 
 echo ""
 echo "Done"
