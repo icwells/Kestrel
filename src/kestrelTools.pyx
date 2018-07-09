@@ -285,12 +285,16 @@ def checkName(query):
 	if "&" in term:
 		# Replace ampersand and add spaces if needed
 		idx = term.find("&")
-		if term[idx+1] != " ":
-			# Check second space first so index remains accurate
-			term = term[:idx+1] + " " + term[idx+1:]
-		if term[idx-1] != " ":
-			term = term[:idx] + " " + term[idx:]
-		term = term.replace("&", "and")
+		if 0 < idx < len(term)-1:
+			if term[idx+1] != " ":
+				# Check second space first so index remains accurate
+				term = term[:idx+1] + " " + term[idx+1:]
+			if term[idx-1] != " ":
+				term = term[:idx] + " " + term[idx:]
+			term = term.replace("&", "and")
+		else:
+			# Remove leading/trailing ampersand
+			term = term.replace("&", "")
 	if "#" in term:
 		idx = term.find("#")
 		if idx < len(term)-1:
