@@ -146,7 +146,7 @@ def scrapeIUCN(js, url):
 	t["url"] = url
 	if js["results"]:
 		j = js["results"][0]
-		if j["scientific_name"]:
+		if j and j["scientific_name"]:
 			# Get species name
 			t["Species"] = j["scientific_name"]
 		for i in t.keys():
@@ -156,7 +156,7 @@ def scrapeIUCN(js, url):
 
 def searchIUCN(query, key):
 	# Searches IUCN Red List for taxonomy
-	result, url = getPage(GBIF, query, key)
+	result, url = getPage(IUCN, query, key)
 	if result:
 	# Convert http bytes object to string before loading into json
 		reader = codecs.getreader("utf-8")

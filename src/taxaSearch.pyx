@@ -15,7 +15,7 @@ def rateMatches(x, y):
 	# Returns score from -7 to 7 between two taxonomy lists
 	cdef int s = 0
 	if EOL in x[-1] or EOL in y[-1]:
-		# Penarlize EOL scrores since they appear to grab the first possible match
+		# Penalize EOL scrores since they appear to grab the first possible match
 		s -= 1
 	x = x[:-1]
 	y = y[:-1]
@@ -41,19 +41,19 @@ def compareMatches(d):
 		if s >= mx:
 			mx = s
 			p = list(pair)
-	for i in pair:
+	for i in p:
 		# Select non-EOL result if possible
-		if EOL in d[pair[0]][-1]:
-			return d[pair[1]]
-		elif EOL in d[pair[1]][-1]:
-			return d[pair[0]]
-		x = list(d[pair[0]].values()).count("NA")
-		y = list(d[pair[1]].values()).count("NA")
+		if EOL in d[p[0]]["url"]:
+			return d[p[1]]
+		elif EOL in d[p[1]]["url"]:
+			return d[p[0]]
+		x = list(d[p[0]].values()).count("NA")
+		y = list(d[p[1]].values()).count("NA")
 		# Get most complete match or choose first
 		if x > y:
-			return d[pair[1]]
+			return d[p[1]]
 		elif x < y or x == y:
-			return d[pair[0]]
+			return d[p[0]]
 
 def formatMatch(d):
 	# Returns taxonomy as formatted string
@@ -197,7 +197,8 @@ def searchSci(outfile, misses, keys, query, term):
 	if not match:
 		# Search Wikipedia
 		w = searchWiki(term)
-		res = sourceDict(vals.append(w))
+		vals.append(w)
+		res = sourceDict(vals)
 		if res:
 			match = getmatches(res, 1)
 	if match:
