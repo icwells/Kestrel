@@ -51,7 +51,72 @@ def getSequenceClassifier():
 	print(("\tFeature classifier evaluation: {:.2%}").format(nltk.classify.accuracy(classifier, test)))
 	return classifier
 
-#---------------------------------------------------------------------------------
+#----------------------------merging-------------------------------------------
+
+def getDelim(line):
+	# Returns delimiter
+	cdef str i
+	for i in ["\t", ",", " "]:
+		if i in line:
+			return i
+	print("\n\t[Error] Cannot determine delimeter. Check file formatting. Exiting.\n")
+	quit()
+
+def mergeTaxonomy(infile, outfile, col, taxa):
+	# Appends data from taxa to matches in infile
+	cdef int first = 1
+	cdef str delim
+	cdef str line
+	cdef list spli
+	cdef list na
+	cdef list row = []
+	cdef int count = 0
+	cdef int total = 0
+	na = ["NA","NA","NA","NA","NA","NA","NA"]
+	print("\tMerging files...")
+	with open(outfile, "w") as out:
+		with open(infile, "r") as f:
+			for line in f:
+				total += 1
+				if first == 0:
+					spli = line.strip().split(delim)
+					if len(spli) >= col:
+						n = spli[col]
+						if n in taxa.keys():
+							row = spli + taxa[n]
+						else:
+							row = spli + na
+						if row:
+							out.write(",".join(row) + "\n")
+							count += 1
+				else:
+					delim = getDelim(line)
+					out.write(line.strip() + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName\n")
+					first = 0
+	print(("\tFound taxonomies for {} of {} entries.\n").format(count, total))
+
+def getTaxa(infile):
+	# Reads in taxonomy dictionary
+	cdef int first = 1
+	cdef list spli
+	cdef str line
+	taxa = {}
+	species = set()
+	print("\tReading taxonomies...")
+	with open(infile, "r") as f:
+		for line in f:
+			if first == 0:
+				spli = line.split(",")
+				# Query name: [taxonomy] (drops search term and urls)
+				if len(spli) >= 9:
+					taxa[spli[0]] = spli[2:9]
+					species.add(spli[8])
+			else:
+				first = 0
+	print(("\tFound {} taxonomies with {} unique species.").format(len(taxa.keys()), len(species)))
+	return taxa
+
+#----------------------------i/o----------------------------------------------
 
 def apiKeys():
 	# Reads in api keys as a dictionary
@@ -169,7 +234,7 @@ def writeResults(outfile, line):
 	with open(outfile, "a") as output:
 		output.write(line)
 
-#-----------------------------------------------------------------------------
+#----------------------------extraction---------------------------------------
 
 def sliceTerm(term, p1, p2):
 	# Removes item from between 2 punctuation marks
@@ -220,12 +285,16 @@ def checkName(query):
 	if "&" in term:
 		# Replace ampersand and add spaces if needed
 		idx = term.find("&")
-		if term[idx+1] != " ":
-			# Check second space first so index remains accurate
-			term = term[:idx+1] + " " + term[idx+1:]
-		if term[idx-1] != " ":
-			term = term[:idx] + " " + term[idx:]
-		term = term.replace("&", "and")
+		if 0 < idx < len(term)-1:
+			if term[idx+1] != " ":
+				# Check second space first so index remains accurate
+				term = term[:idx+1] + " " + term[idx+1:]
+			if term[idx-1] != " ":
+				term = term[:idx] + " " + term[idx:]
+			term = term.replace("&", "and")
+		else:
+			# Remove leading/trailing ampersand
+			term = term.replace("&", "")
 	if "#" in term:
 		idx = term.find("#")
 		if idx < len(term)-1:

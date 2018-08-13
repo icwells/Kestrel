@@ -21,16 +21,18 @@ def checkArgs(args):
 			# Print newline to split from command prompt
 			print()
 		print("\t[Error] Please provide an output file.")
-	if args.extract and args.c < 0:
-		if end != True:
-			print()
-		print("\t[Error] Please provide a column number.")			
+	if args.extract or args.merge:
+		if args.c < 0:
+			if end != True:
+				print()
+				end = True
+			print("\t[Error] Please provide a column number.")			
 	if end == True:
-		print("\n\tExiting.\n")
+		print("\tExiting.\n")
 		quit()
 
 def version():
-	print("\n\tKestrel v0.5 (5/01/2018) is a program for resolving common names and synonyms with \
+	print("\n\tKestrel v0.6 (5/~/2018) is a program for resolving common names and synonyms with \
 scientific names and extracting taxonomies.")
 	print("\n\tCopyright 2017 by Shawn Rupp.")
 	print("\tThis program comes with ABSOLUTELY NO WARRANTY.\n\tThis is free \
@@ -43,7 +45,7 @@ def main():
 databases for taxonomy information.")
 	parser.add_argument("-v", action = "store_true", 
 help = "Prints version info and exits.")
-	parser.add_argument("--extract", action = "store_true",
+	parser.add_argument("--extract", action = "store_true", default = False,
 help = "Extracts and filters input names.")
 	parser.add_argument("--common", action = "store_true", default = False,
 help = "Indicates that input contains only common names (use with --extract).")
@@ -57,18 +59,27 @@ species names (integer starting from 0; use with --extract)).")
 help = "Number of threads for identifying taxa (default = 1).")
 	parser.add_argument("--firefox", action = "store_true", default = False,
 help = "Use Firefox browser (uses Chrome by default).")
+	parser.add_argument("--merge", action = "store_true", default = False,
+help = "Merges output taxonomy (given with -o) with original input file (-i). Column of species names \
+in input file must be given with -c. Output will be written in same directory as taxonomy file.") 
 	args = parser.parse_args()
 	if args.v:
 		version()
 	else:
 		checkArgs(args)
-	if args.extract:
+	if args.extract == True:
 		print("\n\tExtracting and filtering species names...")
 		done = checkOutput(args.o, "Query,SearchTerm,Type\n")
 		misses = args.o[:args.o.rfind("/")+1] + "KestrelRejected.csv"
 		missed = checkOutput(misses, "Query,Reason\n")
 		query = speciesList(args.i, args.c, done.extend(missed))
 		sortNames(args.o, misses, args.common, args.scientific, query)
+	elif args.merge == True:
+		name = os.path.split(args.i)[1]
+		print(("\n\tMerging taxonomies from {} with {}...").format(os.path.split(args.o)[1], name))
+		outfile = args.o[:args.o.rfind("/")+1] + name[:name.find(".")] + ".withTaxonomies.csv"
+		taxa = getTaxa(args.o)
+		mergeTaxonomy(args.i, outfile, args.c, taxa)
 	else:
 		match = 0
 		miss = 0
