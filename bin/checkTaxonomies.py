@@ -105,7 +105,7 @@ def checkArgs(args):
 	name = os.path.split(args.i)[1]
 	name = name[:name.find(".")]
 	if args.checkNames:
-		return args.o + name + ".Passed.csv", args.o + name + ".failed.csv",
+		return args.o + name + ".passed.csv", args.o + name + ".failed.csv",
 	else:
 		return args.o + name + ".withTaxa.csv", args.o + name + ".unmatched.csv",
 
@@ -113,7 +113,7 @@ def main():
 	starttime = datetime.now()
 	parser = ArgumentParser("This script will assist with manually curating Kestrel taxonomy results.")
 	parser.add_argument("--checkNames", action = "store_true", default = False,
-help = "Compares species name to search term (for identifying corectly matched scientific search terms).")
+help = "Compares species name to search term (for identifying correctly matched scientific search terms).")
 	parser.add_argument("-i", help = "Path to input file.")
 	parser.add_argument("-r", help = "Path to reference file of manually currated taxonomies \
 (output of previous kestrel search; will write curated taxonomies to one file and unmatched taxonomies to another).")
