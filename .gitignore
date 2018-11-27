@@ -7,3 +7,7 @@ bin/selenium-server-standalone-*.jar
 # Renamed API file
 bin/API.txt
 bin/seleniumTest.py
+
+# pycache and pyest cache
+bin/.pytest_cache/*
+bin/__pycache__/*

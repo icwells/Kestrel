@@ -32,7 +32,7 @@ def compareFiles(exp, act, taxa = False):
 	assert len(expected.keys()) == len(actual.keys())
 	for k in actual.keys():
 		assert k in expected.keys()
-		if k == "Coyote" and actual[k][1] == "scientific":
+		if (k == "Coyote" and actual[k][1] == "scientific") or (k == "canis lupus" and actual[k][1] == "common"):
 			# Coyote incorectly labled as scientific by feature classifier
 			assert actual[k][0] == expected[k][0]
 		else:
@@ -45,4 +45,4 @@ def test_extract():
 
 def test_search():
 	# Tests search output
-	compareFiles(EXTRACTINPUT, SEARCHOUTPUT, True)
+	compareFiles(EXPECTED, SEARCHOUTPUT, True)

@@ -10,7 +10,7 @@ EXPECTED="test/taxonomies.csv"
 EXTRACTOUTPUT="test/extracted.csv"
 SEARCHOUTPUT="test/searchResults.csv"
 REJECTED="test/KestrelRejected.csv"
-MISSED="test/KestrelMissed.csv"
+MISSED="test/KestrelNoMatch.csv"
 
 cd bin/
 
@@ -22,7 +22,7 @@ testExtract () {
 
 testSearch () {
 	# Run search and comapre output
-	python kestrel.py -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	python kestrel.py -t 4 -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	pytest test_kestrel.py::test_search
 }
 
@@ -32,7 +32,6 @@ cleanup () {
 	done
 }
 
-cleanup
 testExtract
-#testSearch
-#cleanup
+testSearch
+cleanup
