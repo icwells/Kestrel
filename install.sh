@@ -1,7 +1,8 @@
 ##############################################################################
-#	Installs Go and Cython packages for Kestrel
+#	Installs Cython packages for Kestrel
 #
-#		Requires:	Cython
+#		Requires:	Python3
+#					Cython
 ##############################################################################
 
 KT="kestrelTools"
