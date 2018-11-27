@@ -8,6 +8,7 @@ from sys import stdout
 from string import punctuation, digits
 from random import shuffle
 
+cdef str COMMONNAMES = "test/commonNames.csv.gz"
 cdef str NCBI = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 cdef str EOL= "http://eol.org/api/"
 cdef str WIKI = "https://en.wikipedia.org/wiki/"
@@ -21,10 +22,10 @@ def nameFeatures(name):
 def getNames():
 	# Reads common and scientific names in as list of tagged tupples
 	cdef list labled = []
-	if not os.path.isfile("commonNames.csv.gz"):
+	if not os.path.isfile(COMMONNAMES):
 		print("\n\t[Error] Common species name file not found. Exiting\.n")
 		quit()
-	with gzip.open("commonNames.csv.gz", "rb") as f:
+	with gzip.open(COMMONNAMES, "rb") as f:
 		for line in f:
 			line = str(line)[2:-3]
 			line = line.split(",")
@@ -361,7 +362,7 @@ def filterNames(outfile, misses, t, query, reas=""):
 		# Fix caps
 		head = term[0].upper()
 		term = head + term[1:].lower()
-		writeResults(outfile, ("{},{},{}\n").format(query, term, t))
+		writeResults(outfile, ("{},{},{}\n").format(query, term.strip(), t))
 		return 1
 	else:
 		writeResults(misses, ("{},{}\n").format(query, reas))

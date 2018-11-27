@@ -1,4 +1,4 @@
-# Kestrel Taxonomy Finder Version 0.5
+# Kestrel Taxonomy Finder Version 0.7
 
 ## Copyright 2017 by Shawn Rupp
 
@@ -51,5 +51,12 @@ Download the git repository, change into the directory, and build the Cython scr
 	git clone https://github.com/icwells/Kestrel.git
 	cd Kestrel/
 	./install.sh
+
+#### Testing  
+Once you have installed the program and its dependencies, you may with to run the test script:  
+
+	./test.sh
+
+If everything is properly configured, it should not throw any errors.  
 
 ## For further documentation, see KestrelReadMe.pdf

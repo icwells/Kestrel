@@ -58,8 +58,11 @@ def checkTaxa(t):
 			elif i != "Species" and " " in t[i]:
 				t[i] = t[i][:t[i].find(" ")]
 			if i != "url":
-				# Correct caps
-				t[i] = t[i][0].upper() + t[i][1:].lower()
+				if i == "Kingdom" and t[i] == "Metazoa":
+					t[i] = "Animalia"
+				else:
+					# Correct caps
+					t[i] = t[i][0].upper() + t[i][1:].lower()
 		return t
 	else:
 		return None
