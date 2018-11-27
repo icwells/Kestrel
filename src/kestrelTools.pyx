@@ -362,7 +362,7 @@ def filterNames(outfile, misses, t, query, reas=""):
 		# Fix caps
 		head = term[0].upper()
 		term = head + term[1:].lower()
-		writeResults(outfile, ("{},{},{}\n").format(query, term, t))
+		writeResults(outfile, ("{},{},{}\n").format(query, term.strip(), t))
 		return 1
 	else:
 		writeResults(misses, ("{},{}\n").format(query, reas))
