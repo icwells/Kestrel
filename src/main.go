@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/icwells/go-tools/iotools"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"time"
@@ -19,9 +20,19 @@ var (
 	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
 	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
 
+	merge = kingpin.Command("merge", "Merges search results with source file.")
+
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().String()
 )
+
+func checkFile(infile string) {
+	// Makes sure imut file exists
+	if iotools.Exists(infile) == false {
+		fmt.Printf("\n\t[Error] Input file %s not found. Exiting.\n", infile)
+		os.Exit(1)
+	}
+}
 
 func version() {
 	fmt.Print("\n\tKestrel v1.0 (~) is a program for resolving common names and synonyms with scientific names and extracting taxonomies.\n")
