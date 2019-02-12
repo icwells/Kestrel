@@ -10,31 +10,6 @@ import (
 	"strings"
 )
 
-type apis struct {
-	ncbi   string
-	wiki   string
-	iucn   string
-	eol    string
-	search string
-	pages  string
-	hier   string
-	format string
-}
-
-func newAPIs() apis {
-	// Returns api struct
-	var a apis
-	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-	a.iucn = "http://apiv3.iucnredlist.org/api/v3/"
-	a.wiki = "https://en.wikipedia.org/wiki/"
-	a.eol = "http://eol.org/api/"
-	a.search = "search/1.0."
-	a.pages = "pages/1.0."
-	a.hier = "hierarchy_entries/1.0."
-	a.format = "xml"
-	return a
-}
-
 type searcher struct {
 	outfile string
 	missed  string

@@ -7,19 +7,46 @@ import (
 	"strings"
 )
 
+func (s *searcher) setTaxonomy(key, s1, s2, source string, t taxonomy) {
+	// Sets taxonomy in searcher map
+	s.terms[key].taxonomy = t
+	s.terms[key].sources[s1] = t.source
+	if len(source) > 0 {
+		s.terms[key].sources[s2] = source
+	}
+}
+
 func (s *searcher) getMatch(k string, last bool, taxa map[string]taxonomy) bool {
 	// Compares results and determines if there has been a match
-
+	ret := false
+	var k1, k2, source string
 	if len(taxa) > 1 {
-		for key, value := range taxa {
-			for k, v := range taxa {
-				if k != key {
-
-				}
+		// Score each pair
+		s := newScorer()
+		s.setScores(taxa)
+		s1, s2 := s.getMax()
+		if len(s1) > 0 {
+			// Store key of most complete match and url of supporting match
+			if taxa[s1].nas <= taxa[s2].nas {
+				k1 = s1
+				k2 = s2
+			} else {
+				k1 = s2
+				k2 = s1
 			}
+			source = taxa[k2].source
+		}
+	} else if last == true {
+		// Only accept single match for last search
+		for k, v := range taxa {
+			k1 = k
 		}
 	}
-
+	if len(k1) > 0 {
+		s.setTaxonomy(k, k1, k2, source, taxa[k1])
+		ret = true
+	}
+	return ret
 }
 
 func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]taxonomy {
@@ -43,9 +70,10 @@ func (s *searcher) searchTerm(k string) {
 		}
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k)
+		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) < 2 {
+			// Prioritize against EOL since their results are not returned in order of relevance
 			taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
 		}
 		if len(taxa) >= 1 {
