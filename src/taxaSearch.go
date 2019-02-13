@@ -38,7 +38,7 @@ func (s *searcher) getMatch(k string, last bool, taxa map[string]taxonomy) bool 
 		}
 	} else if last == true {
 		// Only accept single match for last search
-		for k, v := range taxa {
+		for k := range taxa {
 			k1 = k
 		}
 	}
@@ -59,7 +59,6 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 
 func (s *searcher) searchTerm(k string) {
 	// Performs api search for given term
-	var e taxonomy
 	var found, last bool
 	searchterm := s.terms[k].term
 	l := len(strings.Split(searchterm, " "))
@@ -70,11 +69,11 @@ func (s *searcher) searchTerm(k string) {
 		}
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
+		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) < 2 {
 			// Prioritize against EOL since their results are not returned in order of relevance
-			taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+			//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
 		}
 		if len(taxa) >= 1 {
 			found = s.getMatch(k, last, taxa)

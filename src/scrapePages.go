@@ -41,8 +41,7 @@ func (s *searcher) searchWikipedia(k string) taxonomy {
 func (s *searcher) searchIUCN(k string) taxonomy {
 	// Seaches IUCN Red List for match
 	ret := newTaxonomy()
-	key, ex := s.keys["IUCN"]
-	if ex == true {
+	if _, ex := s.keys["IUCN"]; ex == true {
 		url := fmt.Sprintf("%s%s?token=%s", s.urls.iucn, s.terms[k].term, s.keys["IUCN"])
 		result, pass := getPage(url)
 		if pass == true {

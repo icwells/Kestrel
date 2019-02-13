@@ -20,7 +20,11 @@ var (
 	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
 	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
 
-	merge = kingpin.Command("merge", "Merges search results with source file.")
+	check = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
+
+	merge   = kingpin.Command("merge", "Merges search results with source file.")
+	resfile = merge.Flag("result", "Path to Kestrel search result file.").Required().Short('r').String()
+	col     = extract.Flag("column", "Column containing species names (integer starting from 0).").Required().Short('c').Int()
 
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().String()
@@ -47,11 +51,17 @@ func main() {
 	case ver.FullCommand():
 		version()
 	case extract.FullCommand():
-		fmt.Println("\tExtracting seacrch terms...")
+		fmt.Println("\n\tExtracting seacrch terms...")
 		extractSearchTerms()
 	case search.FullCommand():
-		fmt.Println("\tSearching for taxonomy matches...")
+		fmt.Println("\n\tSearching for taxonomy matches...")
 		searchTaxonomies()
+	case check.FullCommand():
+		fmt.Println("\n\tChecking taxonomy results...")
+		checkResults()
+	case merge.FullCommand():
+		fmt.Println("\n\tMerging search results with source file...")
+		mergeResults()
 	}
 	fmt.Printf("\tFinished. Run time: %s\n\n", time.Since(start))
 }

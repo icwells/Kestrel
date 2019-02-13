@@ -83,8 +83,8 @@ func (t *taxonomy) countNAs() {
 func (t *taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
 	if l != "NA" {
-		l = strings.Replace(l, ",", "", -1)
-		if sp == false  && strings.Contains(l, " ") == true {
+		l = strings.TrimSpace(strings.Replace(l, ",", "", -1))
+		if sp == false && strings.Contains(l, " ") == true {
 			l = strings.Split(l, " ")[0]
 			l = strings.Title(l)
 		} else {
@@ -97,7 +97,7 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 			}
 		}
 	}
-	return l	
+	return l
 }
 
 func (t *taxonomy) checkTaxa() {
@@ -131,13 +131,13 @@ func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
 		result struct {
 			kingdom, phylum, class, order, family, genus, scientific_name string
 		}
-	} {}
+	}{}
 	json.NewDecoder(result).Decode(a)
 	// Map from anonymous struct to taxonomy struct
 	t.kingdom = a.result.kingdom
 	t.phylum = a.result.phylum
 	t.class = a.result.class
-	t.order =  a.result.order
+	t.order = a.result.order
 	t.family = a.result.family
 	t.genus = a.result.genus
 	t.species = a.result.scientific_name
