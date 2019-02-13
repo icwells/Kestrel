@@ -139,6 +139,10 @@ func (t *taxonomy) setLevel(key, value string) {
 			t.genus = value
 		case "species":
 			t.species = value
+			if strings.Contains(t.species, ".") == true {
+				// Remove genus abbreviations
+				t.species = strings.TrimSpace(t.species[strings.Index(t.species, "."):])
+			}
 	}
 }
 
