@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"golang.org/x/net/html"
 	"io"
 	"strings"
 )
@@ -120,9 +121,46 @@ func (t *taxonomy) checkTaxa() {
 	}
 }
 
-func (t *taxonomy) scrapeWiki(result io.Reader, url string) {
-	// Marshalls html taxonomy into struct
+func (t *taxonomy) setLevel(key, value string) {
+	// Sets level denoted by key with value
+	key = strings.TrimSpace(strings.ToLower(key))
+	switch key {
+		case "kingdom":
+			t.kingdom = value
+		case "phylum":
+			t.phylum = value
+		case "class":
+			t.class = value
+		case "order":
+			t.order = value
+		case "family:
+			t.family = value
+		case "genus":
+			t.genus = value
+		case "species":
+			t.species = value
+	}
+}
 
+func (t *taxonomy) scrapeWiki(page html.Tokenizer, url string) {
+	// Marshalls html taxonomy into struct
+	t.source = url
+	for {
+		tt := page.Next()
+		switch tt {
+			case html.ErrorToken:
+				break
+			case html.StartTagToken:
+				t := page.Token()
+				switch t.Data {
+					case "tr":
+
+					case "td":
+						k := t.Text()
+				}
+		}
+	}
+	t.checkTaxa()
 }
 
 func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {

@@ -3,8 +3,8 @@
 package main
 
 import (
-	//"encoding/xml"
 	"fmt"
+	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"strings"
@@ -23,6 +23,16 @@ func getPage(url string) (io.Reader, bool) {
 	return ret, pass
 }
 
+func getHTML(url string) (html.Tokenizer, bool) {
+	// Wraps call to getPage and returns html object
+	var ret html.Tokenizer
+	result, pass := getPage(url)
+	if pass == true {
+		ret = html.NewTokenizer(result)
+	}
+	return ret, pass
+}
+
 func (s *searcher) searchWikipedia(k string) taxonomy {
 	// Scrapes taxonomy from Wikipedia entry
 	ret := newTaxonomy()
@@ -31,7 +41,7 @@ func (s *searcher) searchWikipedia(k string) taxonomy {
 		t = strings.Replace(t, "%20", "_", -1)
 	}
 	url := s.urls.wiki + t
-	result, pass := getPage(url)
+	result, pass := getHTML(url)
 	if pass == true {
 		ret.scrapeWiki(result, url)
 	}
