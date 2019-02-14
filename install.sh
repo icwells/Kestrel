@@ -1,24 +1,36 @@
+#!/bin/bash
+
 ##############################################################################
-#	Installs Cython packages for Kestrel
+#	Installs Go scripts for Kestrel
 #
-#		Requires:	Python3
-#					Cython
+#		Requires:	Go 1.11+
 ##############################################################################
 
-KT="kestrelTools"
-SP="scrapePages"
-SS="seleniumSearch"
-TS="taxaSearch"
+MAIN="src/*.go"
+IO="github.com/icwells/go-tools/iotools"
+SA="github.com/icwells/go-tools/strarray"
+SE="github.com/tebeka/selenium"
 
-cd src/
-python setup.py build_ext --inplace
-rm -r build/
-rm *.c
-cd ../
+# Get install location
+SYS=$(ls $GOPATH/pkg | head -1)
+PDIR=$GOPATH/pkg/$SYS
 
-for I in $KT $SP $SS $TS; do
-	mv src/$I*so bin/$I*so
+echo ""
+echo "Preparing Kestrel package..."
+echo "GOPATH identified as $GOPATH"
+echo ""
+
+# Get dependencies
+for I in $DR $IO $SA $SE ; do
+	if [ ! -e "$PDIR/$I.a" ]; then
+		echo "Installing $I..."
+		go get -u $I
+		echo ""
+	fi
 done
+
+echo "Building main..."
+go build -o bin/$MAIN src/$MAIN/*.go
 
 echo ""
 echo "Done"
