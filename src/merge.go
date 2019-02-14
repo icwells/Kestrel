@@ -100,8 +100,9 @@ func mergeResults() {
 	// Merges search results with source file
 	checkFile(*infile)
 	checkFile(*resfile)
+	checkColumn(*column)
 	taxa := newTaxa(*resfile)
-	header, results := taxa.mergeTaxonomy(*infile, *col)
+	header, results := taxa.mergeTaxonomy(*infile, *column)
 	fmt.Println("\tWriting output...")
 	iotools.WriteToCSV(*outfile, header, results)
 }

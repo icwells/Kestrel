@@ -6,7 +6,8 @@
 #		Requires:	Go 1.11+
 ##############################################################################
 
-MAIN="src/*.go"
+MAIN="kestrel"
+HT="golang.org/x/net/html"
 IO="github.com/icwells/go-tools/iotools"
 SA="github.com/icwells/go-tools/strarray"
 SE="github.com/tebeka/selenium"
@@ -21,7 +22,7 @@ echo "GOPATH identified as $GOPATH"
 echo ""
 
 # Get dependencies
-for I in $DR $IO $SA $SE ; do
+for I in $GQ $HT $IO $SA $SE ; do
 	if [ ! -e "$PDIR/$I.a" ]; then
 		echo "Installing $I..."
 		go get -u $I
@@ -30,7 +31,7 @@ for I in $DR $IO $SA $SE ; do
 done
 
 echo "Building main..."
-go build -o bin/$MAIN src/$MAIN/*.go
+go build -o bin/$MAIN src/*.go
 
 echo ""
 echo "Done"

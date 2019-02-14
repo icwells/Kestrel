@@ -4,8 +4,10 @@ package main
 
 import (
 	"encoding/json"
-	"golang.org/x/net/html"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -45,6 +47,7 @@ type taxonomy struct {
 	source  string
 	found   bool
 	nas     int
+	levels	string
 }
 
 func newTaxonomy() taxonomy {
@@ -60,6 +63,7 @@ func newTaxonomy() taxonomy {
 	t.source = "NA"
 	t.found = false
 	t.nas = 7
+	t.levels = "kingdom,phylum,class,order,family,genus,species"
 	return t
 }
 
@@ -103,7 +107,6 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 
 func (t *taxonomy) checkTaxa() {
 	// Checks formatting
-	t.countNAs()
 	if t.nas <= 2 && t.genus != "NA" {
 		t.found = true
 		if t.kingdom == "Metazoa" {
@@ -133,7 +136,7 @@ func (t *taxonomy) setLevel(key, value string) {
 			t.class = value
 		case "order":
 			t.order = value
-		case "family:
+		case "family":
 			t.family = value
 		case "genus":
 			t.genus = value
@@ -146,25 +149,26 @@ func (t *taxonomy) setLevel(key, value string) {
 	}
 }
 
-func (t *taxonomy) scrapeWiki(page html.Tokenizer, url string) {
+func (t *taxonomy) isLevel(s string) bool {
+	// Returns true if s is a taxonomic level
+	s = strings.TrimSpace(strings.ToLower(s))
+	return strings.Contains(t.levels, s)
+}
+
+func (t *taxonomy) scrapeWiki(url string) {
 	// Marshalls html taxonomy into struct
 	t.source = url
-	for {
-		tt := page.Next()
-		switch tt {
-			case html.ErrorToken:
-				break
-			case html.StartTagToken:
-				t := page.Token()
-				switch t.Data {
-					case "tr":
-
-					case "td":
-						k := t.Text()
-				}
-		}
+	page, err := goquery.NewDocument(t.source)
+	if err == nil {
+		page.Find("td").Each(func (i int, s *goquery.Selection) {
+			str := s.Text()
+			if t.isLevel(str) == true {
+				fmt.Printf("Content of cell %d: %s\n", i, str)
+			}
+		})
+		os.Exit(0)
+		t.checkTaxa()
 	}
-	t.checkTaxa()
 }
 
 func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
@@ -183,5 +187,6 @@ func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
 	t.family = a.result.family
 	t.genus = a.result.genus
 	t.species = a.result.scientific_name
+	t.countNAs()
 	t.checkTaxa()
 }

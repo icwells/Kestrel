@@ -23,9 +23,9 @@ func getPage(url string) (io.Reader, bool) {
 	return ret, pass
 }
 
-func getHTML(url string) (html.Tokenizer, bool) {
+func getHTML(url string) (*html.Tokenizer, bool) {
 	// Wraps call to getPage and returns html object
-	var ret html.Tokenizer
+	var ret *html.Tokenizer
 	result, pass := getPage(url)
 	if pass == true {
 		ret = html.NewTokenizer(result)
@@ -41,10 +41,7 @@ func (s *searcher) searchWikipedia(k string) taxonomy {
 		t = strings.Replace(t, "%20", "_", -1)
 	}
 	url := s.urls.wiki + t
-	result, pass := getHTML(url)
-	if pass == true {
-		ret.scrapeWiki(result, url)
-	}
+	ret.scrapeWiki(url)
 	return ret
 }
 

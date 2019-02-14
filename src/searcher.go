@@ -47,7 +47,7 @@ func (s *searcher) apiKeys() {
 
 func (s *searcher) checkOutput(outfile, header string) {
 	// Reads in completed searches
-	if iotools.Exists(s.outfile) == true {
+	if iotools.Exists(outfile) == true {
 		var d string
 		first := true
 		fmt.Printf("\tReading previous output from %s\n", s.outfile)

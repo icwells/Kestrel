@@ -163,6 +163,7 @@ func filterTerms(infile string, c int) ([][]string, [][]string) {
 func extractSearchTerms() {
 	// Extracts and formats input terms
 	checkFile(*infile)
+	checkColumn(*column)
 	dir, _ := path.Split(*outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")
 	pass, fail := filterTerms(*infile, *column)

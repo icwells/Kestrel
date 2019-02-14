@@ -15,7 +15,6 @@ var (
 	ver = kingpin.Command("version", "Prints version info and exits.")
 
 	extract = kingpin.Command("extract", "Extracts and filters input names.")
-	column  = extract.Flag("column", "Column containing species names (integer starting from 0).").Required().Short('c').Int()
 
 	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
 	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
@@ -24,16 +23,24 @@ var (
 
 	merge   = kingpin.Command("merge", "Merges search results with source file.")
 	resfile = merge.Flag("result", "Path to Kestrel search result file.").Required().Short('r').String()
-	col     = extract.Flag("column", "Column containing species names (integer starting from 0).").Required().Short('c').Int()
 
-	infile  = kingpin.Flag("infile", "Path to input file.").Required().String()
-	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().String()
+	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
+	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().Short('o').String()
+	column  = kingpin.Flag("column", "Column containing species names (integer starting from 0; required for extract and merge).").Default("-1").Short('c').Int()
 )
+
+func checkColumn(c int) {
+	// Quits if column wasn't given
+	if c < 0 {
+		fmt.Print("\n\t[Error] Column number not given. Exiting.\n\n")
+		os.Exit(2)
+	}
+}
 
 func checkFile(infile string) {
 	// Makes sure imut file exists
 	if iotools.Exists(infile) == false {
-		fmt.Printf("\n\t[Error] Input file %s not found. Exiting.\n", infile)
+		fmt.Printf("\n\t[Error] Input file %s not found. Exiting.\n\n", infile)
 		os.Exit(1)
 	}
 }
