@@ -97,6 +97,7 @@ func searchTaxonomies() {
 	s := newSearcher()
 	s.termMap(*infile)
 	l := len(s.terms)
+	ch := make(chan bool)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for k := range s.terms {
