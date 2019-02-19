@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -89,13 +88,19 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
 	if l != "NA" {
 		l = strings.TrimSpace(strings.Replace(l, ",", "", -1))
-		if sp == false && strings.Contains(l, " ") == true {
-			l = strings.Split(l, " ")[0]
+		if sp == false {
+			if strings.Contains(l, " ") == true {
+				l = strings.Split(l, " ")[0]
+			}
 			l = strings.Title(l)
 		} else {
 			// Get binomial with proper capitalization
+			if strings.Contains(l, ".") == true {
+				// Remove genus abbreviations
+				l = strings.TrimSpace(l[strings.Index(l, ".")+1:])
+			}
 			if strings.Contains(l, " ") == false {
-				l = t.genus + " " + strings.ToLower(l)
+				l = fmt.Sprintf("%s %s", t.genus, strings.ToLower(l))
 			} else {
 				s := strings.Split(l, " ")
 				l = strings.Title(s[0]) + " " + strings.ToLower(s[1])
@@ -126,7 +131,6 @@ func (t *taxonomy) checkTaxa() {
 
 func (t *taxonomy) setLevel(key, value string) {
 	// Sets level denoted by key with value
-	key = strings.TrimSpace(strings.ToLower(key))
 	switch key {
 		case "kingdom":
 			t.kingdom = value
@@ -142,17 +146,18 @@ func (t *taxonomy) setLevel(key, value string) {
 			t.genus = value
 		case "species":
 			t.species = value
-			if strings.Contains(t.species, ".") == true {
-				// Remove genus abbreviations
-				t.species = strings.TrimSpace(t.species[strings.Index(t.species, "."):])
-			}
 	}
+	t.nas--
 }
 
-func (t *taxonomy) isLevel(s string) bool {
-	// Returns true if s is a taxonomic level
-	s = strings.TrimSpace(strings.ToLower(s))
-	return strings.Contains(t.levels, s)
+func (t *taxonomy) isLevel(s string) string {
+	// Returns formatted string if s is a taxonomic level
+	var ret string
+	s = strings.TrimSpace(strings.ToLower(strings.Replace(s, ":", "", -1)))
+	if strings.Contains(t.levels, s) == true {
+		ret = s
+	}
+	return ret
 }
 
 func (t *taxonomy) scrapeWiki(url string) {
@@ -161,12 +166,19 @@ func (t *taxonomy) scrapeWiki(url string) {
 	page, err := goquery.NewDocument(t.source)
 	if err == nil {
 		page.Find("td").Each(func (i int, s *goquery.Selection) {
-			str := s.Text()
-			if t.isLevel(str) == true {
-				fmt.Printf("Content of cell %d: %s\n", i, str)
+			level := t.isLevel(s.Text())
+			if len(level) > 0 {
+				var a *goquery.Selection
+				n := s.Next()
+				if level != "species" {
+					a = n.Find("a")
+				} else {
+					a = n.Find("i")
+				}
+				t.setLevel(level, a.Text())
+				//fmt.Printf("Content of cell %d: %s, %s\n", i, level, a.Text())
 			}
 		})
-		os.Exit(0)
 		t.checkTaxa()
 	}
 }

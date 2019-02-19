@@ -21,6 +21,15 @@ type searcher struct {
 	matches int
 }
 
+func (s *searcher) getMapKeys() []string {
+	// Returns slice of keys
+	var ret []string
+	for k := range(s.terms) {
+		ret = append(ret, k)
+	}
+	return ret
+}
+
 func (s *searcher) assignKey(line string) {
 	// Assigns individual api key to struct
 	l := strings.Split(line, "=")

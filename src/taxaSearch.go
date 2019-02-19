@@ -75,11 +75,13 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		if len(taxa) >= 1 {
 			found = s.getMatch(k, l, taxa)
 		}
+		fmt.Println(found)
 		if found == false && l != 1 {
 			// Remove first word and try again
 			idx := strings.Index(s.terms[k].term, "%20")
-			s.terms[k].term = s.terms[k].term[idx+1:]
-			l = strings.Count(s.terms[k].term, "%20")
+			s.terms[k].term = s.terms[k].term[idx+3:]
+			l = strings.Count(s.terms[k].term, "%20") + 1
+			fmt.Println(s.terms[k].term, l)
 		} else {
 			break
 		}
@@ -99,13 +101,14 @@ func searchTaxonomies() {
 	ch := make(chan bool)
 	s := newSearcher()
 	s.termMap(*infile)
-	l := len(s.terms)
+	keys := s.getMapKeys()
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for idx := 0; idx-done < *max; idx++ {
 		f := false
-		if idx < len(s.terms) {
-			s.searchTerm(ch, s.terms[idx])
+		fmt.Printf("\tFound %d of %d matches.\r", s.matches, len(keys))
+		if idx < len(keys) {
+			s.searchTerm(ch, keys[idx])
 			f = <-ch
 			if f == true {
 				done++
@@ -114,7 +117,7 @@ func searchTaxonomies() {
 			break
 		}
 	}
-	fmt.Printf("\tFound %d of %d matches.\r", s.matches, l)
+	fmt.Println()
 	// Perform selenium search on misses
 
 }

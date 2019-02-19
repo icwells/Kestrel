@@ -1,5 +1,6 @@
-# All cython binaries
+# All binaries
 bin/*.so
+bin/kestrel
 
 # Selenium server
 bin/selenium-server-standalone-*.jar

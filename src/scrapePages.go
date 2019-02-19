@@ -4,14 +4,13 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"strings"
 )
 
 func getPage(url string) (io.Reader, bool) {
-	// Wraps http request, returns byte slice and true if successful
+	// Wraps http request, returns io.Reader and true if successful
 	var ret io.Reader
 	pass := false
 	resp, err := http.Get(url)
@@ -20,16 +19,6 @@ func getPage(url string) (io.Reader, bool) {
 		pass = true
 	}
 	defer resp.Body.Close()
-	return ret, pass
-}
-
-func getHTML(url string) (*html.Tokenizer, bool) {
-	// Wraps call to getPage and returns html object
-	var ret *html.Tokenizer
-	result, pass := getPage(url)
-	if pass == true {
-		ret = html.NewTokenizer(result)
-	}
 	return ret, pass
 }
 
