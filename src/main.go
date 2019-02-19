@@ -17,7 +17,7 @@ var (
 	extract = kingpin.Command("extract", "Extracts and filters input names.")
 
 	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
-	max		= search.Flag("max", "The maximum number of concurrent searches to run.").Short('m').Default("5000").Int()
+	max     = search.Flag("max", "The maximum number of concurrent searches to run.").Short('m').Default("5000").Int()
 	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
 
 	check = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")

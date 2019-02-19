@@ -46,7 +46,7 @@ type taxonomy struct {
 	source  string
 	found   bool
 	nas     int
-	levels	string
+	levels  string
 }
 
 func newTaxonomy() taxonomy {
@@ -132,20 +132,20 @@ func (t *taxonomy) checkTaxa() {
 func (t *taxonomy) setLevel(key, value string) {
 	// Sets level denoted by key with value
 	switch key {
-		case "kingdom":
-			t.kingdom = value
-		case "phylum":
-			t.phylum = value
-		case "class":
-			t.class = value
-		case "order":
-			t.order = value
-		case "family":
-			t.family = value
-		case "genus":
-			t.genus = value
-		case "species":
-			t.species = value
+	case "kingdom":
+		t.kingdom = value
+	case "phylum":
+		t.phylum = value
+	case "class":
+		t.class = value
+	case "order":
+		t.order = value
+	case "family":
+		t.family = value
+	case "genus":
+		t.genus = value
+	case "species":
+		t.species = value
 	}
 	t.nas--
 }
@@ -165,7 +165,7 @@ func (t *taxonomy) scrapeWiki(url string) {
 	t.source = url
 	page, err := goquery.NewDocument(t.source)
 	if err == nil {
-		page.Find("td").Each(func (i int, s *goquery.Selection) {
+		page.Find("td").Each(func(i int, s *goquery.Selection) {
 			level := t.isLevel(s.Text())
 			if len(level) > 0 {
 				var a *goquery.Selection

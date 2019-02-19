@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	//"os"
 	"strings"
 )
 
@@ -60,8 +61,8 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 func (s *searcher) searchTerm(ch chan bool, k string) {
 	// Performs api search for given term
 	var found bool
-	searchterm := s.terms[k].term
-	l := len(strings.Split(searchterm, "%20"))
+	//l := len(strings.Split(s.terms[k].term, "%20"))
+	l := 1
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
@@ -69,19 +70,17 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		//if len(taxa) < 2 {
-			// Prioritize against EOL since their results are not returned in order of relevance
-			//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+		// Prioritize against EOL since their results are not returned in order of relevance
+		//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
 		//}
 		if len(taxa) >= 1 {
 			found = s.getMatch(k, l, taxa)
 		}
-		fmt.Println(found)
 		if found == false && l != 1 {
 			// Remove first word and try again
 			idx := strings.Index(s.terms[k].term, "%20")
 			s.terms[k].term = s.terms[k].term[idx+3:]
 			l = strings.Count(s.terms[k].term, "%20") + 1
-			fmt.Println(s.terms[k].term, l)
 		} else {
 			break
 		}
@@ -97,25 +96,15 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 
 func searchTaxonomies() {
 	// Manages API and selenium searches
-	var done int
-	ch := make(chan bool)
+	ch := make(chan bool, *max)
 	s := newSearcher()
 	s.termMap(*infile)
-	keys := s.getMapKeys()
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
-	for idx := 0; idx-done < *max; idx++ {
-		f := false
-		fmt.Printf("\tFound %d of %d matches.\r", s.matches, len(keys))
-		if idx < len(keys) {
-			s.searchTerm(ch, keys[idx])
-			f = <-ch
-			if f == true {
-				done++
-			}
-		} else {
-			break
-		}
+	for k := range s.terms {
+		s.searchTerm(ch, k)
+		_ = <-ch
+		fmt.Printf("\tFound %d of %d matches.\r", s.matches, len(s.terms))
 	}
 	fmt.Println()
 	// Perform selenium search on misses

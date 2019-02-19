@@ -21,15 +21,6 @@ type searcher struct {
 	matches int
 }
 
-func (s *searcher) getMapKeys() []string {
-	// Returns slice of keys
-	var ret []string
-	for k := range(s.terms) {
-		ret = append(ret, k)
-	}
-	return ret
-}
-
 func (s *searcher) assignKey(line string) {
 	// Assigns individual api key to struct
 	l := strings.Split(line, "=")
@@ -59,7 +50,7 @@ func (s *searcher) checkOutput(outfile, header string) {
 	if iotools.Exists(outfile) == true {
 		var d string
 		first := true
-		fmt.Printf("\tReading previous output from %s\n", s.outfile)
+		fmt.Printf("\tReading previous output from %s\n", outfile)
 		out := iotools.OpenFile(outfile)
 		defer out.Close()
 		scanner := iotools.GetScanner(out)
@@ -71,10 +62,10 @@ func (s *searcher) checkOutput(outfile, header string) {
 				s.done.Add(strings.TrimSpace(l[0]))
 			} else {
 				d = iotools.GetDelim(line)
-				first = true
+				first = false
 			}
-			fmt.Printf("\tFound %d completed entries.\n", s.done.Length())
 		}
+		fmt.Printf("\tFound %d completed entries.\n", s.done.Length())
 	} else {
 		fmt.Println("\tGenerating new output file...")
 		out := iotools.CreateFile(outfile)
