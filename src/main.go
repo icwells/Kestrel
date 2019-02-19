@@ -54,7 +54,7 @@ func version() {
 }
 
 func main() {
-	var start time.Time
+	start := time.Now()
 	switch kingpin.Parse() {
 	case ver.FullCommand():
 		version()
@@ -71,5 +71,5 @@ func main() {
 		fmt.Println("\n\tMerging search results with source file...")
 		mergeResults()
 	}
-	fmt.Printf("\tFinished. Run time: %s\n\n", time.Since(start))
+	fmt.Printf("\tFinished. Run time: %v\n\n", time.Since(start))
 }
