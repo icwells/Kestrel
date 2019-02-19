@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
 	"strings"
@@ -34,6 +35,49 @@ func (s *searcher) searchWikipedia(k string) taxonomy {
 	return ret
 }
 
+func (s *searcher) esearch(term string) string {
+	// Returns taxonomy ID for search term
+	var id string
+	url := fmt.Sprintf("%sesearch.fcgi?db=Taxonomy&term=%s&key=%s", s.urls.ncbi, term, s.keys["NCBI"])
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		list := page.Find("IdList")
+		q := list.Find("Id")
+		if len(q.Text()) > 1 {
+			id = q.Text()
+		}
+	}
+	return id
+}
+
+func (s *searcher) espell(term string) string {
+	// Checks spelling of term
+	term = strings.Replace(term, " ", "%20", -1)
+	url := fmt.Sprintf("%sespell.fcgi?db=Taxonomy&term=%s&key=%s", s.urls.ncbi, term, s.keys["NCBI"])
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		q := page.Find("correctedquery")
+		if len(q.Text()) > 1 {
+			term = q.Text()
+		}
+	}
+	return term
+}
+
+func (s *searcher) searchNCBI(k string) taxonomy {
+	// Searches NCBI for species ID and uses id to query taxonomy
+	ret := newTaxonomy()
+	res := s.espell(s.terms[k].term)
+	if len(res) > 0 {
+		id := s.esearch(res)
+		if len(id) > 0 {
+			url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&key=%s", s.urls.ncbi, id, s.keys["NCBI"])
+			ret.scrapeNCBI(url)
+		}
+	}
+	return ret
+}
+
 func (s *searcher) searchIUCN(k string) taxonomy {
 	// Seaches IUCN Red List for match
 	ret := newTaxonomy()
@@ -44,5 +88,6 @@ func (s *searcher) searchIUCN(k string) taxonomy {
 			ret.scrapeIUCN(result, url)
 		}
 	}
+	fmt.Println(ret.String())
 	return ret
 }

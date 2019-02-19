@@ -160,6 +160,33 @@ func (t *taxonomy) isLevel(s string) string {
 	return ret
 }
 
+func (t *taxonomy) scrapeNCBI(url string) {
+	// Scrapes taxonomy form NCBI efetch results
+	t.source = url
+	page, err := goquery.NewDocument(t.source)
+	if err == nil {
+		taxa := page.Find("Taxon")
+		// Get species name
+		n := taxa.Find("ScientificName")
+		r := taxa.Find("Rank")
+		level := t.isLevel(r.Text())
+		if len(level) > 0 {
+			t.setLevel(level, n.Text())
+		}
+		lineage := taxa.Find("LineageEx")
+		lineage.Find("Taxon").Each(func(i int, s *goquery.Selection) {
+			r = s.Find("Rank")
+			level = t.isLevel(r.Text())
+			if len(level) > 0 {
+				n = s.Find("ScientificName")
+				t.setLevel(level, n.Text())
+			}
+		})
+		t.checkTaxa()
+		fmt.Println(t.String())
+	}
+}
+
 func (t *taxonomy) scrapeWiki(url string) {
 	// Marshalls html taxonomy into struct
 	t.source = url
@@ -176,7 +203,6 @@ func (t *taxonomy) scrapeWiki(url string) {
 					a = n.Find("i")
 				}
 				t.setLevel(level, a.Text())
-				//fmt.Printf("Content of cell %d: %s, %s\n", i, level, a.Text())
 			}
 		})
 		t.checkTaxa()
