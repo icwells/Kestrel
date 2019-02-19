@@ -57,7 +57,7 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 	return taxa
 }
 
-func (s *searcher) searchTerm(k string) {
+func (s *searcher) searchTerm(ch chan bool, k string) {
 	// Performs api search for given term
 	var found bool
 	searchterm := s.terms[k].term
@@ -90,20 +90,31 @@ func (s *searcher) searchTerm(k string) {
 		// Record missed keys
 		s.misses = append(s.misses, k)
 	}
+	ch <- true
 }
 
 func searchTaxonomies() {
 	// Manages API and selenium searches
+	var done int
+	ch := make(chan bool)
 	s := newSearcher()
 	s.termMap(*infile)
 	l := len(s.terms)
-	ch := make(chan bool)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
-	for k := range s.terms {
-		s.searchTerm(k)
-		fmt.Printf("\tFound %d of %d matches.\r", s.matches, l)
+	for idx := 0; idx-done < *max; idx++ {
+		f := false
+		if idx < len(s.terms) {
+			s.searchTerm(ch, s.terms[idx])
+			f = <-ch
+			if f == true {
+				done++
+			}
+		} else {
+			break
+		}
 	}
+	fmt.Printf("\tFound %d of %d matches.\r", s.matches, l)
 	// Perform selenium search on misses
 
 }
