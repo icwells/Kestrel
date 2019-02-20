@@ -84,12 +84,12 @@ func (s *searcher) getTID(term string) string {
 	// Gets taxon id from EOL search api
 	var ret string
 	url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.search, term, s.keys["EOL"])
-	fmt.Println(url)
+	fmt.Println(term, url)
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		q := page.Find("entry")
 		// Get first hit (no way to resolve multiples)
-		tid := q.Text().First()
+		tid := q.Text()
 		if _, err := strconv.Atoi(tid); err == nil {
 			ret = tid
 		}
@@ -101,7 +101,7 @@ func (s *searcher) searchEOL(k string) taxonomy {
 	// Searches EOL for taxon id, hierarchy entry id, and taxonomy
 	ret := newTaxonomy()
 	if _, ex := s.keys["EOL"]; ex == true {
-		tid := s.getTID(k)
+		_ = s.getTID(k)
 		/*if len(tid) >= 1 {
 			hid := s.getHID(k)
 			if len(hid) >= 1 {
