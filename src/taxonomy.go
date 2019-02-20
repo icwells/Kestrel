@@ -35,6 +35,12 @@ func newAPIs() apis {
 	return a
 }
 
+func removeKey(url string) string {
+	// Returns urls with api key removed
+	idx := strings.LastIndex(url, "&")
+	return url[:idx]
+}
+
 type taxonomy struct {
 	kingdom string
 	phylum  string
@@ -160,10 +166,32 @@ func (t *taxonomy) isLevel(s string) string {
 	return ret
 }
 
+func (t *taxonomy) scrapeWiki(url string) {
+	// Marshalls html taxonomy into struct
+	t.source = url
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		page.Find("td").Each(func(i int, s *goquery.Selection) {
+			level := t.isLevel(s.Text())
+			if len(level) > 0 {
+				var a *goquery.Selection
+				n := s.Next()
+				if level != "species" {
+					a = n.Find("a")
+				} else {
+					a = n.Find("i")
+				}
+				t.setLevel(level, a.Text())
+			}
+		})
+		t.checkTaxa()
+	}
+}
+
 func (t *taxonomy) scrapeNCBI(url string) {
 	// Scrapes taxonomy form NCBI efetch results
-	t.source = url
-	page, err := goquery.NewDocument(t.source)
+	t.source = removeKey(url)
+	page, err := goquery.NewDocument(url)
 	if err == nil {
 		taxa := page.Find("Taxon")
 		// Get species name
@@ -186,30 +214,14 @@ func (t *taxonomy) scrapeNCBI(url string) {
 	}
 }
 
-func (t *taxonomy) scrapeWiki(url string) {
-	// Marshalls html taxonomy into struct
-	t.source = url
-	page, err := goquery.NewDocument(t.source)
-	if err == nil {
-		page.Find("td").Each(func(i int, s *goquery.Selection) {
-			level := t.isLevel(s.Text())
-			if len(level) > 0 {
-				var a *goquery.Selection
-				n := s.Next()
-				if level != "species" {
-					a = n.Find("a")
-				} else {
-					a = n.Find("i")
-				}
-				t.setLevel(level, a.Text())
-			}
-		})
-		t.checkTaxa()
-	}
+func (t *taxonomy) scrapeEOL(url string) {
+	// Scrapes taxonomy from EOL hierarchy entry
+	t.source = removeKey(url)
 }
 
 func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
 	// Marshalls json array into struct
+	t.source = removeKey(url)
 	a := struct {
 		result struct {
 			kingdom, phylum, class, order, family, genus, scientific_name string

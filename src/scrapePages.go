@@ -67,13 +67,48 @@ func (s *searcher) espell(term string) string {
 func (s *searcher) searchNCBI(k string) taxonomy {
 	// Searches NCBI for species ID and uses id to query taxonomy
 	ret := newTaxonomy()
-	res := s.espell(s.terms[k].term)
-	if len(res) > 0 {
-		id := s.esearch(res)
-		if len(id) > 0 {
-			url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&api_key=%s", s.urls.ncbi, id, s.keys["NCBI"])
-			ret.scrapeNCBI(url)
+	if _, ex := s.keys["NCBI"]; ex == true {
+		res := s.espell(s.terms[k].term)
+		if len(res) > 0 {
+			id := s.esearch(res)
+			if len(id) > 0 {
+				url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&api_key=%s", s.urls.ncbi, id, s.keys["NCBI"])
+				ret.scrapeNCBI(url)
+			}
 		}
+	}
+	return ret
+}
+
+func (s *searcher) getTID(term string) string {
+	// Gets taxon id from EOL search api
+	var ret string
+	url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.search, term, s.keys["EOL"])
+	fmt.Println(url)
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		q := page.Find("entry")
+		// Get first hit (no way to resolve multiples)
+		tid := q.Text().First()
+		if _, err := strconv.Atoi(tid); err == nil {
+			ret = tid
+		}
+	}
+	return ret	
+}
+
+func (s *searcher) searchEOL(k string) taxonomy {
+	// Searches EOL for taxon id, hierarchy entry id, and taxonomy
+	ret := newTaxonomy()
+	if _, ex := s.keys["EOL"]; ex == true {
+		tid := s.getTID(k)
+		/*if len(tid) >= 1 {
+			hid := s.getHID(k)
+			if len(hid) >= 1 {
+				url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
+				ret.scrapeEOL(url)
+			}
+		}*/
 	}
 	return ret
 }
