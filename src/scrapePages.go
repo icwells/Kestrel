@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -38,12 +39,11 @@ func (s *searcher) searchWikipedia(k string) taxonomy {
 func (s *searcher) esearch(term string) string {
 	// Returns taxonomy ID for search term
 	var id string
-	url := fmt.Sprintf("%sesearch.fcgi?db=Taxonomy&term=%s&key=%s", s.urls.ncbi, term, s.keys["NCBI"])
+	url := fmt.Sprintf("%sesearch.fcgi?db=Taxonomy&term=%s&api_key=%s", s.urls.ncbi, term, s.keys["NCBI"])
 	page, err := goquery.NewDocument(url)
 	if err == nil {
-		list := page.Find("IdList")
-		q := list.Find("Id")
-		if len(q.Text()) > 1 {
+		q := page.Find("Id")
+		if len(q.Text()) >= 1 {
 			id = q.Text()
 		}
 	}
@@ -53,12 +53,12 @@ func (s *searcher) esearch(term string) string {
 func (s *searcher) espell(term string) string {
 	// Checks spelling of term
 	term = strings.Replace(term, " ", "%20", -1)
-	url := fmt.Sprintf("%sespell.fcgi?db=Taxonomy&term=%s&key=%s", s.urls.ncbi, term, s.keys["NCBI"])
+	url := fmt.Sprintf("%sespell.fcgi?db=Taxonomy&term=%s&api_key=%s", s.urls.ncbi, term, s.keys["NCBI"])
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		q := page.Find("correctedquery")
-		if len(q.Text()) > 1 {
-			term = q.Text()
+		if _, err := strconv.Atoi(q.Text()); err == nil {
+			term = strings.Replace(q.Text(), " ", "%20", -1)
 		}
 	}
 	return term
@@ -71,7 +71,7 @@ func (s *searcher) searchNCBI(k string) taxonomy {
 	if len(res) > 0 {
 		id := s.esearch(res)
 		if len(id) > 0 {
-			url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&key=%s", s.urls.ncbi, id, s.keys["NCBI"])
+			url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&api_key=%s", s.urls.ncbi, id, s.keys["NCBI"])
 			ret.scrapeNCBI(url)
 		}
 	}

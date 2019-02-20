@@ -68,7 +68,7 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		//taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
 		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-		//taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		//if len(taxa) < 2 {
 		// Prioritize against EOL since their results are not returned in order of relevance
 		//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))

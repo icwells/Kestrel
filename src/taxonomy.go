@@ -167,8 +167,8 @@ func (t *taxonomy) scrapeNCBI(url string) {
 	if err == nil {
 		taxa := page.Find("Taxon")
 		// Get species name
-		n := taxa.Find("ScientificName")
-		r := taxa.Find("Rank")
+		n := taxa.Find("ScientificName").First()
+		r := taxa.Find("Rank").First()
 		level := t.isLevel(r.Text())
 		if len(level) > 0 {
 			t.setLevel(level, n.Text())
@@ -183,7 +183,6 @@ func (t *taxonomy) scrapeNCBI(url string) {
 			}
 		})
 		t.checkTaxa()
-		fmt.Println(t.String())
 	}
 }
 
