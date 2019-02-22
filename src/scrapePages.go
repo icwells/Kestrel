@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/renstrom/fuzzysearch/fuzzy"
 	"io"
 	"net/http"
 	"strconv"
@@ -83,16 +84,39 @@ func (s *searcher) searchNCBI(k string) taxonomy {
 func (s *searcher) getTID(term string) string {
 	// Gets taxon id from EOL search api
 	var ret string
-	url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.search, term, s.keys["EOL"])
-	fmt.Println(term, url)
+	score := len(term)
+	query := percentDecode(term)
+	url := fmt.Sprintf("%s%sxml?q=%s&vetted=1&key=%s", s.urls.eol, s.urls.search, term, s.keys["EOL"])
 	page, err := goquery.NewDocument(url)
 	if err == nil {
-		q := page.Find("entry")
-		// Get first hit (no way to resolve multiples)
-		tid := q.Text()
-		if _, err := strconv.Atoi(tid); err == nil {
-			ret = tid
-		}
+		page.Find("result").EachWithBreak(func(i int, r *goquery.Selection) bool {
+			// Iterate though all results
+			id := r.Find("id").Text()
+			if _, err := strconv.Atoi(id); err == nil {
+				// Examine all valid ids
+				title := r.Find("title").Text()
+				if fuzzy.Match(query, title) == true {
+					// Keep scientific name match
+					ret = id
+					return false
+				}
+				content := strings.Split(r.Find("content").Text(), ";")
+				for _, i := range content {
+					// Examine each content entry seperately
+					dist := fuzzy.LevenshteinDistance(query, i)
+					if dist == 0 {
+						// Keep perfect match
+						ret = id
+						return false
+					} else if dist < score {
+						// Store best match
+						score = dist
+						ret = id
+					}
+				}
+			}
+			return true
+		})
 	}
 	return ret	
 }
@@ -101,10 +125,11 @@ func (s *searcher) searchEOL(k string) taxonomy {
 	// Searches EOL for taxon id, hierarchy entry id, and taxonomy
 	ret := newTaxonomy()
 	if _, ex := s.keys["EOL"]; ex == true {
-		_ = s.getTID(k)
-		/*if len(tid) >= 1 {
+		tid := s.getTID(k)
+		if len(tid) >= 1 {
 			hid := s.getHID(k)
-			if len(hid) >= 1 {
+			fmt.Println(k, hid)
+			/*if len(hid) >= 1 {
 				url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
 				ret.scrapeEOL(url)
 			}

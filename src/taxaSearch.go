@@ -69,10 +69,7 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		//taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
 		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 		//taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
-		//if len(taxa) < 2 {
-		// Prioritize against EOL since their results are not returned in order of relevance
 		taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
-		//}
 		if len(taxa) >= 1 {
 			found = s.getMatch(k, l, taxa)
 		}
@@ -104,7 +101,7 @@ func searchTaxonomies() {
 	for k := range s.terms {
 		s.searchTerm(ch, k)
 		_ = <-ch
-		fmt.Printf("\tFound %d of %d queries.\r", s.matches, len(s.terms))
+		//fmt.Printf("\tFound %d of %d queries.\r", s.matches, len(s.terms))
 	}
 	fmt.Println()
 	// Perform selenium search on misses

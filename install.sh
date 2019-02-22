@@ -7,6 +7,8 @@
 ##############################################################################
 
 MAIN="kestrel"
+FS="github.com/renstrom/fuzzysearch/fuzzy"
+GQ="github.com/PuerkitoBio/goquery"
 HT="golang.org/x/net/html"
 IO="github.com/icwells/go-tools/iotools"
 SA="github.com/icwells/go-tools/strarray"
@@ -22,7 +24,7 @@ echo "GOPATH identified as $GOPATH"
 echo ""
 
 # Get dependencies
-for I in $GQ $HT $IO $SA $SE ; do
+for I in $FS $GQ $HT $IO $SA $SE ; do
 	if [ ! -e "$PDIR/$I.a" ]; then
 		echo "Installing $I..."
 		go get -u $I
