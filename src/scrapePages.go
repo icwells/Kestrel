@@ -149,11 +149,11 @@ func (s *searcher) searchEOL(k string) taxonomy {
 		tid := s.getTID(k)
 		if len(tid) >= 1 {
 			hid := s.getHID(tid)
-			fmt.Println(k, hid)
-			/*if len(hid) >= 1 {
+			if len(hid) >= 1 {
 				url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
-				ret.scrapeEOL(url)
-			}*/
+				fmt.Println(term, url)
+				//ret.scrapeEOL(url)
+			}
 		}
 	}
 	return ret
