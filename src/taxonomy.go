@@ -206,8 +206,7 @@ func (t *taxonomy) scrapeNCBI(url string) {
 			r = s.Find("Rank")
 			level = t.isLevel(r.Text())
 			if len(level) > 0 {
-				n = s.Find("ScientificName")
-				t.setLevel(level, n.Text())
+				t.setLevel(level, s.Find("ScientificName").Text())
 			}
 		})
 		t.checkTaxa()
@@ -217,6 +216,26 @@ func (t *taxonomy) scrapeNCBI(url string) {
 func (t *taxonomy) scrapeEOL(url string) {
 	// Scrapes taxonomy from EOL hierarchy entry
 	t.source = removeKey(url)
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		found := 0
+		page.Find("ancestor").EachWithBreak(func(i int, r *goquery.Selection) bool {
+			level := t.isLevel(r.Find("taxonRank").Text())
+			if len(level) > 0 {
+				t.setLevel(level, r.Find("scientificName").Text())
+				found++
+				if found == 7 {
+					// Break if all levels have been found
+					return false
+				}
+			}
+			return true
+		})
+		entry := page.Find("entry")
+		// Store canonical species name
+		t.setLevel("species", entry.Find("canonical-form").Text())
+		t.checkTaxa()
+	}
 }
 
 func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {

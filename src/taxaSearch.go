@@ -61,17 +61,17 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 func (s *searcher) searchTerm(ch chan bool, k string) {
 	// Performs api search for given term
 	var found bool
-	//l := len(strings.Split(s.terms[k].term, "%20"))
-	l := 1
+	/*l := strings.Count(s.terms[k].term, "%20") + 1
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		//taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-		//taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 		taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) >= 1 {
-			found = s.getMatch(k, l, taxa)
+			found = s.getMatch(s.terms[k].term, l, taxa)
+			fmt.Println(s.terms[k].term, found)
 		}
 		if found == false && l != 1 {
 			// Remove first word and try again
@@ -81,7 +81,7 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		} else {
 			break
 		}
-	}
+	}*/
 	if found == true {
 		s.writeMatches(k)
 	} else {

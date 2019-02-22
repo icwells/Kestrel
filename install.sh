@@ -18,22 +18,55 @@ SE="github.com/tebeka/selenium"
 SYS=$(ls $GOPATH/pkg | head -1)
 PDIR=$GOPATH/pkg/$SYS
 
+installPackage () {
+	# Installs go package if it is not present in src directory
+	if [ ! -e "$PDIR/$1.a" ]; then
+		echo "Installing $1..."
+		go get -u $1
+		echo ""
+	fi
+}
+
+installSelenium () {
+	# Installs selenium package
+	WD=$(pwd)
+	installPackage $SE
+	cd $GOPATH/$SE/vendor
+	go get -d ./...
+	go run init.go --alsologtostderr
+	cd $WD
+}
+
+installDependencies () {
+	# Get dependencies
+	for I in $FS $GQ $HT $IO $SA $ST ; do
+		installPackage $I
+	done
+}
+
+installMain () {
+	echo "Building main..."
+	go build -o bin/$MAIN src/*.go
+}
+
 echo ""
 echo "Preparing Kestrel package..."
 echo "GOPATH identified as $GOPATH"
 echo ""
 
-# Get dependencies
-for I in $FS $GQ $HT $IO $SA $SE ; do
-	if [ ! -e "$PDIR/$I.a" ]; then
-		echo "Installing $I..."
-		go get -u $I
-		echo ""
-	fi
-done
-
-echo "Building main..."
-go build -o bin/$MAIN src/*.go
+if [ $# -eq 0 ]; then
+	installMain
+elif [ $1 = "all" ]; then
+	installSelenium
+	installDependencies
+	installMain
+elif [ $1 = "all" ]; then
+	echo "Installs Go scripts for Kestrel"
+	echo ""
+	echo "all	Installs all depenencies, including selenium package and drivers."
+	echo "help	Prints help text and exits."
+	echo ""
+fi
 
 echo ""
 echo "Done"

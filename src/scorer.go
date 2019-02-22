@@ -21,6 +21,7 @@ func (s *scorer) getMax() (string, string) {
 		for k, v := range value {
 			if v > max {
 				// Store keys of highest score
+				max = v
 				r1 = key
 				r2 = k
 			}
