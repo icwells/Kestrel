@@ -81,6 +81,27 @@ func (s *searcher) searchNCBI(k string) taxonomy {
 	return ret
 }
 
+func (s *searcher) getHID(tid string) string {
+	// Returns hierarchy id from EOL
+	var ret string
+	url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.pages, tid, s.keys["EOL"])
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		page.Find("taxonConcept").EachWithBreak(func(i int, r *goquery.Selection) bool {
+			if r.Find("taxonRank").Text() == "species" {
+				// Skip incomplete taxonomies
+				hid := r.Find("identifier").Text()
+				if _, er := strconv.Atoi(hid); er == nil {
+					ret = hid
+					return false
+				}
+			}
+			return true
+		})
+	}
+	return ret
+}
+
 func (s *searcher) getTID(term string) string {
 	// Gets taxon id from EOL search api
 	var ret string
@@ -127,13 +148,13 @@ func (s *searcher) searchEOL(k string) taxonomy {
 	if _, ex := s.keys["EOL"]; ex == true {
 		tid := s.getTID(k)
 		if len(tid) >= 1 {
-			hid := s.getHID(k)
+			hid := s.getHID(tid)
 			fmt.Println(k, hid)
 			/*if len(hid) >= 1 {
 				url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
 				ret.scrapeEOL(url)
-			}
-		}*/
+			}*/
+		}
 	}
 	return ret
 }
