@@ -19,6 +19,7 @@ type searcher struct {
 	misses  []string
 	urls    apis
 	matches int
+	fails	int
 }
 
 func (s *searcher) assignKey(line string) {
@@ -133,6 +134,15 @@ func (s *searcher) termMap(infile string) {
 		}
 	}
 	fmt.Printf("\tFound %d unique entries from %d total new entries.\n", unique, total)
+}
+
+func (s *searcher) writeMisses(k string) {
+	// Writes terms with no match to missed file
+	out := iotools.AppendFile(s.missed)
+	for _, i := range s.terms[k].queries {
+		out.WriteString(fmt.Sprintf("%s,%s,noMatch\n", i, k))
+		s.fails++
+	}
 }
 
 func (s *searcher) writeMatches(k string) {

@@ -4,7 +4,11 @@ package main
 
 import (
 	"fmt"
-	//"os"
+	"github.com/icwells/go-tools/iotools"
+	"github.com/tebeka/selenium"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -58,7 +62,7 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 	return taxa
 }
 
-func (s *searcher) searchTerm(ch chan bool, k string) {
+func (s *searcher) searchTerm(ch chan int, k string) {
 	// Performs api search for given term
 	var found bool
 	/*l := strings.Count(s.terms[k].term, "%20") + 1
@@ -71,7 +75,6 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) >= 1 {
 			found = s.getMatch(s.terms[k].term, l, taxa)
-			fmt.Println(s.terms[k].term, found)
 		}
 		if found == false && l != 1 {
 			// Remove first word and try again
@@ -88,22 +91,81 @@ func (s *searcher) searchTerm(ch chan bool, k string) {
 		// Record missed keys
 		s.misses = append(s.misses, k)
 	}
-	ch <- true
+	ch <- 1
+}
+
+func getDriverPath(path string) string {
+	// Returns path to driver
+	var ret string
+	p, err := filepath.Glob(path)
+	if err == nil {
+		for _, i := range p {
+			if strings.Contains(i, ".zip") == false && strings.Contains(i, ".tar") == false {
+				if iotools.Exists(i) == true {
+					ret = i
+					break
+				}
+			}
+		}
+	}
+	return ret
+}
+
+func startService(firefox bool) (*selenium.Service, error) {
+	// Initialzes new selenium browser
+	var browser string
+	port := 8080
+	gopath := iotools.GetGOPATH()
+	path := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
+	seleniumpath := path.Join(path, "selenium-server-standalone-3.4.jar")
+	opts := []selenium.ServiceOption{
+		selenium.StartFrameBuffer(), 
+		selenium.Output(os.Stderr),
+	}
+	if firefox == true {
+		browser = "Firefox"
+		gdpath := getDriverPath(path.Join(path, "geckodriver-*"))
+		opts = append(opts, selenium.GeckoDriver(gdpath))
+	} else {
+		browser = "Chrome"
+		cdpath := getDriverPath(path.Join(path, "chromedriver_*"))
+		opts = append(opts, selenium.ChromeDriver(cdpath))
+	}
+	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
+	return selenium.NewSeleniumService(seleniumpath, port, opts)
 }
 
 func searchTaxonomies() {
 	// Manages API and selenium searches
-	ch := make(chan bool, *max)
+	var f, m int
+	ch := make(chan int, *max)
 	s := newSearcher()
 	s.termMap(*infile)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for k := range s.terms {
 		s.searchTerm(ch, k)
-		_ = <-ch
-		//fmt.Printf("\tFound %d of %d queries.\r", s.matches, len(s.terms))
+		f += <-ch
+		fmt.Printf("\tSearched %d of %d terms.\r", f, len(s.terms))
 	}
-	fmt.Println()
+	fmt.Printf("\n\tFound matches for %d queries.\n\n", s.matches)
 	// Perform selenium search on misses
-
+	f = s.matches
+	service, err := startService(*firefox)
+	if err == nil {
+		defer service.Stop()
+		for _, i := range s.misses {
+			m += seleniumSearch(i)
+			fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
+		}
+		fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
+		fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
+	} else {
+		fmt.Printf("\t[Error] Could not initialize Selenium server: %v", err)
+		fmt.Println("\n\tWriting misses to file...")
+		for _, i := range s.misses {
+			s.writeMisses(i)
+		}
+	}
+	fmt.Printf("\tCould not find matches for %s queries.\n\n", s.fails)
 }
