@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -32,10 +33,10 @@ func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
 	return ret
 }
 
-func getDriverPath(path string) string {
+func getDriverPath(dir string) string {
 	// Returns path to driver
 	var ret string
-	p, err := filepath.Glob(path)
+	p, err := filepath.Glob(dir)
 	if err == nil {
 		for _, i := range p {
 			if strings.Contains(i, ".zip") == false && strings.Contains(i, ".tar") == false {
@@ -49,13 +50,43 @@ func getDriverPath(path string) string {
 	return ret
 }
 
+func getSeleniumPath(dir string) string {
+	// Returns path to selenium jar
+	var ret string
+	p, err := filepath.Glob(path.Join(dir, "selenium-server-standalone-*"))
+	if err == nil {
+		if len(p) > 1 {
+			// Get highest version number
+			ver := 0.0
+			for _, i := range p {
+				n := i[strings.LastIndex(i, "-") + 1:strings.LastIndex(i, ".")]
+				if strings.Count(n, ".") > 1{
+					n = n[:strings.LastIndex(n, ".")]
+				}
+				v, er := strconv.ParseFloat(n, 64)
+				if er == nil && v > ver {
+					ver = v
+					ret = i
+				}
+			}		
+		} else if len(p) == 1 {
+			ret = p[0]
+		}
+		if iotools.Exists(ret) == false {
+			ret = ""
+		}
+	}
+	return ret
+}
+
 func startService(firefox bool) (*selenium.Service, error) {
 	// Initialzes new selenium browser
 	var browser string
 	port := 8080
 	gopath := iotools.GetGOPATH()
 	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
-	seleniumpath := path.Join(dir, "selenium-server-standalone-3.4.jar")
+	seleniumpath := getSeleniumPath(dir)
+	fmt.Println(iotools.Exists(seleniumpath))
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(), 
 		selenium.Output(os.Stderr),
@@ -67,7 +98,7 @@ func startService(firefox bool) (*selenium.Service, error) {
 	} else {
 		browser = "Chrome"
 		cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
-		fmt.Println(dir)
+		fmt.Println(cdpath)
 		opts = append(opts, selenium.ChromeDriver(cdpath))
 	}
 	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
