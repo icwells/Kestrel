@@ -119,14 +119,14 @@ func searchTaxonomies() {
 				//fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
 			}
 			fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
-			fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
 		} else {
 			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", err)
-			/*fmt.Println("\n\tWriting misses to file...")
+			fmt.Println("\n\tWriting misses to file...")
 			for _, i := range s.misses {
 				s.writeMisses(i)
-			}*/
+			}
 		}
 	}
+	fmt.Printf("\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
 }

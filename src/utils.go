@@ -14,6 +14,7 @@ type apis struct {
 	ncbi	string
 	wiki	string
 	iucn	string
+	redlist string
 	eol		string
 	search	string
 	pages	string
@@ -27,19 +28,14 @@ func newAPIs() apis {
 	a.itis = "https://www.itis.gov/"
 	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 	a.iucn = "http://apiv3.iucnredlist.org/api/v3/species/"
+	a.redlist = "http://www.iucnredlist.org"
 	a.wiki = "https://en.wikipedia.org/wiki/"
 	a.eol = "http://eol.org/api/"
 	a.search = "search/1.0."
 	a.pages = "pages/1.0."
 	a.hier = "hierarchy_entries/1.0."
-	a.targets = []*string{&a.ncbi, &a.iucn, &a.wiki, &a.eol, &a.itis}
+	a.targets = []*string{&a.redlist, &a.wiki, &a.eol, &a.itis}
 	return a
-}
-
-func removeKey(url string) string {
-	// Returns urls with api key removed
-	idx := strings.LastIndex(url, "&")
-	return url[:idx]
 }
 
 //----------------------------------------------------------------------------
@@ -86,6 +82,12 @@ func (t *term) addQuery(query string) {
 }
 
 //----------------------------------------------------------------------------
+
+func removeKey(url string) string {
+	// Returns urls with api key removed
+	idx := strings.LastIndex(url, "&")
+	return url[:idx]
+}
 
 func checkFile(infile string) {
 	// Makes sure imut file exists

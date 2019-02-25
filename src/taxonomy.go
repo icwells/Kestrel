@@ -195,15 +195,45 @@ func (t *taxonomy) scrapeEOL(url string) {
 				found++
 				if found == 7 {
 					// Break if all levels have been found
-					return false
+					return true
 				}
 			}
-			return true
+			return false
 		})
 		entry := page.Find("entry")
 		// Store canonical species name
 		t.setLevel("species", entry.Find("canonical-form").Text())
 		t.checkTaxa()
+	}
+}
+
+func (t *taxonomy) scrapeItis(url string) {
+	// Scrapes taxonomy info from itis
+	t.source = url
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		found := 0
+		tbody := page.Find("tbody")
+		tbody.Find("tr").EachWithBreak(func(i int, tr *goquery.Selection) bool {
+			tr.Find("td").Each(func(j int, td *goquery.Selection) {
+				fmt.Println(td.Attr("class"))
+				str := td.Text()
+				if len(str) > 0 {
+					level := t.isLevel(str)
+					if len(level) > 0 {
+						t.setLevel(level, td.Next().Find("a").Text())
+						found++
+					}
+				}
+			})
+			if found == 7 {
+				// Break if all levels have been found
+				return true
+			}
+			return false
+		})
+		t.checkTaxa()
+		fmt.Println(t.String())
 	}
 }
 

@@ -14,34 +14,77 @@ import (
 	"strings"
 )
 
+func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
+	// Attempts to find taxonomy from given urls
+	taxa := make(map[string]taxonomy)
+	for k, v := range urls {
+		var source string
+		t := newTaxonomy()
+		if strings.Contains(v, "#") == true {
+			// Remove subheader link
+			v = v[:strings.Index(v, "#")]
+		}
+		switch (k) {
+			/*case s.urls.wiki:
+				t.scrapeWiki(v)
+				source = "WIKI"
+			case s.urls.eol:
+				t.scrapeEOL(v)
+				source = "EOL"
+			case s.urls.itis:
+				t.scrapeItis(v)
+				source = "ITIS"*/
+			case s.urls.redlist:
+				t.scrapeRedList(v)
+				source = "IUCN"
+		}
+		if t.found == true {
+			taxa[source] = t
+		}
+	}
+	return taxa
+}
+
 func (s *searcher) getURLs(res string) map[string]string {
 	// Returns slice os urls to scrape
 	ret := make(map[string]string)
 	page, err := goquery.NewDocumentFromReader(strings.NewReader(res))
 	if err == nil {
-		page.Find("a").EachWithBreak(func(i int, r *goquery.Selection) bool {
+		page.Find("a").Each(func(i int, r *goquery.Selection) {
 			// Examine all attach tags for target links
 			url, ex := r.Attr("href")
-			if ex == true {
+			if ex == true && strings.Count(url, ":") <= 1 && strings.Contains(url, "(") == false {
+				// Skip urls from webcaches and disambiguation pages
 				for _, i := range s.urls.targets {
-					if strings.Contains(url, i) == true {
-						ret[i] = url
-						fmt.Println(url)
-						if len(ret) == len(s.urls.targets) {
-							return true
+					if strings.Contains(url, *i) == true {
+						if _, exists := ret[*i]; exists == false {
+							ret[*i] = url
 						}
 						break
 					}
 				}
 			}
-			return false
 		})
 	}
 	return ret
 }
 
 func (s *searcher) getSearchResults(ch chan int, res, k string) {
-	_ = s.getURLs(res)
+	// Parses urls from google search results
+	found := false
+	urls := s.getURLs(res)
+	taxa := s.parseURLs(urls)
+	if len(taxa) >= 1 {
+		// Only attempt getMatch once
+		found = s.getMatch(s.terms[k].term, 1, taxa)
+	}
+	if found == true {
+		s.writeMatches(k)
+	//} else {
+		// Write missed queries to file
+		//s.writeMisses(k)
+	}
+	ch <- 1
 }
 
 func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
