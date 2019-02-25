@@ -29,6 +29,7 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 				t.scrapeWiki(v)
 				source = "WIKI"
 			case s.urls.eol:
+				fmt.Println(v)
 				t.scrapeEOL(v)
 				source = "EOL"
 			case s.urls.itis:
