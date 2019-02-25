@@ -14,18 +14,27 @@ import (
 	"strings"
 )
 
-func (s *searcher) getURLs(res string) []string {
+func (s *searcher) getURLs(res string) map[string]string {
 	// Returns slice os urls to scrape
-	var ret []string
+	ret := make(map[string]string)
 	page, err := goquery.NewDocumentFromReader(strings.NewReader(res))
 	if err == nil {
 		page.Find("a").EachWithBreak(func(i int, r *goquery.Selection) bool {
 			// Examine all attach tags for target links
 			url, ex := r.Attr("href")
 			if ex == true {
-				fmt.Println(url)
+				for _, i := range s.urls.targets {
+					if strings.Contains(url, i) == true {
+						ret[i] = url
+						fmt.Println(url)
+						if len(ret) == len(s.urls.targets) {
+							return true
+						}
+						break
+					}
+				}
 			}
-			return true
+			return false
 		})
 	}
 	return ret
