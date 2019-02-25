@@ -139,8 +139,10 @@ func (s *searcher) termMap(infile string) {
 func (s *searcher) writeMisses(k string) {
 	// Writes terms with no match to missed file
 	out := iotools.AppendFile(s.missed)
+	defer out.Close()
+	t := percentDecode(k)
 	for _, i := range s.terms[k].queries {
-		out.WriteString(fmt.Sprintf("%s,%s,noMatch\n", i, k))
+		out.WriteString(fmt.Sprintf("%s,%s,noMatch\n", i, t))
 		s.fails++
 	}
 }
@@ -148,6 +150,7 @@ func (s *searcher) writeMisses(k string) {
 func (s *searcher) writeMatches(k string) {
 	// Appends matches to file
 	out := iotools.AppendFile(s.outfile)
+	defer out.Close()
 	match := s.terms[k].String()
 	for _, i := range s.terms[k].queries {
 		out.WriteString(fmt.Sprintf("%s,%s\n", i, match))

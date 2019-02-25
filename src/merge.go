@@ -90,9 +90,9 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, 
 			d = iotools.GetDelim(line)
 			s := strings.Split(line, d)
 			if prepend == false {
-				header = strings.Join(s, ",") + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName\n"
+				header = strings.Join(s, ",") + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName"
 			} else {
-				header = "Kingdom,Phylum,Class,Order,Family,Genus,ScientificName," + strings.Join(s, ",") + "\n"
+				header = "Kingdom,Phylum,Class,Order,Family,Genus,ScientificName," + strings.Join(s, ",")
 			}
 			first = false
 		}

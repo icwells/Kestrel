@@ -4,12 +4,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/icwells/go-tools/iotools"
-	"github.com/tebeka/selenium"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
+	//"strings"
 )
 
 func (s *searcher) setTaxonomy(key, s1, s2, source string, t taxonomy) {
@@ -88,76 +83,40 @@ func (s *searcher) searchTerm(ch chan int, k string) {
 	if found == true {
 		s.writeMatches(k)
 	} else {
-		// Record missed keys
+		// Record missed keys and reset term to original
+		s.terms[k].term = k
 		s.misses = append(s.misses, k)
 	}
 	ch <- 1
 }
 
-func getDriverPath(path string) string {
-	// Returns path to driver
-	var ret string
-	p, err := filepath.Glob(path)
-	if err == nil {
-		for _, i := range p {
-			if strings.Contains(i, ".zip") == false && strings.Contains(i, ".tar") == false {
-				if iotools.Exists(i) == true {
-					ret = i
-					break
-				}
-			}
-		}
-	}
-	return ret
-}
-
-func startService(firefox bool) (*selenium.Service, error) {
-	// Initialzes new selenium browser
-	var browser string
-	port := 8080
-	gopath := iotools.GetGOPATH()
-	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
-	seleniumpath := path.Join(dir, "selenium-server-standalone-3.4.jar")
-	opts := []selenium.ServiceOption{
-		selenium.StartFrameBuffer(), 
-		selenium.Output(os.Stderr),
-	}
-	if firefox == true {
-		browser = "Firefox"
-		gdpath := getDriverPath(path.Join(dir, "geckodriver-*"))
-		opts = append(opts, selenium.GeckoDriver(gdpath))
-	} else {
-		browser = "Chrome"
-		cdpath := getDriverPath(path.Join(dir, "chromedriver_*"))
-		opts = append(opts, selenium.ChromeDriver(cdpath))
-	}
-	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
-	return selenium.NewSeleniumService(seleniumpath, port, opts...)
-}
-
 func searchTaxonomies() {
 	// Manages API and selenium searches
-	var f int
+	var f, m int
 	ch := make(chan int, *max)
 	s := newSearcher()
 	s.termMap(*infile)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for k := range s.terms {
-		s.searchTerm(ch, k)
+		go s.searchTerm(ch, k)
 		f += <-ch
 		fmt.Printf("\tSearched %d of %d terms.\r", f, len(s.terms))
 	}
 	fmt.Printf("\n\tFound matches for %d queries.\n\n", s.matches)
 	// Perform selenium search on misses
 	f = s.matches
-	service, err := startService(*firefox)
+	service, browser, err := getBrowser(*firefox)
 	if err == nil {
 		defer service.Stop()
-		/*for _, i := range s.misses {
-			m += seleniumSearch(i)
-			fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
-		}*/
+		defer browser.Close()
+		for _, i := range s.misses {
+			res := s.seleniumSearch(browser, i)
+			// Parse search results concurrently
+			go s.getSearchResults(ch, res, i)
+			m += <- ch
+			//fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
+		}
 		fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
 		fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
 	} else {
@@ -167,5 +126,5 @@ func searchTaxonomies() {
 			s.writeMisses(i)
 		}
 	}
-	fmt.Printf("\tCould not find matches for %s queries.\n\n", s.fails)
+	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
 }

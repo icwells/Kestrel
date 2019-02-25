@@ -17,7 +17,7 @@ type term struct {
 func newTerm(query string) term {
 	// Returns initialized term
 	var t term
-	if len(query) >= 1 {
+	if len(query) > 0 {
 		t.addQuery(query)
 	}
 	t.taxonomy = newTaxonomy()
