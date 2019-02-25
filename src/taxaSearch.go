@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	//"strings"
+	"strings"
 )
 
 func (s *searcher) setTaxonomy(key, s1, s2, source string, t taxonomy) {
@@ -60,7 +60,7 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 func (s *searcher) searchTerm(ch chan int, k string) {
 	// Performs api search for given term
 	var found bool
-	/*l := strings.Count(s.terms[k].term, "%20") + 1
+	l := strings.Count(s.terms[k].term, "%20") + 1
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
@@ -79,7 +79,7 @@ func (s *searcher) searchTerm(ch chan int, k string) {
 		} else {
 			break
 		}
-	}*/
+	}
 	if found == true {
 		s.writeMatches(k)
 	} else {
@@ -122,10 +122,10 @@ func searchTaxonomies() {
 			fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
 		} else {
 			fmt.Printf("\t[Error] Could not initialize Selenium server: %v", err)
-			fmt.Println("\n\tWriting misses to file...")
+			/*fmt.Println("\n\tWriting misses to file...")
 			for _, i := range s.misses {
 				s.writeMisses(i)
-			}
+			}*/
 		}
 	}
 	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
