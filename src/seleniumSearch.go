@@ -66,7 +66,7 @@ func startService(firefox bool) (*selenium.Service, error) {
 		opts = append(opts, selenium.GeckoDriver(gdpath))
 	} else {
 		browser = "Chrome"
-		cdpath := getDriverPath(path.Join(dir, "chromedriver_*"))
+		cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
 		fmt.Println(dir)
 		opts = append(opts, selenium.ChromeDriver(cdpath))
 	}
