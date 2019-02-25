@@ -21,15 +21,20 @@ func (s *searcher) getSearchResults(ch chan int, res, k string) {
 func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
 	// Gets Google search result page
 	var ret string
-	elem, err := browser.FindElement(selenium.ByName, "q")
-	if err == nil {
-		elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
-		ret, err = browser.PageSource()
-		if err != nil {
-			// Ensure empty return
-			ret = ""
+	er := browser.Get("http://www.google.com")
+	if er == nil {
+		elem, err := browser.FindElement(selenium.ByName, "q")
+		if err == nil {
+			elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
+			ret, err = browser.PageSource()
+			if err != nil {
+				// Ensure empty return
+				ret = ""
+			}
 		}
 	}
+	// Close browser window
+	_ = browser.Close()
 	return ret
 }
 
@@ -79,14 +84,12 @@ func getSeleniumPath(dir string) string {
 	return ret
 }
 
-func startService(firefox bool) (*selenium.Service, error) {
+func startService(port int, firefox bool) (*selenium.Service, error) {
 	// Initialzes new selenium browser
 	var browser string
-	port := 8080
 	gopath := iotools.GetGOPATH()
 	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
 	seleniumpath := getSeleniumPath(dir)
-	fmt.Println(iotools.Exists(seleniumpath))
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(), 
 		selenium.Output(os.Stderr),
@@ -98,7 +101,6 @@ func startService(firefox bool) (*selenium.Service, error) {
 	} else {
 		browser = "Chrome"
 		cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
-		fmt.Println(cdpath)
 		opts = append(opts, selenium.ChromeDriver(cdpath))
 	}
 	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
@@ -108,14 +110,16 @@ func startService(firefox bool) (*selenium.Service, error) {
 func getBrowser(firefox bool) (*selenium.Service, selenium.WebDriver, error) {
 	// Returns selenium service, browser instance, and error
 	var wd selenium.WebDriver
-	service, err := startService(firefox)
+	port := 8080
+	service, err := startService(port, firefox)
 	if err == nil {
 		browser := "chrome"
 		if firefox == true {
 			browser = "firefox"
 		}
+		fmt.Println(browser)
 		caps := selenium.Capabilities{"browserName": browser}
-		wd, err = selenium.NewRemote(caps, "http://www.google.com")
+		wd, err = selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", port))
 	}
 	return service, wd, err
 }

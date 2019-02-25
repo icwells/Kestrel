@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	//"strings"
 )
 
 func (s *searcher) setTaxonomy(key, s1, s2, source string, t taxonomy) {
@@ -60,7 +60,7 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 func (s *searcher) searchTerm(ch chan int, k string) {
 	// Performs api search for given term
 	var found bool
-	l := strings.Count(s.terms[k].term, "%20") + 1
+	/*l := strings.Count(s.terms[k].term, "%20") + 1
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
@@ -79,7 +79,7 @@ func (s *searcher) searchTerm(ch chan int, k string) {
 		} else {
 			break
 		}
-	}
+	}*/
 	if found == true {
 		s.writeMatches(k)
 	} else {
@@ -110,7 +110,7 @@ func searchTaxonomies() {
 		service, browser, err := getBrowser(*firefox)
 		if err == nil {
 			defer service.Stop()
-			defer browser.Close()
+			defer browser.Quit()
 			for _, i := range s.misses {
 				res := s.seleniumSearch(browser, i)
 				// Parse search results concurrently
@@ -121,7 +121,7 @@ func searchTaxonomies() {
 			fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
 			fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
 		} else {
-			fmt.Printf("\t[Error] Could not initialize Selenium server: %v", err)
+			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", err)
 			/*fmt.Println("\n\tWriting misses to file...")
 			for _, i := range s.misses {
 				s.writeMisses(i)
