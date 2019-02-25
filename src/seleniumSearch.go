@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/tebeka/selenium"
 	"os"
 	"path"
@@ -13,9 +14,25 @@ import (
 	"strings"
 )
 
+func (s *searcher) getURLs(res string) []string {
+	// Returns slice os urls to scrape
+	var ret []string
+	page, err := goquery.NewDocumentFromReader(strings.NewReader(res))
+	if err == nil {
+		page.Find("a").EachWithBreak(func(i int, r *goquery.Selection) bool {
+			// Examine all attach tags for target links
+			url, ex := r.Attr("href")
+			if ex == true {
+				fmt.Println(url)
+			}
+			return true
+		})
+	}
+	return ret
+}
+
 func (s *searcher) getSearchResults(ch chan int, res, k string) {
-	fmt.Println(res)
-	os.Exit(0)
+	_ = s.getURLs(res)
 }
 
 func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {

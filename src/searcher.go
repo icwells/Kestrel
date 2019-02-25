@@ -91,12 +91,6 @@ func newSearcher() searcher {
 	return s
 }
 
-func percentEncode(term string) string {
-	// Percent encodes apostrophes and spaces
-	term = strings.Replace(term, " ", "%20", -1)
-	return strings.Replace(term, "'", "%27", -1)
-}
-
 func (s *searcher) termMap(infile string) {
 	// Reads formatted species names
 	var d string
