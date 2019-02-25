@@ -163,10 +163,9 @@ func filterTerms(infile string, c int) ([][]string, [][]string) {
 func extractSearchTerms() {
 	// Extracts and formats input terms
 	checkFile(*infile)
-	checkColumn(*column)
 	dir, _ := path.Split(*outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")
-	pass, fail := filterTerms(*infile, *column)
+	pass, fail := filterTerms(*infile, *ecol)
 	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.", len(pass), len(fail))
 	iotools.WriteToCSV(*outfile, "Query,SearchTerm\n", pass)
 	iotools.WriteToCSV(misses, "Query,SearchTerm,Reason\n", fail)

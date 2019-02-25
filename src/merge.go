@@ -26,6 +26,7 @@ func newTaxa(infile string) taxamerger {
 	// Reads in results as a map of string slices
 	var t taxamerger
 	t.taxa = make(map[string][]string)
+	t.nas = []string{"NA", "NA", "NA", "NA", "NA", "NA", "NA"}
 	var d string
 	var h map[string]int
 	first := true
@@ -59,7 +60,7 @@ func (t *taxamerger) getTaxa(n string) []string {
 	return ret
 }
 
-func (t *taxamerger) mergeTaxonomy(infile string, c int) (string, [][]string) {
+func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, [][]string) {
 	// Returns header and merged results
 	first := true
 	var ret [][]string
@@ -75,20 +76,23 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int) (string, [][]string) {
 			if len(s) >= c {
 				var row []string
 				taxa := t.getTaxa(s[c])
-				if taxa != nil {
+				if taxa == nil {
+					taxa = t.nas
+				}
+				if prepend == false {
 					row = append(s, taxa...)
 				} else {
-					row = append(s, t.nas...)
+					row = append(taxa, s...)
 				}
 				ret = append(ret, row)
 			}
 		} else {
 			d = iotools.GetDelim(line)
 			s := strings.Split(line, d)
-			header = strings.Join(s, ",") + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName\n"
-			for i := 0; i < len(s); i++ {
-				// Get blank entry
-				t.nas = append(t.nas, "NA")
+			if prepend == false {
+				header = strings.Join(s, ",") + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName\n"
+			} else {
+				header = "Kingdom,Phylum,Class,Order,Family,Genus,ScientificName," + strings.Join(s, ",") + "\n"
 			}
 			first = false
 		}
@@ -100,9 +104,8 @@ func mergeResults() {
 	// Merges search results with source file
 	checkFile(*infile)
 	checkFile(*resfile)
-	checkColumn(*column)
 	taxa := newTaxa(*resfile)
-	header, results := taxa.mergeTaxonomy(*infile, *column)
+	header, results := taxa.mergeTaxonomy(*infile, *mcol, *prepend)
 	fmt.Println("\tWriting output...")
 	iotools.WriteToCSV(*outfile, header, results)
 }

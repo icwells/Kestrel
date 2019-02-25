@@ -116,28 +116,28 @@ func startService(firefox bool) (*selenium.Service, error) {
 	var browser string
 	port := 8080
 	gopath := iotools.GetGOPATH()
-	path := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
-	seleniumpath := path.Join(path, "selenium-server-standalone-3.4.jar")
+	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
+	seleniumpath := path.Join(dir, "selenium-server-standalone-3.4.jar")
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(), 
 		selenium.Output(os.Stderr),
 	}
 	if firefox == true {
 		browser = "Firefox"
-		gdpath := getDriverPath(path.Join(path, "geckodriver-*"))
+		gdpath := getDriverPath(path.Join(dir, "geckodriver-*"))
 		opts = append(opts, selenium.GeckoDriver(gdpath))
 	} else {
 		browser = "Chrome"
-		cdpath := getDriverPath(path.Join(path, "chromedriver_*"))
+		cdpath := getDriverPath(path.Join(dir, "chromedriver_*"))
 		opts = append(opts, selenium.ChromeDriver(cdpath))
 	}
 	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
-	return selenium.NewSeleniumService(seleniumpath, port, opts)
+	return selenium.NewSeleniumService(seleniumpath, port, opts...)
 }
 
 func searchTaxonomies() {
 	// Manages API and selenium searches
-	var f, m int
+	var f int
 	ch := make(chan int, *max)
 	s := newSearcher()
 	s.termMap(*infile)
@@ -154,10 +154,10 @@ func searchTaxonomies() {
 	service, err := startService(*firefox)
 	if err == nil {
 		defer service.Stop()
-		for _, i := range s.misses {
+		/*for _, i := range s.misses {
 			m += seleniumSearch(i)
 			fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
-		}
+		}*/
 		fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
 		fmt.Printf("\tFound matched for a total of %d queries.\n", s.matches)
 	} else {
