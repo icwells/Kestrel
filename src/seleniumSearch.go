@@ -25,7 +25,7 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 			v = v[:strings.Index(v, "#")]
 		}
 		switch (k) {
-			/*case s.urls.wiki:
+			case s.urls.wiki:
 				t.scrapeWiki(v)
 				source = "WIKI"
 			case s.urls.eol:
@@ -33,10 +33,7 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 				source = "EOL"
 			case s.urls.itis:
 				t.scrapeItis(v)
-				source = "ITIS"*/
-			case s.urls.redlist:
-				t.scrapeRedList(v)
-				source = "IUCN"
+				source = "ITIS"
 		}
 		if t.found == true {
 			taxa[source] = t

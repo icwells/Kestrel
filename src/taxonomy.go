@@ -213,8 +213,7 @@ func (t *taxonomy) scrapeItis(url string) {
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		found := 0
-		tbody := page.Find("tbody")
-		tbody.Find("tr").EachWithBreak(func(i int, tr *goquery.Selection) bool {
+		page.Find("tr").EachWithBreak(func(i int, tr *goquery.Selection) bool {
 			tr.Find("td").Each(func(j int, td *goquery.Selection) {
 				fmt.Println(td.Attr("class"))
 				str := td.Text()
