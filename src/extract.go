@@ -117,7 +117,7 @@ func (t *term) titleCase() {
 	for _, i := range s {
 		if len(i) > 1 {
 			// Skip stray characters
-			query = append(query, strings.ToUpper(string(i[0])) + strings.ToLower(i[1:]))
+			query = append(query, strings.ToUpper(string(i[0]))+strings.ToLower(i[1:]))
 		}
 	}
 	t.term = strings.Join(query, " ")

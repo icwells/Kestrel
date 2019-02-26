@@ -10,14 +10,14 @@ import (
 )
 
 type apis struct {
-	itis	string
-	ncbi	string
-	wiki	string
-	iucn	string
-	eol		string
-	search	string
-	pages	string
-	hier	string
+	itis   string
+	ncbi   string
+	wiki   string
+	iucn   string
+	eol    string
+	search string
+	pages  string
+	hier   string
 }
 
 func newAPIs() apis {

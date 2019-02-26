@@ -139,7 +139,7 @@ func (s *searcher) getTID(term string) string {
 			return true
 		})
 	}
-	return ret	
+	return ret
 }
 
 func (s *searcher) searchEOL(k string) taxonomy {

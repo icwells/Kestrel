@@ -19,7 +19,7 @@ type searcher struct {
 	misses  []string
 	urls    apis
 	matches int
-	fails	int
+	fails   int
 }
 
 func (s *searcher) assignKey(line string) {

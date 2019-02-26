@@ -50,19 +50,35 @@ func (t *taxonomy) String() string {
 	return strings.Join(ret, ",")
 }
 
+func (t *taxonomy) copyTaxonomy(x taxonomy) {
+	// Deep copies x to t
+	t.kingdom = x.kingdom
+	t.phylum = x.phylum
+	t.class = x.class
+	t.order = x.order
+	t.family = x.family
+	t.genus = x.genus
+	t.species = x.species
+	t.source = x.source
+	t.found = x.found
+	t.nas = x.nas
+}
+
 func (t *taxonomy) countNAs() {
 	// Rechecks nas
+	nas := 0
 	for _, i := range []string{t.kingdom, t.phylum, t.class, t.order, t.family, t.genus, t.species} {
-		if i != "NA" {
-			t.nas--
+		if i == "NA" {
+			nas++
 		}
 	}
+	t.nas = nas
 }
 
 func (t *taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
 	if l != "NA" {
-		l = strings.TrimSpace(strings.Replace(l, ",", "", -1))
+		l = strings.Replace(l, ",", "", -1)
 		if sp == false {
 			if strings.Contains(l, " ") == true {
 				l = strings.Split(l, " ")[0]
@@ -87,6 +103,7 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 
 func (t *taxonomy) checkTaxa() {
 	// Checks formatting
+	t.countNAs()
 	if t.nas <= 2 && t.genus != "NA" {
 		t.found = true
 		if t.kingdom == "Metazoa" {
@@ -106,23 +123,25 @@ func (t *taxonomy) checkTaxa() {
 
 func (t *taxonomy) setLevel(key, value string) {
 	// Sets level denoted by key with value
-	switch key {
-	case "kingdom":
-		t.kingdom = value
-	case "phylum":
-		t.phylum = value
-	case "class":
-		t.class = value
-	case "order":
-		t.order = value
-	case "family":
-		t.family = value
-	case "genus":
-		t.genus = value
-	case "species":
-		t.species = value
+	value = strings.TrimSpace(value)
+	if strings.ToUpper(value) != "NA" && len(value) > 1 {
+		switch key {
+		case "kingdom":
+			t.kingdom = value
+		case "phylum":
+			t.phylum = value
+		case "class":
+			t.class = value
+		case "order":
+			t.order = value
+		case "family":
+			t.family = value
+		case "genus":
+			t.genus = value
+		case "species":
+			t.species = value
+		}
 	}
-	t.nas--
 }
 
 func (t *taxonomy) isLevel(s string) string {
@@ -252,6 +271,5 @@ func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
 	t.family = a.result.family
 	t.genus = a.result.genus
 	t.species = a.result.scientific_name
-	t.countNAs()
 	t.checkTaxa()
 }

@@ -4,14 +4,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/icwells/go-tools/iotools"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/icwells/go-tools/iotools"
 	"github.com/tebeka/selenium"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
@@ -24,13 +25,13 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 			// Remove subheader link
 			v = v[:strings.Index(v, "#")]
 		}
-		switch (k) {
-			case s.urls.wiki:
-				t.scrapeWiki(v)
-				source = "WIKI"
-			case s.urls.itis:
-				t.scrapeItis(v)
-				source = "ITIS"
+		switch k {
+		case s.urls.wiki:
+			t.scrapeWiki(v)
+			source = "WIKI"
+		case s.urls.itis:
+			t.scrapeItis(v)
+			source = "ITIS"
 		}
 		if t.found == true {
 			taxa[source] = t
@@ -63,8 +64,9 @@ func (s *searcher) getURLs(res string) map[string]string {
 	return ret
 }
 
-func (s *searcher) getSearchResults(ch chan int, res, k string) {
+func (s *searcher) getSearchResults(wg *sync.WaitGroup, res, k string) {
 	// Parses urls from google search results
+	defer wg.Done()
 	found := false
 	urls := s.getURLs(res)
 	taxa := s.parseURLs(urls)
@@ -78,7 +80,6 @@ func (s *searcher) getSearchResults(ch chan int, res, k string) {
 		// Write missed queries to file
 		s.writeMisses(k)
 	}
-	ch <- 1
 }
 
 func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
@@ -125,8 +126,8 @@ func getSeleniumPath(dir string) string {
 			// Get highest version number
 			ver := 0.0
 			for _, i := range p {
-				n := i[strings.LastIndex(i, "-") + 1:strings.LastIndex(i, ".")]
-				if strings.Count(n, ".") > 1{
+				n := i[strings.LastIndex(i, "-")+1 : strings.LastIndex(i, ".")]
+				if strings.Count(n, ".") > 1 {
 					n = n[:strings.LastIndex(n, ".")]
 				}
 				v, er := strconv.ParseFloat(n, 64)
@@ -134,7 +135,7 @@ func getSeleniumPath(dir string) string {
 					ver = v
 					ret = i
 				}
-			}		
+			}
 		} else if len(p) == 1 {
 			ret = p[0]
 		}
@@ -152,7 +153,7 @@ func startService(port int, firefox bool) (*selenium.Service, error) {
 	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
 	seleniumpath := getSeleniumPath(dir)
 	opts := []selenium.ServiceOption{
-		selenium.StartFrameBuffer(), 
+		selenium.StartFrameBuffer(),
 		selenium.Output(os.Stderr),
 	}
 	if firefox == true {
