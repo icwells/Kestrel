@@ -14,9 +14,11 @@ import (
 func (t *term) checkPunctuation() {
 	// Returns false if term contains puntuation
 	for _, i := range []rune(t.term) {
-		if i != '.' && unicode.IsPunct(i) == true {
-			t.status = "punctuation"
-			break
+		if i != '.' && i != '-' {
+			if unicode.IsPunct(i) == true {
+				t.status = "punctuation"
+				break
+			}
 		}
 	}
 }
