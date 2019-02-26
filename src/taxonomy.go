@@ -215,7 +215,6 @@ func (t *taxonomy) scrapeItis(url string) {
 		found := 0
 		page.Find("tr").EachWithBreak(func(i int, tr *goquery.Selection) bool {
 			tr.Find("td").Each(func(j int, td *goquery.Selection) {
-				fmt.Println(td.Attr("class"))
 				str := td.Text()
 				if len(str) > 0 {
 					level := t.isLevel(str)
@@ -232,7 +231,7 @@ func (t *taxonomy) scrapeItis(url string) {
 			return false
 		})
 		t.checkTaxa()
-		fmt.Println(t.String())
+		//fmt.Println(t.String())
 	}
 }
 

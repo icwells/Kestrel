@@ -28,10 +28,6 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 			case s.urls.wiki:
 				t.scrapeWiki(v)
 				source = "WIKI"
-			case s.urls.eol:
-				fmt.Println(v)
-				t.scrapeEOL(v)
-				source = "EOL"
 			case s.urls.itis:
 				t.scrapeItis(v)
 				source = "ITIS"
@@ -53,10 +49,10 @@ func (s *searcher) getURLs(res string) map[string]string {
 			url, ex := r.Attr("href")
 			if ex == true && strings.Count(url, ":") <= 1 && strings.Contains(url, "(") == false {
 				// Skip urls from webcaches and disambiguation pages
-				for _, i := range s.urls.targets {
-					if strings.Contains(url, *i) == true {
-						if _, exists := ret[*i]; exists == false {
-							ret[*i] = url
+				for _, i := range []string{s.urls.wiki, s.urls.itis} {
+					if strings.Contains(url, i) == true {
+						if _, exists := ret[i]; exists == false {
+							ret[i] = url
 						}
 						break
 					}
@@ -78,9 +74,9 @@ func (s *searcher) getSearchResults(ch chan int, res, k string) {
 	}
 	if found == true {
 		s.writeMatches(k)
-	//} else {
+	} else {
 		// Write missed queries to file
-		//s.writeMisses(k)
+		s.writeMisses(k)
 	}
 	ch <- 1
 }
@@ -100,8 +96,6 @@ func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
 			}
 		}
 	}
-	// Close browser window
-	_ = browser.Close()
 	return ret
 }
 
@@ -170,7 +164,7 @@ func startService(port int, firefox bool) (*selenium.Service, error) {
 		cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
 		opts = append(opts, selenium.ChromeDriver(cdpath))
 	}
-	fmt.Printf("\tPerfoming Selenium search with %s browser...\n", browser)
+	fmt.Printf("\tPerfoming Selenium search with %s browser...\n\n", browser)
 	return selenium.NewSeleniumService(seleniumpath, port, opts...)
 }
 
@@ -188,5 +182,7 @@ func getBrowser(firefox bool) (*selenium.Service, selenium.WebDriver, error) {
 		caps := selenium.Capabilities{"browserName": browser}
 		wd, err = selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", port))
 	}
+	// Println blank line after selenium stdout
+	fmt.Println()
 	return service, wd, err
 }

@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	//"strings"
+	"strings"
 )
 
 func (s *searcher) setTaxonomy(key, s1, s2, source string, t taxonomy) {
@@ -60,7 +60,7 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 func (s *searcher) searchTerm(ch chan int, k string) {
 	// Performs api search for given term
 	var found bool
-	/*l := strings.Count(s.terms[k].term, "%20") + 1
+	l := strings.Count(s.terms[k].term, "%20") + 1
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
@@ -79,7 +79,7 @@ func (s *searcher) searchTerm(ch chan int, k string) {
 		} else {
 			break
 		}
-	}*/
+	}
 	if found == true {
 		s.writeMatches(k)
 	} else {
@@ -116,7 +116,7 @@ func searchTaxonomies() {
 				// Parse search results concurrently
 				go s.getSearchResults(ch, res, i)
 				m += <- ch
-				//fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
+				fmt.Printf("\tSearched %d of %d missed terms.\r", m, len(s.misses))
 			}
 			fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
 		} else {

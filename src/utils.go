@@ -18,7 +18,6 @@ type apis struct {
 	search	string
 	pages	string
 	hier	string
-	targets	[]*string
 }
 
 func newAPIs() apis {
@@ -32,7 +31,6 @@ func newAPIs() apis {
 	a.search = "search/1.0."
 	a.pages = "pages/1.0."
 	a.hier = "hierarchy_entries/1.0."
-	a.targets = []*string{&a.wiki, &a.eol, &a.itis}
 	return a
 }
 
