@@ -4,7 +4,7 @@ go: "1.10.x"
 
 sudo: required
 
-before_script: install.sh test
+before_script: bash install.sh test
 
-script: test.sh whitebox
+script: bash test.sh whitebox
 
