@@ -4,6 +4,8 @@
 # Performs black box tests on kestrel output
 #	Requires:	Pytest
 ##############################################################################
+WD=$(pwd)
+SRC="$WD/src/*.go"
 
 EXTRACTINPUT="test/testInput.csv"
 EXPECTED="test/taxonomies.csv"
@@ -13,6 +15,12 @@ REJECTED="test/KestrelRejected.csv"
 MISSED="test/KestrelNoMatch.csv"
 
 cd bin/
+
+whiteBoxTests () {
+	echo ""
+	echo "Running white box tests..."
+	go test $SRC
+}
 
 testExtract () {
 	# Extract names and compare output
@@ -32,6 +40,21 @@ cleanup () {
 	done
 }
 
-testExtract
-testSearch
-cleanup
+#testExtract
+#testSearch
+#cleanup
+
+if [ $# -eq 0 ]; then
+	whiteBoxTests
+elif [ $1 = "whitebox" ]; then
+	whiteBoxTests
+elif [ $1 = "all" ]; then
+	whiteBoxTests
+elif [ $1 = "help" ]; then
+	echo "Installs Go scripts for Kestrel"
+	echo ""
+	echo "all				Runs all tests."
+	echo "whiteBoxTests		Runs white box tests only."
+	echo "help				Prints help text and exits."
+	echo ""
+fi

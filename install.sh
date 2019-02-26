@@ -9,7 +9,7 @@
 MAIN="kestrel"
 FS="github.com/renstrom/fuzzysearch/fuzzy"
 GQ="github.com/PuerkitoBio/goquery"
-HT="golang.org/x/net/html"
+#HT="golang.org/x/net/html"
 IO="github.com/icwells/go-tools/iotools"
 SA="github.com/icwells/go-tools/strarray"
 SE="github.com/tebeka/selenium"
@@ -39,7 +39,7 @@ installSelenium () {
 
 installDependencies () {
 	# Get dependencies
-	for I in $FS $GQ $HT $IO $SA $ST ; do
+	for I in $FS $GQ $IO $SA $ST ; do
 		installPackage $I
 	done
 }
@@ -60,10 +60,14 @@ elif [ $1 = "all" ]; then
 	installSelenium
 	installDependencies
 	installMain
-elif [ $1 = "all" ]; then
+elif [ $1 = "test" ]; then
+	installSelenium
+	installDependencies
+elif [ $1 = "help" ]; then
 	echo "Installs Go scripts for Kestrel"
 	echo ""
 	echo "all	Installs all depenencies, including selenium package and drivers."
+	echo "test	Installs dependencies only."
 	echo "help	Prints help text and exits."
 	echo ""
 fi

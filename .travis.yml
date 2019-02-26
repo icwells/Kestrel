@@ -1,0 +1,10 @@
+language: go
+
+go: "1.10.x"
+
+sudo: required
+
+before_script: install.sh test
+
+script: test.sh whitebox
+
