@@ -1,4 +1,4 @@
-// Tests funcitons in the extract script
+// Tests functions in the extract script as well as percent encoding functions
 
 package main
 
@@ -47,6 +47,26 @@ func TestFilter(t *testing.T) {
 			}
 		} else if a.term != e.term {
 			t.Errorf("%s actual term %s does not equal expected: %s", e.query, a.term, e.term)
+		}
+	}
+}
+
+func TestEncoding(t *testing.T) {
+	// Tests percent encode and decode functions
+	expected := []struct {
+		input, output string
+	} {
+		{"SEBA'S STRIPED FINGERFISH", "SEBA%27S%20STRIPED%20FINGERFISH"},
+		{"Sharp shinned Hawk", "Sharp%20shinned%20Hawk"},
+	}
+	for _, e := range expected {
+		encoded := percentEncode(e.input)
+		if encoded != e.output {
+			t.Errorf("Actual encoded string %s does not equal expected: %s", encoded, e.output)
+		}
+		decoded := percentDecode(e.output)
+		if decoded != e.input {
+			t.Errorf("Actual decoded string %s does not equal expected: %s", decoded, e.input)
 		}
 	}
 }
