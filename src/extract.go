@@ -13,8 +13,9 @@ import (
 
 func (t *term) checkPunctuation() {
 	// Returns false if term contains puntuation
+	t.term = strings.Replace(t.term, "`", "", -1)
 	for _, i := range []rune(t.term) {
-		if i != '.' && i != '-' && i == '\'' {
+		if i != '.' && i != '-' && i != '\'' {
 			if unicode.IsPunct(i) == true {
 				t.status = "punctuation"
 				break
@@ -41,6 +42,7 @@ func (t *term) sliceTerm(p1, p2 string) {
 		} else {
 			t.term = t.term[:idx] + t.term[ind+1:]
 		}
+		t.term = strings.TrimSpace(t.term)
 	} else {
 		// Remove puntuation
 		t.term = strings.Replace(t.term, p1, "", -1)
@@ -108,14 +110,28 @@ func (t *term) reformat() {
 	}
 }
 
+func (t *term) titleCase() {
+	// Manually converts term to title case (strings.Title is buggy)
+	var query []string
+	s := strings.Split(t.term, " ")
+	for _, i := range s {
+		if len(i) > 1 {
+			// Skip stray characters
+			query = append(query, strings.ToUpper(string(i[0])) + strings.ToLower(i[1:]))
+		}
+	}
+	t.term = strings.Join(query, " ")
+}
+
 func (t *term) filter() {
 	// Filters input query
 	query := t.queries[0]
 	if len(query) >= 3 {
 		r := regexp.MustCompile(` +`)
-		// Replace extra spaces and convert to title case (convert to lower fist as strings.title ignores all but first character
-		t.term = r.ReplaceAllString(strings.Title(strings.ToLower(query)), " ")
-		t.compareSlice([]string{"?", "not", "unknown"}, "uncertainEntry")
+		// Replace extra spaces and convert to title case
+		t.term = r.ReplaceAllString(query, " ")
+		t.titleCase()
+		t.compareSlice([]string{"?", " not", "not ", "unknown"}, "uncertainEntry")
 		if len(t.status) == 0 {
 			t.compareSlice([]string{" x", "mix ", " mix", "hybrid"}, "hybrid")
 			if len(t.status) == 0 {
@@ -124,6 +140,9 @@ func (t *term) filter() {
 				t.compareSlice([]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}, "numberContent")
 				if len(t.status) == 0 {
 					t.checkPunctuation()
+					if len(t.status) == 0 && len(t.term) < 3 {
+						t.status = "tooShort"
+					}
 				}
 			}
 		}
