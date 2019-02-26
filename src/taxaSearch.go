@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 )
 
 func fillLevel(t1, t2 string) string {
@@ -37,8 +38,10 @@ func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]taxonomy) {
 			t[s1] = fillTaxonomy(t[s1], t[s2])
 		}
 	}
-	s.terms[key].taxonomy.copyTaxonomy(t[s1])
-	s.terms[key].sources[s1] = s.terms[key].taxonomy.source
+	if _, ex := s.terms[key]; ex == true {
+		s.terms[key].taxonomy.copyTaxonomy(t[s1])
+		s.terms[key].sources[s1] = s.terms[key].taxonomy.source
+	}
 }
 
 func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
@@ -62,8 +65,8 @@ func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
 		}
 	} else if last == 1 {
 		// Only accept single match for last search
-		for k := range taxa {
-			k1 = k
+		for key := range taxa {
+			k1 = key
 		}
 	}
 	if len(k1) > 0 {
@@ -115,10 +118,9 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 		s.terms[k].term = k
 		s.misses = append(s.misses, k)
 	}
-	//ch <- 1
 }
 
-func searchTaxonomies() {
+func searchTaxonomies(start time.Time) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
@@ -127,11 +129,13 @@ func searchTaxonomies() {
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for k := range s.terms {
+		//s.misses = append(s.misses, k)
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, k)
 	}
 	wg.Wait()
-	fmt.Printf("\n\tFound matches for %d queries.\n\n", s.matches)
+	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
+	fmt.Printf("\tCurrent run time: %v\n\n", time.Since(start))
 	if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
@@ -143,10 +147,10 @@ func searchTaxonomies() {
 				res := s.seleniumSearch(browser, i)
 				// Parse search results concurrently
 				wg.Add(1)
-				go s.getSearchResults(&wg, res, i)
+				go s.getSearchResults(&wg, &mut, res, i)
 			}
 			wg.Wait()
-			fmt.Printf("\n\tFound matches for %d missed queries.\n\n", s.matches-f)
+			fmt.Printf("\tFound matches for %d missed queries.\n\n", s.matches-f)
 		} else {
 			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", err)
 			fmt.Println("\n\tWriting misses to file...")

@@ -17,7 +17,6 @@ var (
 	ecol    = extract.Flag("column", "Column containing species names (integer starting from 0).").Required().Short('c').Int()
 
 	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
-	max     = search.Flag("max", "The maximum number of concurrent searches to run.").Short('m').Default("5000").Int()
 	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
 
 	check = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
@@ -48,7 +47,7 @@ func main() {
 		extractSearchTerms()
 	case search.FullCommand():
 		fmt.Println("\n\tSearching for taxonomy matches...")
-		searchTaxonomies()
+		searchTaxonomies(start)
 	case check.FullCommand():
 		fmt.Println("\n\tChecking taxonomy results...")
 		checkResults()

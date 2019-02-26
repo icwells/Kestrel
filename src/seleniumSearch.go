@@ -64,7 +64,7 @@ func (s *searcher) getURLs(res string) map[string]string {
 	return ret
 }
 
-func (s *searcher) getSearchResults(wg *sync.WaitGroup, res, k string) {
+func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, res, k string) {
 	// Parses urls from google search results
 	defer wg.Done()
 	found := false
@@ -74,12 +74,14 @@ func (s *searcher) getSearchResults(wg *sync.WaitGroup, res, k string) {
 		// Only attempt getMatch once
 		found = s.getMatch(s.terms[k].term, 1, taxa)
 	}
+	mut.Lock()
 	if found == true {
 		s.writeMatches(k)
 	} else {
 		// Write missed queries to file
 		s.writeMisses(k)
 	}
+	mut.Unlock()
 }
 
 func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
