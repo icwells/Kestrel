@@ -113,8 +113,8 @@ func (t *term) filter() {
 	query := t.queries[0]
 	if len(query) >= 3 {
 		r := regexp.MustCompile(` +`)
-		// Replace extra spaces and convert to title case
-		t.term = r.ReplaceAllString(strings.Title(query), " ")
+		// Replace extra spaces and convert to title case (convert to lower fist as strings.title ignores all but first character
+		t.term = r.ReplaceAllString(strings.Title(strings.ToLower(query)), " ")
 		t.compareSlice([]string{"?", "not", "unknown"}, "uncertainEntry")
 		if len(t.status) == 0 {
 			t.compareSlice([]string{" x", "mix ", " mix", "hybrid"}, "hybrid")
@@ -168,7 +168,7 @@ func extractSearchTerms() {
 	dir, _ := path.Split(*outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")
 	pass, fail := filterTerms(*infile, *ecol)
-	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.", len(pass), len(fail))
+	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.\n", len(pass), len(fail))
 	iotools.WriteToCSV(*outfile, "Query,SearchTerm", pass)
 	iotools.WriteToCSV(misses, "Query,SearchTerm,Reason", fail)
 }

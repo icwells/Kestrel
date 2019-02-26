@@ -100,9 +100,9 @@ func searchTaxonomies() {
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for k := range s.terms {
 		go s.searchTerm(ch, k)
-		f += <-ch
 		fmt.Printf("\tSearched %d of %d terms.\r", f, len(s.terms))
 	}
+	f += <-ch
 	fmt.Printf("\n\tFound matches for %d queries.\n\n", s.matches)
 	if len(s.misses) > 0 {
 		// Perform selenium search on misses
