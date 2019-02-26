@@ -167,6 +167,6 @@ func extractSearchTerms() {
 	misses := path.Join(dir, "KestrelRejected.csv")
 	pass, fail := filterTerms(*infile, *ecol)
 	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.", len(pass), len(fail))
-	iotools.WriteToCSV(*outfile, "Query,SearchTerm\n", pass)
-	iotools.WriteToCSV(misses, "Query,SearchTerm,Reason\n", fail)
+	iotools.WriteToCSV(*outfile, "Query,SearchTerm", pass)
+	iotools.WriteToCSV(misses, "Query,SearchTerm,Reason", fail)
 }
