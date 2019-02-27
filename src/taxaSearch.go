@@ -12,7 +12,7 @@ import (
 
 func fillLevel(t1, t2 string) string {
 	// Returns non-NA value
-	if t1 == "NA" && t2 != "NA" {
+	if strings.ToUpper(t1) == "NA" && strings.ToUpper(t2) != "NA" {
 		t1 = t2
 	}
 	return t1
