@@ -21,7 +21,7 @@ type taxonomy struct {
 	source  string
 	found   bool
 	nas     int
-	levels  string
+	levels  []string
 }
 
 func newTaxonomy() taxonomy {
@@ -37,7 +37,7 @@ func newTaxonomy() taxonomy {
 	t.source = "NA"
 	t.found = false
 	t.nas = 7
-	t.levels = "kingdom,phylum,class,order,family,genus,species"
+	t.levels = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
 	return t
 }
 
@@ -68,7 +68,7 @@ func (t *taxonomy) countNAs() {
 	// Rechecks nas
 	nas := 0
 	for _, i := range []string{t.kingdom, t.phylum, t.class, t.order, t.family, t.genus, t.species} {
-		if i == "NA" {
+		if strings.ToUpper(i) == "NA" {
 			nas++
 		}
 	}
@@ -77,13 +77,13 @@ func (t *taxonomy) countNAs() {
 
 func (t *taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
-	if l != "NA" {
+	if strings.ToUpper(l) != "NA" {
 		l = strings.Replace(l, ",", "", -1)
 		if sp == false {
 			if strings.Contains(l, " ") == true {
 				l = strings.Split(l, " ")[0]
 			}
-			l = strings.Title(l)
+			l = titleCase(l)
 		} else {
 			// Get binomial with proper capitalization
 			if strings.Contains(l, ".") == true {
@@ -97,6 +97,9 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 				l = strings.Title(s[0]) + " " + strings.ToLower(s[1])
 			}
 		}
+	} else {
+		// Standardize NAs
+		l = strings.ToUpper(l)
 	}
 	return l
 }
@@ -104,9 +107,9 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 func (t *taxonomy) checkTaxa() {
 	// Checks formatting
 	t.countNAs()
-	if t.nas <= 2 && t.genus != "NA" {
+	if t.nas <= 2 && strings.ToUpper(t.genus) != "NA" {
 		t.found = true
-		if t.kingdom == "Metazoa" {
+		if strings.ToLower(t.kingdom) == "metazoa" {
 			// Correct NCBI kingdom
 			t.kingdom = "Animalia"
 		} else {
@@ -146,12 +149,13 @@ func (t *taxonomy) setLevel(key, value string) {
 
 func (t *taxonomy) isLevel(s string) string {
 	// Returns formatted string if s is a taxonomic level
-	var ret string
 	s = strings.TrimSpace(strings.ToLower(strings.Replace(s, ":", "", -1)))
-	if strings.Contains(t.levels, s) == true {
-		ret = s
+	for _, i := range t.levels {
+		if i == s {
+			return s
+		}
 	}
-	return ret
+	return ""
 }
 
 func (t *taxonomy) scrapeWiki(url string) {

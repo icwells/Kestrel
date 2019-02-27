@@ -104,3 +104,16 @@ func percentDecode(term string) string {
 	term = strings.Replace(term, "%20", " ", -1)
 	return strings.Replace(term, "%27", "'", -1)
 }
+
+func titleCase(t string) string {
+	// Manually converts term to title case (strings.Title is buggy)
+	var query []string
+	s := strings.Split(t, " ")
+	for _, i := range s {
+		if len(i) > 1 {
+			// Skip stray characters
+			query = append(query, strings.ToUpper(string(i[0]))+strings.ToLower(i[1:]))
+		}
+	}
+	return strings.Join(query, " ")
+}

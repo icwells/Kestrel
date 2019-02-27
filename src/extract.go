@@ -111,19 +111,6 @@ func (t *term) reformat() {
 	}
 }
 
-func (t *term) titleCase() {
-	// Manually converts term to title case (strings.Title is buggy)
-	var query []string
-	s := strings.Split(t.term, " ")
-	for _, i := range s {
-		if len(i) > 1 {
-			// Skip stray characters
-			query = append(query, strings.ToUpper(string(i[0]))+strings.ToLower(i[1:]))
-		}
-	}
-	t.term = strings.Join(query, " ")
-}
-
 func (t *term) filter() {
 	// Filters input query
 	query := t.queries[0]
@@ -136,7 +123,7 @@ func (t *term) filter() {
 			t.compareSlice([]string{" x", "mix ", " mix", "hybrid"}, "hybrid")
 			if len(t.status) == 0 {
 				// Convert to title case after checking for ? and x
-				t.titleCase()
+				t.term = titleCase(t.term)
 				// Reformat before filtering for numbers since it might drop number content
 				t.reformat()
 				t.compareSlice([]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}, "numberContent")
