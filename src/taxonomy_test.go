@@ -70,7 +70,7 @@ func TestCountNAs(t *testing.T) {
 		if e != i.nas {
 			t.Errorf("Actual NA count %d does not equal expected: %d", i.nas, e)
 		}
-	}	
+	}
 }
 
 func TestCheckLevel(t *testing.T) {
@@ -116,7 +116,7 @@ func TestIsLevel(t *testing.T) {
 	taxa := newTaxonomy()
 	expected := []struct {
 		input, expected string
-	} {
+	}{
 		{" Species", "species"},
 		{"six", ""},
 		{"GENUS ", "genus"},

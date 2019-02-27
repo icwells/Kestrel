@@ -146,7 +146,7 @@ func searchTaxonomies(start time.Time) {
 		go s.searchTerm(&wg, &mut, i)
 		if idx%10 == 0 {
 			// Pause after 10 to avoid swamping apis
-			time.Sleep(2*time.Second)
+			time.Sleep(2 * time.Second)
 		}
 		fmt.Printf("\tSearching for %d of %d terms.\r", idx+1, len(s.terms))
 	}
@@ -167,7 +167,7 @@ func searchTaxonomies(start time.Time) {
 				wg.Add(1)
 				go s.getSearchResults(&wg, &mut, res, i)
 				if idx%10 == 0 {
-					time.Sleep(2*time.Second)
+					time.Sleep(2 * time.Second)
 				}
 				fmt.Printf("\tSearched %d of %d missed terms.\r", idx+1, len(s.misses))
 			}

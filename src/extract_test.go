@@ -54,7 +54,7 @@ func TestFilter(t *testing.T) {
 func TestTitleCase(t *testing.T) {
 	str := []struct {
 		input, expected string
-	} {
+	}{
 		{"SEBA'S STRIPED  FINGERFISH", "Seba's Striped Fingerfish"},
 		{"Sharp shinned Hawk", "Sharp Shinned Hawk"},
 		{"PIPING` x GUAN ", "Piping` Guan"},
@@ -71,7 +71,7 @@ func TestEncoding(t *testing.T) {
 	// Tests percent encode and decode functions
 	expected := []struct {
 		input, output string
-	} {
+	}{
 		{"SEBA'S STRIPED FINGERFISH", "SEBA%27S%20STRIPED%20FINGERFISH"},
 		{"Sharp shinned Hawk", "Sharp%20shinned%20Hawk"},
 	}
