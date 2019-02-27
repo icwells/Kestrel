@@ -51,6 +51,22 @@ func TestFilter(t *testing.T) {
 	}
 }
 
+func TestTitleCase(t *testing.T) {
+	str := []struct {
+		input, expected string
+	} {
+		{"SEBA'S STRIPED  FINGERFISH", "Seba's Striped Fingerfish"},
+		{"Sharp shinned Hawk", "Sharp Shinned Hawk"},
+		{"PIPING` x GUAN ", "Piping` Guan"},
+	}
+	for _, i := range str {
+		a := titleCase(i.input)
+		if a != i.expected {
+			t.Errorf("Actual term %s does not equal expected: %s", a, i.expected)
+		}
+	}
+}
+
 func TestEncoding(t *testing.T) {
 	// Tests percent encode and decode functions
 	expected := []struct {
