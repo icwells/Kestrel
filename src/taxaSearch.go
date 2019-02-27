@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +32,10 @@ func fillTaxonomy(t, x taxonomy) taxonomy {
 
 func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]taxonomy) {
 	// Sets taxonomy in searcher map
+	if _, ex := s.terms[key]; ex == false {
+		fmt.Println(key)
+		os.Exit(0)
+	}
 	if len(s2) > 0 {
 		s.terms[key].sources[s2] = t[s2].source
 		if t[s1].nas != 0 {
@@ -38,10 +43,8 @@ func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]taxonomy) {
 			t[s1] = fillTaxonomy(t[s1], t[s2])
 		}
 	}
-	if _, ex := s.terms[key]; ex == true {
-		s.terms[key].taxonomy.copyTaxonomy(t[s1])
-		s.terms[key].sources[s1] = s.terms[key].taxonomy.source
-	}
+	s.terms[key].taxonomy.copyTaxonomy(t[s1])
+	s.terms[key].sources[s1] = s.terms[key].taxonomy.source
 }
 
 func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
@@ -120,6 +123,15 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	}
 }
 
+func (s *searcher) keySlice() []string {
+	// Returns slice of map keys
+	var ret []string
+	for k := range s.terms {
+		ret = append(ret, k)
+	}
+	return ret
+}
+
 func searchTaxonomies(start time.Time) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
@@ -128,11 +140,17 @@ func searchTaxonomies(start time.Time) {
 	s.termMap(*infile)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
-	for k := range s.terms {
+	for idx, i := range s.keySlice() {
 		//s.misses = append(s.misses, k)
 		wg.Add(1)
-		go s.searchTerm(&wg, &mut, k)
+		go s.searchTerm(&wg, &mut, i)
+		if idx%10 == 0 {
+			// Pause after 10 to avoid swamping apis
+			time.Sleep(2*time.Second)
+		}
+		fmt.Printf("\tSearching for %d of %d terms.\r", idx+1, len(s.terms))
 	}
+	// Wait for remainging processes
 	wg.Wait()
 	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
 	fmt.Printf("\tCurrent run time: %v\n\n", time.Since(start))
@@ -143,11 +161,15 @@ func searchTaxonomies(start time.Time) {
 		if err == nil {
 			defer service.Stop()
 			defer browser.Quit()
-			for _, i := range s.misses {
+			for idx, i := range s.misses {
 				res := s.seleniumSearch(browser, i)
 				// Parse search results concurrently
 				wg.Add(1)
 				go s.getSearchResults(&wg, &mut, res, i)
+				if idx%10 == 0 {
+					time.Sleep(2*time.Second)
+				}
+				fmt.Printf("\tSearched %d of %d missed terms.\r", idx+1, len(s.misses))
 			}
 			wg.Wait()
 			fmt.Printf("\tFound matches for %d missed queries.\n\n", s.matches-f)
