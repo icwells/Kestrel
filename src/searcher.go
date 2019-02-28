@@ -75,7 +75,7 @@ func (s *searcher) checkOutput(outfile, header string) {
 	}
 }
 
-func newSearcher() searcher {
+func newSearcher(test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
 	s.outfile = *outfile
@@ -85,9 +85,11 @@ func newSearcher() searcher {
 	s.done = strarray.NewSet()
 	s.terms = make(map[string]*term)
 	s.urls = newAPIs()
-	s.apiKeys()
-	s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
-	s.checkOutput(s.missed, "Query,SearchTerm,Reason")
+	if test == false {
+		s.apiKeys()
+		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
+		s.checkOutput(s.missed, "Query,SearchTerm,Reason")
+	}
 	return s
 }
 

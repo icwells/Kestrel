@@ -65,6 +65,15 @@ func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
 				k1 = s2
 				k2 = s1
 			}
+		} else if last == 1 {
+			// Return value with fewest NAs
+			min := 8
+			for key, v := range taxa {
+				if v.nas < min {
+					min = v.nas
+					k1 = key
+				}
+			}
 		}
 	} else if last == 1 {
 		// Only accept single match for last search
@@ -136,7 +145,7 @@ func searchTaxonomies(start time.Time) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
-	s := newSearcher()
+	s := newSearcher(false)
 	s.termMap(*infile)
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
