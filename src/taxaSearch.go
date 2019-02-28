@@ -100,10 +100,10 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	for l >= 1 {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
-		//taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-		taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
-		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
+		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
+		//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+		//taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) >= 1 {
 			found = s.getMatch(k, l, taxa)
 		}
@@ -159,7 +159,7 @@ func searchTaxonomies(start time.Time) {
 	wg.Wait()
 	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
 	fmt.Printf("\tCurrent run time: %v\n\n", time.Since(start))
-	if len(s.misses) > 0 {
+	/*if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
 		service, browser, err := getBrowser(*firefox)
@@ -186,7 +186,7 @@ func searchTaxonomies(start time.Time) {
 				s.writeMisses(i)
 			}
 		}
-	}
+	}*/
 	fmt.Printf("\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
 }

@@ -3,23 +3,28 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/renstrom/fuzzysearch/fuzzy"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func getPage(url string) (io.Reader, bool) {
+func getPage(url string) ([]byte, bool) {
 	// Wraps http request, returns io.Reader and true if successful
-	var ret io.Reader
+	var ret []byte
 	pass := false
 	resp, err := http.Get(url)
 	if err == nil {
-		ret = resp.Body
-		pass = true
+		// Convert reader to byte slice
+		buf := new(bytes.Buffer)
+		_, err = buf.ReadFrom(resp.Body)
+		if err == nil {
+			ret = buf.Bytes()
+			pass = true
+		}
 	}
 	defer resp.Body.Close()
 	return ret, pass
@@ -168,6 +173,6 @@ func (s *searcher) searchIUCN(k string) taxonomy {
 			ret.scrapeIUCN(result, url)
 		}
 	}
-	fmt.Println(ret.String())
+	//fmt.Println(ret.String())
 	return ret
 }

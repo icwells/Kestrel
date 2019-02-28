@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"io"
 	"strings"
 )
 
@@ -143,6 +142,8 @@ func (t *taxonomy) setLevel(key, value string) {
 			t.genus = value
 		case "species":
 			t.species = value
+		case "scientific_name":
+			t.species = value
 		}
 	}
 }
@@ -258,22 +259,27 @@ func (t *taxonomy) scrapeItis(url string) {
 	}
 }
 
-func (t *taxonomy) scrapeIUCN(result io.Reader, url string) {
+type jsa struct {
+	res map[string]string `json:"result"`
+}
+
+func (t *taxonomy) scrapeIUCN(result []byte, url string) {
 	// Marshalls json array into struct
 	t.source = removeKey(url)
-	a := struct {
-		result struct {
-			kingdom, phylum, class, order, family, genus, scientific_name string
+	var a jsa
+	a.res = make(map[string]string)
+	err := json.Unmarshal(result, &a)
+	if err == nil {
+		// Map from anonymous struct to taxonomy struct
+		fmt.Println(string(result))
+		for k, v := range a.res {
+			fmt.Println(k, v)
+			level := t.isLevel(k)
+			if len(level) > 1 && len(v) > 2 {
+				t.setLevel(level, v)
+			}
 		}
-	}{}
-	json.NewDecoder(result).Decode(a)
-	// Map from anonymous struct to taxonomy struct
-	t.kingdom = a.result.kingdom
-	t.phylum = a.result.phylum
-	t.class = a.result.class
-	t.order = a.result.order
-	t.family = a.result.family
-	t.genus = a.result.genus
-	t.species = a.result.scientific_name
-	t.checkTaxa()
+		//fmt.Println(t.String())
+		t.checkTaxa()
+	}
 }

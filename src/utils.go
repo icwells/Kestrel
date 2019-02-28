@@ -114,6 +114,14 @@ func percentDecode(term string) string {
 
 func removeKey(url string) string {
 	// Returns urls with api key removed
-	idx := strings.LastIndex(url, "&")
-	return url[:idx]
+	var idx int
+	if strings.Contains(url, "&") == true {
+		idx = strings.LastIndex(url, "&")
+	} else if strings.Contains(url, "?") == true {
+		idx = strings.LastIndex(url, "&")
+	}
+	if idx > 0 {
+		url = url[:idx]
+	}
+	return url
 }
