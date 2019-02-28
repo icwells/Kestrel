@@ -56,8 +56,8 @@ func checkSetTaxonomy(t *testing.T, s searcher, key, k1, k2 string, taxa map[str
 	}
 }
 
-func TestSetTaxonomy(t *testing.T) {
-	s := getTestSearcher()
+func testTaxonomy() (map[string]taxonomy, []string) {
+	// Returns taxonomy map for testing
 	var keys []string
 	taxa := make(map[string]taxonomy)
 	sli := taxaSlice()
@@ -69,6 +69,12 @@ func TestSetTaxonomy(t *testing.T) {
 			keys = append(keys, k)
 		}
 	}
+	return taxa, keys
+}
+
+func TestSetTaxonomy(t *testing.T) {
+	s := getTestSearcher()
+	taxa, keys := testTaxonomy()
 	s.setTaxonomy("Fish", keys[0], keys[1], taxa)
 	checkSetTaxonomy(t, s, "Fish", keys[0], keys[1], taxa)
 	s.setTaxonomy("Piping Guan", keys[1], keys[0], taxa)
@@ -77,13 +83,7 @@ func TestSetTaxonomy(t *testing.T) {
 
 func TestGetMatch(t *testing.T) {
 	s := getTestSearcher()
-	taxa := make(map[string]taxonomy)
-	sli := taxaSlice()
-	for idx, i := range sli {
-		k := strconv.Itoa(idx)
-		i.source = k
-		taxa = checkMatch(taxa, k, i)
-	}
+	taxa, _ := testTaxonomy()
 	a := s.getMatch("Fish", 1, taxa)
 	if a != true {
 		t.Error("Taxonomy match not found.")
