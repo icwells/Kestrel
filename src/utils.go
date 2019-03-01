@@ -7,6 +7,7 @@ import (
 	"github.com/icwells/go-tools/iotools"
 	"os"
 	"strings"
+	"unicode"
 )
 
 type apis struct {
@@ -124,4 +125,16 @@ func removeKey(url string) string {
 		url = url[:idx]
 	}
 	return url
+}
+
+func removeNonBreakingSpaces(s string) string {
+	// Converts non-breaking spaces to standard unicode spaces
+	sp := ' '
+	ret := strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return sp
+		}
+		return r
+	}, s)
+	return ret
 }

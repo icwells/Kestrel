@@ -84,12 +84,12 @@ func TestSetTaxonomy(t *testing.T) {
 func TestGetMatch(t *testing.T) {
 	s := getTestSearcher()
 	taxa, _ := testTaxonomy()
-	a := s.getMatch("Fish", 1, taxa)
+	a := s.getMatch("Fish", taxa)
 	if a != true {
 		t.Error("Taxonomy match not found.")
 	}
 	delete(taxa, "0")
-	a = s.getMatch("Fish", 1, taxa)
+	a = s.getMatch("Fish", taxa)
 	if a != true {
 		t.Error("Taxonomy match not found.")
 	}

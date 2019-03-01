@@ -115,7 +115,6 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			break
 		}
 	}
-	//fmt.Println(found)
 	if found == true {
 		mut.Lock()
 		s.writeMatches(k)
@@ -145,10 +144,9 @@ func searchTaxonomies(start time.Time) {
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming API based taxonomy search...")
 	for idx, i := range s.keySlice() {
-		//s.misses = append(s.misses, k)
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, i)
-		if idx%5 == 0 {
+		if idx%10 == 0 {
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(2 * time.Second)
 		}
@@ -159,7 +157,7 @@ func searchTaxonomies(start time.Time) {
 	wg.Wait()
 	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
 	fmt.Printf("\tCurrent run time: %v\n\n", time.Since(start))
-	/*if len(s.misses) > 0 {
+	if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
 		service, browser, err := getBrowser(*firefox)
@@ -171,9 +169,6 @@ func searchTaxonomies(start time.Time) {
 				// Parse search results concurrently
 				wg.Add(1)
 				go s.getSearchResults(&wg, &mut, res, i)
-				if idx%10 == 0 {
-					time.Sleep(2 * time.Second)
-				}
 				fmt.Printf("\tDispatched %d of %d missed terms.\r", idx+1, len(s.misses))
 			}
 			wg.Wait()
@@ -186,7 +181,7 @@ func searchTaxonomies(start time.Time) {
 				s.writeMisses(i)
 			}
 		}
-	}*/
+	}
 	fmt.Printf("\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
 }

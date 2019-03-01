@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/json"
-	//"fmt"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -88,25 +87,31 @@ func (t *taxonomy) scrapeItis(url string) {
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		found := 0
-		page.Find("tr").EachWithBreak(func(i int, tr *goquery.Selection) bool {
-			tr.Find("td").Each(func(j int, td *goquery.Selection) {
-				str := td.Text()
-				if len(str) > 0 {
-					level := t.isLevel(str)
-					if len(level) > 0 {
-						t.setLevel(level, td.Next().Find("a").Text())
-						found++
+		page.Find("table").EachWithBreak(func(i int, table *goquery.Selection) bool {
+			table.Find("tr").Each(func(i int, tr *goquery.Selection) {
+				tr.Find("td").Each(func(j int, td *goquery.Selection) {
+					str := td.Text()
+					if len(str) > 0 {
+						level := t.isLevel(str)
+						if len(level) > 0 {
+							if level == "species" {
+								t.setLevel(level, removeNonBreakingSpaces(td.Next().Text()))
+							} else {
+								t.setLevel(level, removeNonBreakingSpaces(td.Next().Find("a").Text()))
+							}
+							found++
+						}
 					}
-				}
+				})
+
 			})
 			if found == 7 {
 				// Break if all levels have been found
-				return true
+				return false
 			}
-			return false
+			return true
 		})
 		t.checkTaxa()
-		//fmt.Println(t.String())
 	}
 }
 
