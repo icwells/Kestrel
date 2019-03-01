@@ -71,7 +71,7 @@ func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
 				}
 			}
 		}
-	} else if last == 1 {
+	} else if len(taxa) == 1 {
 		// Only accept single match for last search
 		for key := range taxa {
 			k1 = key
@@ -116,6 +116,7 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			break
 		}
 	}
+	//fmt.Println(found)
 	if found == true {
 		mut.Lock()
 		s.writeMatches(k)
