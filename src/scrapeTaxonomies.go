@@ -55,27 +55,29 @@ func (t *taxonomy) scrapeNCBI(url string) {
 	}
 }
 
-func (t *taxonomy) scrapeEOL(url string) {
+type eolstruct struct {
+	Entry struct {
+		Species string `json:"canonical_form"`
+	} `json:"entry"`
+	Ancestors []struct {
+		ScientificName string `json:"scientificName"`
+		TaxonRank      string `json:"taxonRank"`
+	} `json:"ancestors"`
+}
+
+func (t *taxonomy) scrapeEOL(result []byte, url string) {
 	// Scrapes taxonomy from EOL hierarchy entry
 	t.source = removeKey(url)
-	page, err := goquery.NewDocument(url)
+	var j eolstruct
+	err := json.Unmarshal(result, &j)
 	if err == nil {
-		found := 0
-		page.Find("ancestor").EachWithBreak(func(i int, r *goquery.Selection) bool {
-			level := t.isLevel(r.Find("taxonRank").Text())
-			if len(level) > 0 {
-				t.setLevel(level, r.Find("scientificName").Text())
-				found++
-				if found == 7 {
-					// Break if all levels have been found
-					return true
-				}
+		t.setLevel("species", j.Entry.Species)
+		for _, a := range j.Ancestors {
+			level := t.isLevel(a.TaxonRank)
+			if len(level) >= 1 {
+				t.setLevel(level, a.ScientificName)
 			}
-			return false
-		})
-		entry := page.Find("entry")
-		// Store canonical species name
-		t.setLevel("species", entry.Find("canonical-form").Text())
+		}
 		t.checkTaxa()
 	}
 }
@@ -108,7 +110,7 @@ func (t *taxonomy) scrapeItis(url string) {
 	}
 }
 
-type jsarray struct {
+type iucnstruct struct {
 	// https://mholt.github.io/json-to-go/
 	Result []struct {
 		Species string `json:"scientific_name"`
@@ -124,10 +126,10 @@ type jsarray struct {
 func (t *taxonomy) scrapeIUCN(result []byte, url string) {
 	// Marshalls json array into struct
 	t.source = removeKey(url)
-	var j jsarray
+	var j iucnstruct
 	err := json.Unmarshal(result, &j)
 	if err == nil {
-		// Map from jsarray struct to taxonomy struct
+		// Map from iucnstruct struct to taxonomy struct
 		for _, a := range j.Result {
 			//a := j.result[0]
 			t.kingdom = a.Kingdom

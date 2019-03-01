@@ -155,8 +155,12 @@ func (s *searcher) searchEOL(k string) taxonomy {
 		if len(tid) >= 1 {
 			hid := s.getHID(tid)
 			if len(hid) >= 1 {
-				url := fmt.Sprintf("%s%sxml?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
-				ret.scrapeEOL(url)
+				// Switch to json for easier scraping of larger results
+				url := fmt.Sprintf("%s%sjson?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
+				result, pass := getPage(url)
+				if pass == true {
+					ret.scrapeEOL(result, url)
+				}
 			}
 		}
 	}

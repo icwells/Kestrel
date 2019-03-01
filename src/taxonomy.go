@@ -139,8 +139,6 @@ func (t *taxonomy) setLevel(key, value string) {
 			t.genus = value
 		case "species":
 			t.species = value
-		case "scientific_name":
-			t.species = value
 		}
 	}
 }

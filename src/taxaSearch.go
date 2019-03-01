@@ -43,7 +43,7 @@ func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]taxonomy) {
 	s.terms[key].sources[s1] = s.terms[key].taxonomy.source
 }
 
-func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
+func (s *searcher) getMatch(k string, taxa map[string]taxonomy) bool {
 	// Compares results and determines if there has been a match
 	ret := false
 	var k1, k2 string
@@ -61,7 +61,7 @@ func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
 				k1 = s2
 				k2 = s1
 			}
-		} else if last == 1 {
+		} else {
 			// Return value with fewest NAs
 			min := 8
 			for key, v := range taxa {
@@ -72,7 +72,6 @@ func (s *searcher) getMatch(k string, last int, taxa map[string]taxonomy) bool {
 			}
 		}
 	} else if len(taxa) == 1 {
-		// Only accept single match for last search
 		for key := range taxa {
 			k1 = key
 		}
@@ -101,11 +100,11 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 		taxa := make(map[string]taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		//taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-		//taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
-		//taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
+		taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
 		if len(taxa) >= 1 {
-			found = s.getMatch(k, l, taxa)
+			found = s.getMatch(k, taxa)
 		}
 		if found == false && l != 1 {
 			// Remove first word and try again

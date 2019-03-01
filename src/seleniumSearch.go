@@ -72,7 +72,7 @@ func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, res, 
 	taxa := s.parseURLs(urls)
 	if len(taxa) >= 1 {
 		// Only attempt getMatch once
-		found = s.getMatch(s.terms[k].term, 1, taxa)
+		found = s.getMatch(s.terms[k].term, taxa)
 	}
 	mut.Lock()
 	if found == true {
