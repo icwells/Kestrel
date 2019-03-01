@@ -148,7 +148,7 @@ func searchTaxonomies(start time.Time) {
 		//s.misses = append(s.misses, k)
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, i)
-		if idx%10 == 0 {
+		if idx%5 == 0 {
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(2 * time.Second)
 		}
