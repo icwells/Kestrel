@@ -173,6 +173,6 @@ func (s *searcher) searchIUCN(k string) taxonomy {
 			ret.scrapeIUCN(result, url)
 		}
 	}
-	//fmt.Println(ret.String())
+	fmt.Println(ret.String())
 	return ret
 }
