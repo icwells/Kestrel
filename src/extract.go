@@ -118,13 +118,17 @@ func containsWithSpace(l, target string) bool {
 	idx := strings.Index(l, target)
 	if idx >= 0 {
 		next := idx + len(target)
-		if idx == 0 && unicode.IsSpace(rune(l[next])) == true {
-			// First word
-			ret = true
-		} else if next >= len(l) && unicode.IsSpace(rune(l[idx-1])) == true {
+		if idx == 0 {
+			if next < len(l) && unicode.IsSpace(rune(l[next])) == true {
+				// First word
+				ret = true
+			}
+		} else if next < len(l) {
+			if unicode.IsSpace(rune(l[next])) == true && unicode.IsSpace(rune(l[idx-1])) == true {
+				ret = true
+			}
+		} else if unicode.IsSpace(rune(l[idx-1])) == true {
 			// Last word
-			ret = true
-		} else if unicode.IsSpace(rune(l[idx-1])) == true && unicode.IsSpace(rune(l[next])) == true {
 			ret = true
 		}
 	}
@@ -138,11 +142,8 @@ func (t *term) checkCertainty() {
 	l := strings.ToLower(t.term)
 	if strings.Contains(l, "?") == true || strings.Contains(l, "unknown") == true || containsWithSpace(l, "not") == true {
 		t.status = unk
-	}
-	if len(t.status) == 0 {
-		if strings.Contains(l, "hybrid") == true || containsWithSpace(l, "x") == true || containsWithSpace(l, "mix") == true {
-			t.status = hyb
-		}
+	} else if strings.Contains(l, "hybrid") == true || containsWithSpace(l, "x") == true || containsWithSpace(l, "mix") == true {
+		t.status = hyb
 	}
 }
 
