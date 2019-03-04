@@ -62,17 +62,6 @@ func (t *term) sliceTerm(p1, p2 string) {
 	}
 }
 
-func (t *term) compareSlice(s []string, e string) {
-	// Sets t.status to e if element in s is in term
-	l := strings.ToLower(t.term)
-	for _, i := range s {
-		if strings.Contains(l, i) == true {
-			t.status = e
-			break
-		}
-	}
-}
-
 func (t *term) reformat() {
 	// Performs more complicated formatting steps
 	if strings.Contains(t.term, "(") == true || strings.Contains(t.term, ")") == true {
@@ -123,6 +112,40 @@ func (t *term) reformat() {
 	}
 }
 
+func containsWithSpace(l, target string) bool {
+	// Returns true is target is in l and sperated by spaces/term boundary
+	var ret bool
+	idx := strings.Index(l, target)
+	if idx >= 0 {
+		next := idx + len(target)
+		if idx == 0 && unicode.IsSpace(rune(l[next])) == true {
+			// First word
+			ret = true
+		} else if next >= len(l) && unicode.IsSpace(rune(l[idx-1])) == true {
+			// Last word
+			ret = true
+		} else if unicode.IsSpace(rune(l[idx-1])) == true && unicode.IsSpace(rune(l[next])) == true {
+			ret = true
+		}
+	}
+	return ret
+}
+
+func (t *term) checkCertainty() {
+	// Sets t.status if term is unknown or hybrid
+	unk := "uncertainEntry"
+	hyb := "hybrid"
+	l := strings.ToLower(t.term)
+	if strings.Contains(l, "?") == true || strings.Contains(l, "unknown") == true || containsWithSpace(l, "not") == true {
+		t.status = unk
+	}
+	if len(t.status) == 0 {
+		if strings.Contains(l, "hybrid") == true || containsWithSpace(l, "x") == true || containsWithSpace(l, "mix") == true {
+			t.status = hyb
+		}
+	}
+}
+
 func (t *term) filter() {
 	// Filters input query
 	query := t.queries[0]
@@ -130,17 +153,14 @@ func (t *term) filter() {
 		r := regexp.MustCompile(` +`)
 		// Replace extra spaces and convert to title case
 		t.term = r.ReplaceAllString(query, " ")
-		t.compareSlice([]string{"?", " not ", "unknown"}, "uncertainEntry")
+		t.checkCertainty()
 		if len(t.status) == 0 {
-			t.compareSlice([]string{" x ", "mix ", " mix", "hybrid"}, "hybrid")
-			if len(t.status) == 0 {
-				// Convert to title case after checking for ? and x
-				t.term = titleCase(t.term)
-				t.reformat()
-				t.checkRunes()
-				if len(t.status) == 0 && len(t.term) < 3 {
-					t.status = "tooShort"
-				}
+			// Convert to title case after checking for ? and x
+			t.term = titleCase(t.term)
+			t.reformat()
+			t.checkRunes()
+			if len(t.status) == 0 && len(t.term) < 3 {
+				t.status = "tooShort"
 			}
 		}
 	} else {
