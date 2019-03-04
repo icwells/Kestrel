@@ -148,9 +148,8 @@ func getSeleniumPath(dir string) string {
 	return ret
 }
 
-func startService(port int, firefox bool) (*selenium.Service, error) {
+func startService(port int, browser string) (*selenium.Service, error) {
 	// Initialzes new selenium browser
-	var browser string
 	gopath := iotools.GetGOPATH()
 	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
 	seleniumpath := getSeleniumPath(dir)
@@ -158,30 +157,19 @@ func startService(port int, firefox bool) (*selenium.Service, error) {
 		selenium.StartFrameBuffer(),
 		selenium.Output(os.Stderr),
 	}
-	if firefox == true {
-		browser = "Firefox"
-		gdpath := getDriverPath(path.Join(dir, "geckodriver-*"))
-		opts = append(opts, selenium.GeckoDriver(gdpath))
-	} else {
-		browser = "Chrome"
-		cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
-		opts = append(opts, selenium.ChromeDriver(cdpath))
-	}
+	cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
+	opts = append(opts, selenium.ChromeDriver(cdpath))
 	fmt.Printf("\tPerfoming Selenium search with %s browser...\n\n", browser)
 	return selenium.NewSeleniumService(seleniumpath, port, opts...)
 }
 
-func getBrowser(firefox bool) (*selenium.Service, selenium.WebDriver, error) {
+func getBrowser() (*selenium.Service, selenium.WebDriver, error) {
 	// Returns selenium service, browser instance, and error
 	var wd selenium.WebDriver
 	port := 8080
-	service, err := startService(port, firefox)
+	browser := "chrome"
+	service, err := startService(port, browser)
 	if err == nil {
-		browser := "chrome"
-		if firefox == true {
-			browser = "firefox"
-		}
-		fmt.Println(browser)
 		caps := selenium.Capabilities{"browserName": browser}
 		wd, err = selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", port))
 	}

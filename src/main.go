@@ -16,10 +16,10 @@ var (
 	extract = kingpin.Command("extract", "Extracts and filters input names.")
 	ecol    = extract.Flag("column", "Column containing species names (integer starting from 0).").Required().Short('c').Int()
 
-	search  = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
-	firefox = search.Flag("firefox", "Use Firefox browser (uses Chrome by default).").Default("false").Bool()
+	search = kingpin.Command("search", "Searches for taxonomy matches to extracted names.")
 
-	check = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
+	check    = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
+	taxafile = check.Flag("taxa", "Path to currated taxonomy file.").Default("nil").Short('t').String()
 
 	merge   = kingpin.Command("merge", "Merges search results with source file.")
 	prepend = merge.Flag("prepend", "Prepend taxonomies to existing rows (appends by default).").Default("false").Bool()

@@ -50,7 +50,11 @@ func getOutfiles(name string) (string, string) {
 
 func checkResults() {
 	// Checks scientific names in search results
-	checkFile(*infile)
+	//var taxa map[string][]string
+	if *taxafile != "nil" {
+		checkFile(*taxafile)
+		//taxa = loadTaxa(*taxafile)
+	}
 	pass, fail := getOutfiles(*outfile)
 	header, hits, misses := checkTaxonomyResults(*infile)
 	fmt.Println("\tWriting output files...")

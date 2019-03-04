@@ -160,7 +160,7 @@ func searchTaxonomies(start time.Time) {
 	if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
-		service, browser, err := getBrowser(*firefox)
+		service, browser, err := getBrowser()
 		if err == nil {
 			defer service.Stop()
 			defer browser.Quit()
