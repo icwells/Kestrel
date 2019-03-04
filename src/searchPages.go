@@ -121,7 +121,7 @@ func (s *searcher) getTID(term string) string {
 			if _, err := strconv.Atoi(id); err == nil {
 				// Examine all valid ids
 				title := r.Find("title").Text()
-				if fuzzy.Match(query, title) == true {
+				if fuzzy.MatchFold(query, title) == true {
 					// Keep scientific name match
 					ret = id
 					return false

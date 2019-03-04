@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"github.com/renstrom/fuzzysearch/fuzzy"
 	"strings"
 )
 
@@ -21,7 +22,9 @@ func checkTaxonomyResults(infile string) (string, [][]string, [][]string) {
 		line := strings.TrimSpace(string(scanner.Text()))
 		if first == false {
 			s := strings.Split(line, d)
-			if strings.TrimSpace(s[h["SearchTerm"]]) == strings.TrimSpace(s[h["Species"]]) {
+			term := strings.TrimSpace(s[h["SearchTerm"]])
+			species := strings.TrimSpace(s[h["Species"]])
+			if fuzzy.MatchFold(term, species) == true {
 				hits = append(hits, s)
 			} else {
 				miss = append(miss, s)

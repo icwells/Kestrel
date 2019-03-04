@@ -11,16 +11,28 @@ import (
 	"unicode"
 )
 
-func (t *term) checkPunctuation() {
-	// Returns false if term contains puntuation
-	t.term = strings.Replace(t.term, "`", "", -1)
-	for _, i := range []rune(t.term) {
+func (t *term) checkRunes() {
+	// Removes puntuation and numbers from term
+	for idx, i := range []rune(t.term) {
 		if i != '.' && i != '-' && i != '\'' {
-			if unicode.IsPunct(i) == true {
-				t.status = "punctuation"
-				break
+			if unicode.IsLetter(i) == false && unicode.IsSpace(i) == false {
+				// Remove punctuation and numbers
+				if idx == 0 {
+					t.term = t.term[idx+1:]
+				} else if idx < len(t.term) {
+					t.term = t.term[:idx] + t.term[idx+1:]
+				} else {
+					t.term = t.term[:idx]
+				}
 			}
 		}
+	}
+	// Double check starting and ending runes for escaped punctuation
+	if t.term[0] == '.' || t.term[0] == '-' {
+		t.term = t.term[1:]
+	}
+	if t.term[len(t.term)-1] == '-' {
+		t.term = t.term[:len(t.term)-1]
 	}
 }
 
@@ -62,7 +74,7 @@ func (t *term) compareSlice(s []string, e string) {
 }
 
 func (t *term) reformat() {
-	// Performs more complicated fortting steps
+	// Performs more complicated formatting steps
 	if strings.Contains(t.term, "(") == true || strings.Contains(t.term, ")") == true {
 		t.sliceTerm("(", ")")
 	}
@@ -124,14 +136,10 @@ func (t *term) filter() {
 			if len(t.status) == 0 {
 				// Convert to title case after checking for ? and x
 				t.term = titleCase(t.term)
-				// Reformat before filtering for numbers since it might drop number content
 				t.reformat()
-				t.compareSlice([]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}, "numberContent")
-				if len(t.status) == 0 {
-					t.checkPunctuation()
-					if len(t.status) == 0 && len(t.term) < 3 {
-						t.status = "tooShort"
-					}
+				t.checkRunes()
+				if len(t.status) == 0 && len(t.term) < 3 {
+					t.status = "tooShort"
 				}
 			}
 		}

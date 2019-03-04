@@ -27,7 +27,7 @@ func newExtractInput() []extractinput {
 	ret = append(ret, extractentry([]string{"FISH (CARDINAL TETRA OR PENCIL FISH)", "Fish", ""}))
 	ret = append(ret, extractentry([]string{"PIPING` GUAN ", "Piping Guan", ""}))
 	ret = append(ret, extractentry([]string{`SEBA'S  STRIPED FINGERFISH "Sheila"`, "Seba's Striped Fingerfish", ""}))
-	ret = append(ret, extractentry([]string{"axolotl-5", "", "numberContent"}))
+	ret = append(ret, extractentry([]string{"axolotl-5", "Axolotl", ""}))
 	ret = append(ret, extractentry([]string{"unknown fish", "", "uncertainEntry"}))
 	ret = append(ret, extractentry([]string{"ferret?", "", "uncertainEntry"}))
 	ret = append(ret, extractentry([]string{"canine mix", "", "hybrid"}))
