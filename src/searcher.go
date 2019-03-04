@@ -88,7 +88,7 @@ func newSearcher(test bool) searcher {
 	if test == false {
 		s.apiKeys()
 		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
-		s.checkOutput(s.missed, "Query,SearchTerm,Reason")
+		s.checkOutput(s.missed, "Query,SearchTerm")
 	}
 	return s
 }
@@ -138,7 +138,7 @@ func (s *searcher) writeMisses(k string) {
 	defer out.Close()
 	t := percentDecode(k)
 	for _, i := range s.terms[k].queries {
-		out.WriteString(fmt.Sprintf("%s,%s,noMatch\n", i, t))
+		out.WriteString(fmt.Sprintf("%s,%s\n", i, t))
 		s.fails++
 	}
 }

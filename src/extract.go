@@ -130,9 +130,9 @@ func (t *term) filter() {
 		r := regexp.MustCompile(` +`)
 		// Replace extra spaces and convert to title case
 		t.term = r.ReplaceAllString(query, " ")
-		t.compareSlice([]string{"?", " not", "not ", "unknown"}, "uncertainEntry")
+		t.compareSlice([]string{"?", " not ", "unknown"}, "uncertainEntry")
 		if len(t.status) == 0 {
-			t.compareSlice([]string{" x", "mix ", " mix", "hybrid"}, "hybrid")
+			t.compareSlice([]string{" x ", "mix ", " mix", "hybrid"}, "hybrid")
 			if len(t.status) == 0 {
 				// Convert to title case after checking for ? and x
 				t.term = titleCase(t.term)
