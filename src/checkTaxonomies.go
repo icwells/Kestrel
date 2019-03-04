@@ -13,7 +13,7 @@ import (
 type curated struct {
 	taxa map[string][]string
 	keys []string
-	set	 bool
+	set  bool
 }
 
 func newCurated() curated {

@@ -13,26 +13,24 @@ import (
 
 func (t *term) checkRunes() {
 	// Removes puntuation and numbers from term
-	for idx, i := range []rune(t.term) {
+	var name string
+	for _, i := range []rune(t.term) {
 		if i != '.' && i != '-' && i != '\'' {
-			if unicode.IsLetter(i) == false && unicode.IsSpace(i) == false {
+			if unicode.IsLetter(i) == true && unicode.IsSpace(i) == true {
 				// Remove punctuation and numbers
-				if idx == 0 {
-					t.term = t.term[idx+1:]
-				} else if idx < len(t.term) {
-					t.term = t.term[:idx] + t.term[idx+1:]
-				} else {
-					t.term = t.term[:idx]
-				}
+				name = name + string(i)
 			}
 		}
 	}
+	t.term = name
 	// Double check starting and ending runes for escaped punctuation
-	if t.term[0] == '.' || t.term[0] == '-' {
-		t.term = t.term[1:]
-	}
-	if t.term[len(t.term)-1] == '-' {
-		t.term = t.term[:len(t.term)-1]
+	if len(t.term) > 0 {
+		if t.term[0] == '.' || t.term[0] == '-' {
+			t.term = t.term[1:]
+		}
+		if t.term[len(t.term)-1] == '-' {
+			t.term = t.term[:len(t.term)-1]
+		}
 	}
 }
 

@@ -20,6 +20,8 @@ type searcher struct {
 	urls    apis
 	matches int
 	fails   int
+	port    int
+	browser string
 }
 
 func (s *searcher) assignKey(line string) {
@@ -85,6 +87,8 @@ func newSearcher(test bool) searcher {
 	s.done = strarray.NewSet()
 	s.terms = make(map[string]*term)
 	s.urls = newAPIs()
+	s.port = 8080
+	s.browser = "chrome"
 	if test == false {
 		s.apiKeys()
 		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
