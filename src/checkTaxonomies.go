@@ -6,10 +6,68 @@ import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/renstrom/fuzzysearch/fuzzy"
+	"sort"
 	"strings"
 )
 
-func checkTaxonomyResults(infile string) (string, [][]string, [][]string) {
+type curated struct {
+	taxa map[string][]string
+	keys []string
+	set	 bool
+}
+
+func newCurated() curated {
+	// Returns initialized curated struct
+	var c curated
+	c.set = false
+	c.taxa = make(map[string][]string)
+	return c
+}
+
+func (c *curated) setKeys() {
+	// Stores keys as slice
+	for k := range c.taxa {
+		c.keys = append(c.keys, k)
+	}
+}
+
+func (c *curated) loadTaxa(infile string) {
+	// Reads taxa map
+	first := true
+	f := iotools.OpenFile(infile)
+	defer f.Close()
+	scanner := iotools.GetScanner(f)
+	for scanner.Scan() {
+		if first == false {
+			line := strings.Split(strings.TrimSpace(string(scanner.Text())), ",")
+			c.taxa[line[1]] = line[2:]
+		} else {
+			first = false
+		}
+	}
+	c.setKeys()
+	c.set = true
+}
+
+func (c *curated) getTaxonomy(term string) ([]string, bool) {
+	// Returns matching taxonomy if term is in map
+	var ret []string
+	var pass bool
+	ret, pass = c.taxa[term]
+	if pass == false {
+		// Only perform fuzzy search if there is no literal match
+		matches := fuzzy.RankFindFold(term, c.keys)
+		sort.Sort(matches)
+		if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
+			// Accept 0 or 1 transposition
+			ret = c.taxa[matches[0].Target]
+			pass = true
+		}
+	}
+	return ret, pass
+}
+
+func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]string) {
 	// Identifies records with matching search terms and scientific names
 	var header, d string
 	var hits, miss [][]string
@@ -21,10 +79,22 @@ func checkTaxonomyResults(infile string) (string, [][]string, [][]string) {
 	for scanner.Scan() {
 		line := strings.TrimSpace(string(scanner.Text()))
 		if first == false {
+			var pass bool
 			s := strings.Split(line, d)
 			term := strings.TrimSpace(s[h["SearchTerm"]])
 			species := strings.TrimSpace(s[h["Species"]])
-			if fuzzy.MatchFold(term, species) == true {
+			if taxa.set == true {
+				row, pass := taxa.getTaxonomy(species)
+				if pass == true {
+					// Replace with currated taxonomy
+					s = append(s[:2], row...)
+				}
+			}
+			if pass == false {
+				// Compare search term and species
+				pass = fuzzy.MatchFold(term, species)
+			}
+			if pass == true {
 				hits = append(hits, s)
 			} else {
 				miss = append(miss, s)
@@ -50,13 +120,13 @@ func getOutfiles(name string) (string, string) {
 
 func checkResults() {
 	// Checks scientific names in search results
-	//var taxa map[string][]string
+	taxa := newCurated()
 	if *taxafile != "nil" {
 		checkFile(*taxafile)
-		//taxa = loadTaxa(*taxafile)
+		taxa.loadTaxa(*taxafile)
 	}
 	pass, fail := getOutfiles(*outfile)
-	header, hits, misses := checkTaxonomyResults(*infile)
+	header, hits, misses := checkTaxonomyResults(*infile, taxa)
 	fmt.Println("\tWriting output files...")
 	iotools.WriteToCSV(pass, header, hits)
 	iotools.WriteToCSV(fail, header, misses)
