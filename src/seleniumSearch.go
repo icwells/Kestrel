@@ -26,9 +26,9 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
 			v = v[:strings.Index(v, "#")]
 		}
 		switch k {
-		/*case s.urls.wiki:
-		t.scrapeWiki(v)
-		source = "WIKI"*/
+		case s.urls.wiki:
+			t.scrapeWiki(v)
+			source = "WIKI"
 		case s.urls.itis:
 			t.scrapeItis(v)
 			source = "ITIS"
@@ -64,11 +64,10 @@ func (s *searcher) getURLs(res string) map[string]string {
 	return ret
 }
 
-func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
+func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, res, k string) {
 	// Parses urls from google search results
 	defer wg.Done()
 	found := false
-	res := s.seleniumSearch(k)
 	urls := s.getURLs(res)
 	taxa := s.parseURLs(urls)
 	if len(taxa) >= 1 {
@@ -85,22 +84,18 @@ func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, k str
 	mut.Unlock()
 }
 
-func (s *searcher) seleniumSearch(k string) string {
+func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
 	// Gets Google search result page
 	var ret string
-	browser, e := s.getBrowser()
-	if e == nil {
-		defer browser.Quit()
-		er := browser.Get("http://www.google.com")
-		if er == nil {
-			elem, err := browser.FindElement(selenium.ByName, "q")
-			if err == nil {
-				elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
-				ret, err = browser.PageSource()
-				if err != nil {
-					// Ensure empty return
-					ret = ""
-				}
+	er := browser.Get("http://www.google.com")
+	if er == nil {
+		elem, err := browser.FindElement(selenium.ByName, "q")
+		if err == nil {
+			elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
+			ret, err = browser.PageSource()
+			if err != nil {
+				// Ensure empty return
+				ret = ""
 			}
 		}
 	}
@@ -164,15 +159,18 @@ func (s *searcher) startService() (*selenium.Service, error) {
 	}
 	cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
 	opts = append(opts, selenium.ChromeDriver(cdpath))
-	fmt.Printf("\tPerfoming Selenium search with %s browser...\n\n", s.browser)
 	return selenium.NewSeleniumService(seleniumpath, s.port, opts...)
 }
 
-func (s *searcher) getBrowser() (selenium.WebDriver, error) {
+func (s *searcher) getBrowser() (*selenium.Service, selenium.WebDriver, error) {
 	// Returns selenium service, browser instance, and error
-	caps := selenium.Capabilities{"browserName": s.browser}
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
+	var wd selenium.WebDriver
+	service, err := s.startService()
+	if err == nil {
+		caps := selenium.Capabilities{"browserName": s.browser}
+		wd, err = selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
+	}
 	// Println blank line after selenium stdout
 	fmt.Println()
-	return wd, err
+	return service, wd, err
 }

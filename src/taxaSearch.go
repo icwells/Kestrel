@@ -160,14 +160,15 @@ func searchTaxonomies(start time.Time) {
 	if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
-		service, err := s.startService()
+		service, browser, err := s.getBrowser()
 		if err == nil {
 			defer service.Stop()
+			defer browser.Quit()
 			for idx, i := range s.misses {
-				//res := s.seleniumSearch(browser, i)
+				res := s.seleniumSearch(browser, i)
 				// Parse search results concurrently
 				wg.Add(1)
-				go s.getSearchResults(&wg, &mut, i)
+				go s.getSearchResults(&wg, &mut, res, i)
 				fmt.Printf("\tDispatched %d of %d missed terms.\r", idx+1, len(s.misses))
 			}
 			wg.Wait()
