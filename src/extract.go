@@ -198,12 +198,14 @@ func filterTerms(infile string, c int) ([][]string, [][]string) {
 			s := strings.Split(line, d)
 			if len(s) > c {
 				t := newTerm(s[c])
-				t.filter()
-				// Append terms with no fail reason to pass; else append to fail
-				if len(t.status) == 0 {
-					pass = append(pass, []string{t.queries[0], t.term})
-				} else {
-					fail = append(fail, []string{t.queries[0], t.term, t.status})
+				if len(t.queries) >= 1 {
+					t.filter()
+					// Append terms with no fail reason to pass; else append to fail
+					if len(t.status) == 0 {
+						pass = append(pass, []string{t.queries[0], t.term})
+					} else {
+						fail = append(fail, []string{t.queries[0], t.term, t.status})
+					}
 				}
 			}
 		} else {
