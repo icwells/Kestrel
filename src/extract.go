@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"path"
@@ -13,16 +14,16 @@ import (
 
 func (t *term) checkRunes() {
 	// Removes puntuation and numbers from term
-	var name string
+	var name bytes.Buffer
 	for _, i := range []rune(t.term) {
-		if i != '.' && i != '-' && i != '\'' {
-			if unicode.IsLetter(i) == true && unicode.IsSpace(i) == true {
-				// Remove punctuation and numbers
-				name = name + string(i)
-			}
+		if unicode.IsLetter(i) == true || unicode.IsSpace(i) == true {
+			// Remove punctuation and numbers
+			name.WriteRune(i)
+		} else if i == '.' || i == '-' || i == '\'' {
+			name.WriteRune(i)
 		}
 	}
-	t.term = name
+	t.term = name.String()
 	// Double check starting and ending runes for escaped punctuation
 	if len(t.term) > 0 {
 		if t.term[0] == '.' || t.term[0] == '-' {
@@ -36,14 +37,9 @@ func (t *term) checkRunes() {
 
 func (t *term) sliceTerm(p1, p2 string) {
 	// Removes item from between 2 puntuation marks
-	var ind int
 	idx := strings.Index(t.term, p1)
-	if p1 == p2 {
-		ind = strings.LastIndex(t.term, p2)
-	} else {
-		ind = strings.Index(t.term, p2)
-	}
-	if idx < ind {
+	ind := strings.LastIndex(t.term, p2)
+	if idx >= 0 && idx < ind {
 		// Drop item between punctuation
 		if ind == len(t.term)-1 {
 			t.term = t.term[:idx]
@@ -133,6 +129,26 @@ func containsWithSpace(l, target string) bool {
 	return ret
 }
 
+func (t *term) removeInfant() {
+	// Removes words referring to infancy from term
+	if strings.Count(t.term, " ") >= 1 {
+		var buffer bytes.Buffer
+		first := true
+		s := strings.Split(t.term, " ")
+		words := "Fetus, Juvenile, Infant"
+		for _, i := range s {
+			if strings.Contains(words, i) == false {
+				if first == false {
+					buffer.WriteRune(' ')
+				}
+				buffer.WriteString(i)
+				first = false
+			}
+		}
+		t.term = buffer.String()
+	}
+}
+
 func (t *term) checkCertainty() {
 	// Sets t.status if term is unknown or hybrid
 	unk := "uncertainEntry"
@@ -156,6 +172,7 @@ func (t *term) filter() {
 		if len(t.status) == 0 {
 			// Convert to title case after checking for ? and x
 			t.term = titleCase(t.term)
+			t.removeInfant()
 			t.reformat()
 			t.checkRunes()
 			if len(t.status) == 0 && len(t.term) < 3 {
