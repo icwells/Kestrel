@@ -3,14 +3,10 @@
 package main
 
 import (
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/icwells/go-tools/iotools"
 	"github.com/tebeka/selenium"
+	"log"
 	"os"
-	"path"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -64,10 +60,11 @@ func (s *searcher) getURLs(res string) map[string]string {
 	return ret
 }
 
-func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, res, k string) {
+func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	// Parses urls from google search results
 	defer wg.Done()
 	found := false
+	res := s.seleniumSearch(k)
 	urls := s.getURLs(res)
 	taxa := s.parseURLs(urls)
 	if len(taxa) >= 1 {
@@ -84,93 +81,26 @@ func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, res, 
 	mut.Unlock()
 }
 
-func (s *searcher) seleniumSearch(browser selenium.WebDriver, k string) string {
+func (s *searcher) seleniumSearch(k string) string {
 	// Gets Google search result page
 	var ret string
-	er := browser.Get("http://www.google.com")
-	if er == nil {
-		elem, err := browser.FindElement(selenium.ByName, "q")
-		if err == nil {
-			elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
-			ret, err = browser.PageSource()
-			if err != nil {
-				// Ensure empty return
-				ret = ""
-			}
-		}
-	}
-	return ret
-}
-
-func getDriverPath(dir string) string {
-	// Returns path to driver
-	var ret string
-	p, err := filepath.Glob(dir)
-	if err == nil {
-		for _, i := range p {
-			if strings.Contains(i, ".zip") == false && strings.Contains(i, ".tar") == false {
-				if iotools.Exists(i) == true {
-					ret = i
-					break
+	log.SetOutput(s.service.log)
+	browser, e := s.service.getBrowser()
+	if e == nil {
+		defer browser.Quit()
+		er := browser.Get("http://www.google.com")
+		if er == nil {
+			elem, err := browser.FindElement(selenium.ByName, "q")
+			if err == nil {
+				elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
+				ret, err = browser.PageSource()
+				if err != nil {
+					// Ensure empty return
+					ret = ""
 				}
 			}
 		}
 	}
+	log.SetOutput(os.Stdout)
 	return ret
-}
-
-func getSeleniumPath(dir string) string {
-	// Returns path to selenium jar
-	var ret string
-	p, err := filepath.Glob(path.Join(dir, "selenium-server-standalone-*"))
-	if err == nil {
-		if len(p) > 1 {
-			// Get highest version number
-			ver := 0.0
-			for _, i := range p {
-				n := i[strings.LastIndex(i, "-")+1 : strings.LastIndex(i, ".")]
-				if strings.Count(n, ".") > 1 {
-					n = n[:strings.LastIndex(n, ".")]
-				}
-				v, er := strconv.ParseFloat(n, 64)
-				if er == nil && v > ver {
-					ver = v
-					ret = i
-				}
-			}
-		} else if len(p) == 1 {
-			ret = p[0]
-		}
-		if iotools.Exists(ret) == false {
-			ret = ""
-		}
-	}
-	return ret
-}
-
-func (s *searcher) startService() (*selenium.Service, error) {
-	// Initialzes new selenium browser
-	gopath := iotools.GetGOPATH()
-	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
-	seleniumpath := getSeleniumPath(dir)
-	opts := []selenium.ServiceOption{
-		selenium.StartFrameBuffer(),
-		selenium.Output(os.Stderr),
-	}
-	cdpath := getDriverPath(path.Join(dir, "chromedriver-*"))
-	opts = append(opts, selenium.ChromeDriver(cdpath))
-	return selenium.NewSeleniumService(seleniumpath, s.port, opts...)
-}
-
-func (s *searcher) getBrowser() (*selenium.Service, selenium.WebDriver, error) {
-	// Returns selenium service, browser instance, and error
-	var wd selenium.WebDriver
-	service, err := s.startService()
-	if err == nil {
-		caps := selenium.Capabilities{"browserName": s.browser}
-		wd, err = selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
-	}
-	// Println blank line after selenium stdout
-	fmt.Println()
-	return service, wd, err
 }

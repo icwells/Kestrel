@@ -93,7 +93,7 @@ func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]
 			if pass == false {
 				// Compare search term and species
 				score := fuzzy.RankMatchFold(term, species)
-				if score >= 0 && score <= 1{
+				if score >= 0 && score <= 1 {
 					pass = true
 				}
 			}

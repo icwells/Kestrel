@@ -156,32 +156,32 @@ func searchTaxonomies(start time.Time) {
 	fmt.Println("\n\tWaiting for search results...")
 	wg.Wait()
 	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
-	fmt.Printf("\tCurrent run time: %v\n\n", time.Since(start))
+	fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
 	if len(s.misses) > 0 {
 		// Perform selenium search on misses
 		f := s.matches
-		service, browser, err := s.getBrowser()
-		if err == nil {
-			defer service.Stop()
-			defer browser.Quit()
+		s.newService()
+		//service, browser, err := s.getBrowser()
+		if s.service.err == nil {
+			defer s.service.stop()
+			fmt.Println("\n\tPerforming Google search using Selenium service...")
 			for idx, i := range s.misses {
-				res := s.seleniumSearch(browser, i)
 				// Parse search results concurrently
 				wg.Add(1)
-				go s.getSearchResults(&wg, &mut, res, i)
+				go s.getSearchResults(&wg, &mut, i)
 				fmt.Printf("\tDispatched %d of %d missed terms.\r", idx+1, len(s.misses))
 			}
-			wg.Wait()
 			fmt.Println("\n\tWaiting for search results...")
-			fmt.Printf("\tFound matches for %d missed queries.\n\n", s.matches-f)
+			wg.Wait()
+			fmt.Printf("\tFound matches for %d missed queries.\n", s.matches-f)
 		} else {
-			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", err)
+			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", s.service.err)
 			fmt.Println("\n\tWriting misses to file...")
 			for _, i := range s.misses {
 				s.writeMisses(i)
 			}
 		}
 	}
-	fmt.Printf("\tFound matches for a total of %d queries.\n", s.matches)
-	fmt.Printf("\tCould not find matches for %d queries.\n\n", s.fails)
+	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
+	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)
 }

@@ -1,14 +1,6 @@
-# All binaries
-bin/*.so
+# Binary
 bin/kestrel
 
-# Selenium server
-bin/selenium-server-standalone-*.jar
-
-# Renamed API file
+# Renamed API file and log
 bin/API.txt
-bin/seleniumTest.py
-
-# pycache and pyest cache
-bin/.pytest_cache/*
-bin/__pycache__/*
+bin/seleniumLog.txt
