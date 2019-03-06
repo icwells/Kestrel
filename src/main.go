@@ -43,7 +43,7 @@ func main() {
 	case ver.FullCommand():
 		version()
 	case extract.FullCommand():
-		fmt.Println("\n\tExtracting seacrch terms...")
+		fmt.Println("\n\tExtracting search terms...")
 		extractSearchTerms()
 	case search.FullCommand():
 		fmt.Println("\n\tSearching for taxonomy matches...")

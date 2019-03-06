@@ -75,11 +75,6 @@ func (s *searcher) checkOutput(outfile, header string) {
 	}
 }
 
-func (s *searcher) newService() {
-	// Wraps call to newService
-	s.service = newService()
-}
-
 func newSearcher(test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
@@ -91,6 +86,7 @@ func newSearcher(test bool) searcher {
 	s.terms = make(map[string]*term)
 	s.urls = newAPIs()
 	if test == false {
+		s.service = newService()
 		s.apiKeys()
 		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
 		s.checkOutput(s.missed, "Query,SearchTerm")

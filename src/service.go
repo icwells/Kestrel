@@ -21,8 +21,16 @@ type service struct {
 	browser string
 }
 
+func (s *service) getBrowser() (selenium.WebDriver, error) {
+	// Returns browser instance and error
+	caps := selenium.Capabilities{"browserName": s.browser,
+									"pageLoadStrategy": "normal",
+	}
+	return selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
+}
+
 func (s *service) startService() {
-	// Initialzes new selenium browser
+	// Initialzes new selenium service
 	s.log = iotools.CreateFile("seleniumLog.txt")
 	gopath := iotools.GetGOPATH()
 	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
@@ -42,6 +50,7 @@ func (s *service) stop() {
 }
 
 func newService() service {
+	// Initializes new struct
 	var s service
 	s.port = 8080
 	s.browser = "chrome"
@@ -49,10 +58,7 @@ func newService() service {
 	return s
 }
 
-func (s *service) getBrowser() (selenium.WebDriver, error) {
-	// Returns browser instance and error
-	return selenium.NewRemote(selenium.Capabilities{"browserName": s.browser}, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
-}
+//----------------------------------------------------------------------------
 
 func getDriverPath(dir string) string {
 	// Returns path to driver
