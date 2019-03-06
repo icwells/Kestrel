@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/tebeka/selenium"
 	"log"
@@ -67,14 +66,12 @@ func (s *searcher) seleniumSearch(k string) string {
 	browser, e := s.service.getBrowser()
 	if e == nil {
 		defer browser.Quit()
-		er := browser.Get("http://www.google.com")
+		er := browser.Get("https://duckduckgo.com/")
 		if er == nil {
 			elem, err := browser.FindElement(selenium.ByName, "q")
 			if err == nil {
 				elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
 				ret, err = browser.PageSource()
-				fmt.Println(k, err)
-				os.Exit(0)
 				if err != nil {
 					// Ensure empty return
 					ret = ""
@@ -86,12 +83,10 @@ func (s *searcher) seleniumSearch(k string) string {
 	return ret
 }
 
-
 func (s *searcher) getSearchResults(k string) bool {
 	// Parses urls from google search results
 	found := false
 	res := s.seleniumSearch(k)
-	//fmt.Println(k, len(res))
 	urls := s.getURLs(res)
 	taxa := s.parseURLs(urls)
 	if len(taxa) >= 1 {

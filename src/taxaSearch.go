@@ -160,7 +160,7 @@ func searchTaxonomies(start time.Time) {
 	for idx, i := range s.keySlice() {
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, i)
-		//fmt.Printf("\tDispatched %d of %d terms.\r", idx+1, len(s.terms))
+		fmt.Printf("\tDispatched %d of %d terms.\r", idx+1, len(s.terms))
 		if idx%10 == 0 {
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(time.Second)

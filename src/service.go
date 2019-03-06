@@ -24,7 +24,7 @@ type service struct {
 func (s *service) getBrowser() (selenium.WebDriver, error) {
 	// Returns browser instance and error
 	caps := selenium.Capabilities{"browserName": s.browser,
-									"pageLoadStrategy": "normal",
+		"pageLoadStrategy": "normal",
 	}
 	return selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
 }
