@@ -165,6 +165,10 @@ func searchTaxonomies(start time.Time) {
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(2 * time.Second)
 		}
+		if idx%200 == 0 {
+			// Pause to avoid using all available RAM
+			wg.Wait()
+		}
 		fmt.Printf("\tDispatched %d of %d terms.\r", idx+1, len(s.terms))
 	}
 	// Wait for remainging processes

@@ -77,8 +77,8 @@ func (s *searcher) seleniumSearch(k string) string {
 	var ret string
 	log.SetOutput(s.service.log)
 	browser, e := s.service.getBrowser()
+	defer browser.Quit()
 	if e == nil {
-		defer browser.Quit()
 		er := browser.Get("http://www.google.com")
 		if er == nil {
 			elem, err := browser.FindElement(selenium.ByName, "q")
