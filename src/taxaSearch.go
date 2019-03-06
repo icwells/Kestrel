@@ -91,6 +91,18 @@ func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]
 	return taxa
 }
 
+func (s *searcher) writeResults(mut *sync.RWMutex, k string, found bool) {
+	// Manages mutex call and writes to appropriate output file
+	mut.Lock()
+	if found == true {
+		s.writeMatches(k)
+	} else {
+		// Write missed queries to file
+		s.writeMisses(k)
+	}
+	mut.Unlock()
+}
+
 func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	// Performs api search for given term
 	defer wg.Done()
@@ -115,15 +127,15 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			break
 		}
 	}
-	if found == true {
-		mut.Lock()
-		s.writeMatches(k)
-		mut.Unlock()
-	} else {
-		// Record missed keys and reset term to original
+	if found == false {
+		// Reset term to original
 		s.terms[k].term = k
-		s.misses = append(s.misses, k)
+		if s.service.err == nil {
+			// Perform selenium search if service is running
+			found = s.getSearchResults(k)
+		}
 	}
+	s.writeResults(mut, k, found)
 }
 
 func (s *searcher) keySlice() []string {
@@ -141,8 +153,12 @@ func searchTaxonomies(start time.Time) {
 	var mut sync.RWMutex
 	s := newSearcher(false)
 	s.termMap(*infile)
+	s.newService()
+	if s.service.err == nil {
+		defer s.service.stop()
+	}
 	// Concurrently perform api search
-	fmt.Println("\n\tPerforming API based taxonomy search...")
+	fmt.Println("\n\tPerforming taxonomy search...")
 	for idx, i := range s.keySlice() {
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, i)
@@ -154,34 +170,8 @@ func searchTaxonomies(start time.Time) {
 	}
 	// Wait for remainging processes
 	fmt.Println("\n\tWaiting for search results...")
-	wg.Wait()
-	fmt.Printf("\tFound matches for %d queries.\n", s.matches)
 	fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
-	if len(s.misses) > 0 {
-		// Perform selenium search on misses
-		f := s.matches
-		s.newService()
-		//service, browser, err := s.getBrowser()
-		if s.service.err == nil {
-			defer s.service.stop()
-			fmt.Println("\n\tPerforming Google search using Selenium service...")
-			for idx, i := range s.misses {
-				// Parse search results concurrently
-				wg.Add(1)
-				go s.getSearchResults(&wg, &mut, i)
-				fmt.Printf("\tDispatched %d of %d missed terms.\r", idx+1, len(s.misses))
-			}
-			fmt.Println("\n\tWaiting for search results...")
-			wg.Wait()
-			fmt.Printf("\tFound matches for %d missed queries.\n", s.matches-f)
-		} else {
-			fmt.Printf("\t[Error] Could not initialize Selenium server: %v\n", s.service.err)
-			fmt.Println("\n\tWriting misses to file...")
-			for _, i := range s.misses {
-				s.writeMisses(i)
-			}
-		}
-	}
+	wg.Wait()
 	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)
 }

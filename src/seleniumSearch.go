@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 )
 
 func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
@@ -60,9 +59,8 @@ func (s *searcher) getURLs(res string) map[string]string {
 	return ret
 }
 
-func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
+func (s *searcher) getSearchResults(k string) bool {
 	// Parses urls from google search results
-	defer wg.Done()
 	found := false
 	res := s.seleniumSearch(k)
 	urls := s.getURLs(res)
@@ -71,14 +69,7 @@ func (s *searcher) getSearchResults(wg *sync.WaitGroup, mut *sync.RWMutex, k str
 		// Only attempt getMatch once
 		found = s.getMatch(s.terms[k].term, taxa)
 	}
-	mut.Lock()
-	if found == true {
-		s.writeMatches(k)
-	} else {
-		// Write missed queries to file
-		s.writeMisses(k)
-	}
-	mut.Unlock()
+	return found
 }
 
 func (s *searcher) seleniumSearch(k string) string {

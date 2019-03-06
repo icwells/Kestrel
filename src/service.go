@@ -50,12 +50,8 @@ func newService() service {
 }
 
 func (s *service) getBrowser() (selenium.WebDriver, error) {
-	// Returns selenium service, browser instance, and error
-	caps := selenium.Capabilities{"browserName": s.browser}
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
-	// Println blank line after selenium stdout
-	//fmt.Println()
-	return wd, err
+	// Returns browser instance and error
+	return selenium.NewRemote(selenium.Capabilities{"browserName": s.browser}, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
 }
 
 func getDriverPath(dir string) string {

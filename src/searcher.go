@@ -16,7 +16,6 @@ type searcher struct {
 	keys    map[string]string
 	done    strarray.Set
 	terms   map[string]*term
-	misses  []string
 	urls    apis
 	matches int
 	fails   int
