@@ -112,8 +112,8 @@ EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 				miss += abs(x)
 		pool.close()
 		pool.join()
-		print(("\n\tFound matches for {} entries.").format(match + donelen))
-		print(("\tNo match found for {} entries.").format(miss + missedlen))
+		print(("\n\tFound matches for {:,} entries.").format(match + donelen))
+		print(("\tNo match found for {:,} entries.").format(miss + missedlen))
 		# Google search
 		print("\n\tSearching for missed terms...")
 		nomatch = args.o[:args.o.rfind("/")+1] + "KestrelNoMatch.csv"
@@ -123,8 +123,8 @@ EOL,NCBI,Wikipedia,IUCN,GBIF,ITIS\n"
 		if hits:
 			# Delete temp misses file
 			remove(misses)
-		print(("\n\tTotal matches found: {}").format(match + donelen + hits))
-		print(("\tTotal entries without matches: {}").format(nohit))
+		print(("\n\tTotal matches found: {:,}").format(match + donelen + hits))
+		print(("\tTotal entries without matches: {:,}").format(nohit))
 	print(("\tFinished. Runtime: {}\n").format(datetime.now()-starttime))
 
 if __name__ == "__main__":

@@ -154,7 +154,7 @@ def termList(infile, done=[]):
 		for line in f:
 			if first == 0:
 				splt = line.strip().split(",")
-				if len(splt) == 3:
+				if len(splt) >= 3:
 					if splt[0] not in done:
 						if splt[1] in terms.keys():
 							terms[splt[1]].append(splt[0])

@@ -1,8 +1,8 @@
-Query,SearchTerm,Type
-Coyote,Coyote,common
-Canis Latrans,Canis latrans,scientific
-canis lupus,Canis lupus,scientific
-wolf,Wolf,common
-GRAY WOLF,Gray wolf,common
-GRAY FOX (frank),Gray fox,common
-Urocyon cinereoargenteus,Urocyon cinereoargenteus,scientific
+Query,SearchTerm
+Coyote,Coyote
+Canis Latrans,Canis Latrans
+canis lupus,Canis Lupus
+wolf,Wolf
+GRAY WOLF,Gray Wolf
+GRAY FOX (frank),Gray Fox
+Urocyon cinereoargenteus,Urocyon Cinereoargenteus
