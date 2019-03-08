@@ -67,7 +67,7 @@ func (c *curated) getTaxonomy(term string) ([]string, bool) {
 	return ret, pass
 }
 
-func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]string) {
+func checkTaxonomyResults(infile string, hier hierarchy, taxa curated) (string, [][]string, [][]string) {
 	// Identifies records with matching search terms and scientific names
 	var header, d string
 	var hits, miss [][]string
@@ -92,6 +92,7 @@ func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]
 			}
 			if pass == false {
 				// Compare search term and species
+				s = hier.checkHierarchy(s)
 				score := fuzzy.RankMatchFold(term, species)
 				if score >= 0 && score <= 1 {
 					pass = true
@@ -123,13 +124,15 @@ func getOutfiles(name string) (string, string) {
 
 func checkResults() {
 	// Checks scientific names in search results
+	hier := newHierarchy()
+	hier.setLevels(*infile)
 	taxa := newCurated()
 	if *taxafile != "nil" {
 		checkFile(*taxafile)
 		taxa.loadTaxa(*taxafile)
 	}
 	pass, fail := getOutfiles(*outfile)
-	header, hits, misses := checkTaxonomyResults(*infile, taxa)
+	header, hits, misses := checkTaxonomyResults(*infile, hier, taxa)
 	fmt.Println("\tWriting output files...")
 	iotools.WriteToCSV(pass, header, hits)
 	iotools.WriteToCSV(fail, header, misses)
