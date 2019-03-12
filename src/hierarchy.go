@@ -49,38 +49,25 @@ func newHierarchy() hierarchy {
 
 func (h *hierarchy) getParent(level, name string) string {
 	// Returns parent level name for given level
+	var parent string
+	var ex bool
 	name = titleCase(name)
 	switch level {
 	case "Phylum":
-		parent, ex := h.phylum[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.phylum[name]
 	case "Class":
-		parent, ex := h.class[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.class[name]
 	case "Order":
-		parent, ex := h.order[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.order[name]
 	case "Family":
-		parent, ex := h.family[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.family[name]
 	case "Genus":
-		parent, ex := h.genus[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.genus[name]
 	case "Species":
-		parent, ex := h.species[name]
-		if ex == true {
-			return parent
-		}
+		parent, ex = h.species[name]
+	}
+	if ex == true {
+		return parent
 	}
 	return ""
 }
@@ -138,7 +125,7 @@ func (h *hierarchy) setParent(level, parent, child string) {
 }
 
 func (h *hierarchy) setLevels(infile string) {
-	// Parses input file anf stores taxonomy hierarchy
+	// Parses input file and stores taxonomy hierarchy
 	var d string
 	first := true
 	f := iotools.OpenFile(infile)

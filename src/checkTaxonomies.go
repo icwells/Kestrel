@@ -58,10 +58,12 @@ func (c *curated) getTaxonomy(term string) ([]string, bool) {
 		// Only perform fuzzy search if there is no literal match
 		matches := fuzzy.RankFindFold(term, c.keys)
 		sort.Sort(matches)
-		if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
-			// Accept 0 or 1 transposition
-			ret = c.taxa[matches[0].Target]
-			pass = true
+		if len(matches) > 0 {
+			if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
+				// Accept 0 or 1 transposition
+				ret = c.taxa[matches[0].Target]
+				pass = true
+			}
 		}
 	}
 	return ret, pass
@@ -84,7 +86,7 @@ func checkTaxonomyResults(infile string, hier hierarchy, taxa curated) (string, 
 			term := strings.TrimSpace(s[h["SearchTerm"]])
 			species := strings.TrimSpace(s[h["Species"]])
 			if taxa.set == true {
-				row, pass := taxa.getTaxonomy(species)
+				row, pass := taxa.getTaxonomy(term)
 				if pass == true {
 					// Replace with currated taxonomy
 					s = append(s[:2], row...)
@@ -92,12 +94,13 @@ func checkTaxonomyResults(infile string, hier hierarchy, taxa curated) (string, 
 			}
 			if pass == false {
 				// Compare search term and species
-				s = hier.checkHierarchy(s)
 				score := fuzzy.RankMatchFold(term, species)
 				if score >= 0 && score <= 1 {
 					pass = true
 				}
 			}
+			// Fill NAs in taxonomy
+			s = hier.checkHierarchy(s)
 			if pass == true {
 				hits = append(hits, s)
 			} else {
@@ -129,6 +132,8 @@ func checkResults() {
 	taxa := newCurated()
 	if *taxafile != "nil" {
 		checkFile(*taxafile)
+		// Add to taxonomy hierarchy
+		hier.setLevels(*taxafile)
 		taxa.loadTaxa(*taxafile)
 	}
 	pass, fail := getOutfiles(*outfile)
