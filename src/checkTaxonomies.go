@@ -58,16 +58,18 @@ func (c *curated) getTaxonomy(term string) ([]string, bool) {
 		// Only perform fuzzy search if there is no literal match
 		matches := fuzzy.RankFindFold(term, c.keys)
 		sort.Sort(matches)
-		if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
-			// Accept 0 or 1 transposition
-			ret = c.taxa[matches[0].Target]
-			pass = true
+		if len(matches) > 0 {
+			if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
+				// Accept 0 or 1 transposition
+				ret = c.taxa[matches[0].Target]
+				pass = true
+			}
 		}
 	}
 	return ret, pass
 }
 
-func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]string) {
+func checkTaxonomyResults(infile string, hier hierarchy, taxa curated) (string, [][]string, [][]string) {
 	// Identifies records with matching search terms and scientific names
 	var header, d string
 	var hits, miss [][]string
@@ -84,7 +86,7 @@ func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]
 			term := strings.TrimSpace(s[h["SearchTerm"]])
 			species := strings.TrimSpace(s[h["Species"]])
 			if taxa.set == true {
-				row, pass := taxa.getTaxonomy(species)
+				row, pass := taxa.getTaxonomy(term)
 				if pass == true {
 					// Replace with currated taxonomy
 					s = append(s[:2], row...)
@@ -97,6 +99,8 @@ func checkTaxonomyResults(infile string, taxa curated) (string, [][]string, [][]
 					pass = true
 				}
 			}
+			// Fill NAs in taxonomy
+			s = hier.checkHierarchy(s)
 			if pass == true {
 				hits = append(hits, s)
 			} else {
@@ -123,13 +127,17 @@ func getOutfiles(name string) (string, string) {
 
 func checkResults() {
 	// Checks scientific names in search results
+	hier := newHierarchy()
+	hier.setLevels(*infile)
 	taxa := newCurated()
 	if *taxafile != "nil" {
 		checkFile(*taxafile)
+		// Add to taxonomy hierarchy
+		hier.setLevels(*taxafile)
 		taxa.loadTaxa(*taxafile)
 	}
 	pass, fail := getOutfiles(*outfile)
-	header, hits, misses := checkTaxonomyResults(*infile, taxa)
+	header, hits, misses := checkTaxonomyResults(*infile, hier, taxa)
 	fmt.Println("\tWriting output files...")
 	iotools.WriteToCSV(pass, header, hits)
 	iotools.WriteToCSV(fail, header, misses)

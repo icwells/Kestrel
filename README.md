@@ -1,4 +1,6 @@
-# Kestrel Taxonomy Finder Version  
+[![Build Status](https://travis-ci.com/icwells/Kestrel.svg?branch=master)](https://travis-ci.com/icwells/Kestrel)
+
+# Kestrel Taxonomy Finder
 
 ## Copyright 2019 by Shawn Rupp  
 
