@@ -7,7 +7,7 @@
 ##############################################################################
 
 MAIN="kestrel"
-FS="github.com/renstrom/fuzzysearch/fuzzy"
+FS="github.com/lithammer/fuzzysearch/fuzzy"
 GQ="github.com/PuerkitoBio/goquery"
 #HT="golang.org/x/net/html"
 IO="github.com/icwells/go-tools/iotools"

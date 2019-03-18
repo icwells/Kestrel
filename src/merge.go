@@ -41,6 +41,8 @@ func newTaxa(infile string) taxamerger {
 			// Query name: [taxonomy] (drops search term and urls)
 			if len(s) >= h["Species"] {
 				t.taxa[s[h["Query"]]] = s[h["Kingdom"] : h["Species"]+1]
+				// Additionally store scientific name as key
+				t.taxa[s[h["Species"]]] = s[h["Kingdom"] : h["Species"]+1]
 			}
 		} else {
 			d = iotools.GetDelim(line)
@@ -55,7 +57,7 @@ func (t *taxamerger) getTaxa(n string) []string {
 	// Returns taxonomy for given name
 	ret, ex := t.taxa[n]
 	if ex != true {
-		ret = nil
+		ret = t.nas
 	}
 	return ret
 }
@@ -76,9 +78,6 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, 
 			if len(s) >= c {
 				var row []string
 				taxa := t.getTaxa(s[c])
-				if taxa == nil {
-					taxa = t.nas
-				}
 				if prepend == false {
 					row = append(s, taxa...)
 				} else {

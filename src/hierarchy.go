@@ -77,7 +77,7 @@ func (h *hierarchy) checkHierarchy(s []string) []string {
 	// Iterate backwards starting from genus to fill multiple empty cells
 	for _, level := range h.levels[1:] {
 		idx := h.header[level]
-		if s[idx] == "NA" {
+		if strings.ToLower(s[idx]) == "na" {
 			// Get name and index of child level
 			child := h.children[level]
 			ind := h.header[child]
