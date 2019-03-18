@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
-	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"sort"
 	"strings"
 )
@@ -57,8 +57,8 @@ func (c *curated) getTaxonomy(term string) ([]string, bool) {
 	if pass == false {
 		// Only perform fuzzy search if there is no literal match
 		matches := fuzzy.RankFindFold(term, c.keys)
-		sort.Sort(matches)
 		if len(matches) > 0 {
+			sort.Sort(matches)
 			if matches[0].Distance >= 0 || matches[0].Distance <= 1 {
 				// Accept 0 or 1 transposition
 				ret = c.taxa[matches[0].Target]
