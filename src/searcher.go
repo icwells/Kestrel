@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
-	"github.com/icwells/go-tools/strarray"
+	"github.com/icwells/simpleset"
 	"path"
 	"strings"
 )
@@ -14,7 +14,7 @@ type searcher struct {
 	outfile string
 	missed  string
 	keys    map[string]string
-	done    strarray.Set
+	done    *simpleset.Set
 	terms   map[string]*term
 	urls    apis
 	matches int
@@ -82,7 +82,7 @@ func newSearcher(test bool) searcher {
 	dir, _ := path.Split(s.outfile)
 	s.missed = path.Join(dir, "KestrelMissed.csv")
 	s.keys = make(map[string]string)
-	s.done = strarray.NewSet()
+	s.done = simpleset.NewStringSet()
 	s.terms = make(map[string]*term)
 	s.urls = newAPIs()
 	if test == false {
