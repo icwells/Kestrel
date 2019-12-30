@@ -11,7 +11,7 @@ FS="github.com/lithammer/fuzzysearch/fuzzy"
 GQ="github.com/PuerkitoBio/goquery"
 #HT="golang.org/x/net/html"
 IO="github.com/icwells/go-tools/iotools"
-SA="github.com/icwells/go-tools/strarray"
+SA="github.com/icwells/simpleset"
 SE="github.com/tebeka/selenium"
 
 # Get install location
