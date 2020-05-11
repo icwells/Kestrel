@@ -111,7 +111,7 @@ func (s *searcher) termMap(infile string) {
 			if len(l) >= 2 {
 				query := strings.TrimSpace(l[0])
 				searchterm := percentEncode(strings.TrimSpace(l[1]))
-				if s.done.InSet(query) == false {
+				if ex, _ := s.done.InSet(query); !ex {
 					total++
 					if _, ex := s.terms[searchterm]; ex == false {
 						// Initialize new struct

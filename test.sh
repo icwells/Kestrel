@@ -38,6 +38,38 @@ cleanup () {
 	done
 }
 
+blackBoxTests () {
+	# Wraps calls to testSearch and testExtract
+	./install.sh
+	cd bin/
+	testExtract
+	testSearch
+	cleanup
+}
+
+checkSource () {
+	# Runs go fmt/vet on source files (vet won't run in loop)
+	echo ""
+	echo "Running go $1..."
+	#for I in $(ls); do
+		#if [ -d $I ]; then
+			go $1 $SRC
+		#fi
+	#done
+}
+
+helpText () {
+	echo "Installs Go scripts for Kestrel"
+	echo ""
+	echo "all			Runs all tests."
+	echo "whitebox		Runs white box tests only."
+	echo "blackbox		Runs black box tests only."
+	echo "help			Prints help text and exits."
+	echo "fmt		Runs go fmt on all source files."
+	echo "vet		Runs go vet on all source files."
+	echo ""
+}
+
 if [ $# -eq 0 ]; then
 	whiteBoxTests
 	cd bin/
@@ -47,22 +79,16 @@ if [ $# -eq 0 ]; then
 elif [ $1 = "whitebox" ]; then
 	whiteBoxTests
 elif [ $1 = "blackbox" ]; then
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
+	blackBoxTests
 elif [ $1 = "all" ]; then
 	whiteBoxTests
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
+	blackBoxTests
+elif [ $1 = "fmt" ]; then
+	checkSource $1
+elif [ $1 = "vet" ]; then
+	checkSource $1
 elif [ $1 = "help" ]; then
-	echo "Installs Go scripts for Kestrel"
-	echo ""
-	echo "all			Runs all tests."
-	echo "whitebox		Runs white box tests only."
-	echo "blackbox		Runs black box tests only."
-	echo "help			Prints help text and exits."
-	echo ""
+	helpText
+else
+	helpText
 fi
