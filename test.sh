@@ -22,13 +22,13 @@ whiteBoxTests () {
 
 testExtract () {
 	# Extract names and compare output
-	./kestrel extract -c 0 -i $EXTRACTINPUT -o $EXTRACTOUTPUT
+	kestrel extract -c 0 -i $EXTRACTINPUT -o $EXTRACTOUTPUT
 	go test blackBox_test.go --run TestExtract
 }
 
 testSearch () {
 	# Run search and comapre output
-	./kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	go test blackBox_test.go --run TestSearch
 }
 
@@ -41,7 +41,6 @@ cleanup () {
 blackBoxTests () {
 	# Wraps calls to testSearch and testExtract
 	./install.sh
-	cd bin/
 	testExtract
 	testSearch
 	cleanup

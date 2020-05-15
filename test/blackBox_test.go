@@ -54,10 +54,10 @@ func compareFiles(t *testing.T, exp, act string, taxa bool) {
 
 func TestExtract(t *testing.T) {
 	// Tests extract output
-	compareFiles(t, "test/testInput.csv", "test/extracted.csv", false)
+	compareFiles(t, "testInput.csv", "extracted.csv", false)
 }
 
 func TestSearch(t *testing.T) {
 	// Tests search output
-	compareFiles(t, "test/taxonomies.csv", "test/searchResults.csv", true)
+	compareFiles(t, "taxonomies.csv", "searchResults.csv", true)
 }
