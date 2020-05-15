@@ -9,12 +9,9 @@
 MAIN="kestrel"
 SE="github.com/tebeka/selenium"
 
-# Get install location
-SYS=$(ls $GOPATH/pkg | head -1)
-PDIR=$GOPATH/pkg/$SYS
-
 installSelenium () {
 	# Installs selenium package
+	echo "Installing Selenium driver..."
 	WD=$(pwd)
 	installPackage $SE
 	cd $GOPATH/$SE/vendor
@@ -25,7 +22,7 @@ installSelenium () {
 
 installMain () {
 	echo "Building main..."
-	go build -i -o bin/$MAIN src/*.go
+	go build -i -o $GOBIN/$MAIN src/*.go
 }
 
 echo ""

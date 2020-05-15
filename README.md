@@ -10,7 +10,7 @@
 ## Dependencies  
 [Go 1.11+](https://golang.org/dl/)  
 Xvfb  
-Chrome or Firefox    
+Chrome browser    
 
 ## Installation  
 
@@ -27,7 +27,7 @@ Download the git repository, change into the directory, and install (required Go
 	./install.sh all  
 
 #### Testing  
-Once you have installed the program and its dependencies, you may with to run the test script:  
+Once you have installed the program and its dependencies, you may wish to run the test script:  
 
 	./test.sh
 

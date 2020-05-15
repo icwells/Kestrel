@@ -1,6 +1,3 @@
-# Binary
-bin/kestrel
-
 # Renamed API file and log
-bin/API.txt
-bin/seleniumLog.txt
+utils/API.txt
+utils/seleniumLog.txt
