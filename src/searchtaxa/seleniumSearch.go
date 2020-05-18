@@ -1,6 +1,6 @@
 // Calls selenium to perform Google search
 
-package main
+package searchtaxa
 
 import (
 	"github.com/PuerkitoBio/goquery"

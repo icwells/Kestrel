@@ -1,6 +1,6 @@
 // Contains web scraping functions
 
-package main
+package searchtaxa
 
 import (
 	"bytes"

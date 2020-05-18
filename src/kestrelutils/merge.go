@@ -1,6 +1,6 @@
 // Merges search results with source data
 
-package main
+package kestrelutils
 
 import (
 	"fmt"

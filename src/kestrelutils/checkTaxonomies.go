@@ -1,6 +1,6 @@
 // Splits search results file into one with matching search terms and scientific names and one without to streamline manual curration.
 
-package main
+package kestrelutils
 
 import (
 	"fmt"

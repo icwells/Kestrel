@@ -1,6 +1,6 @@
 // Defines taxonomy struct and methods
 
-package main
+package kestrelutils
 
 import (
 	"strings"

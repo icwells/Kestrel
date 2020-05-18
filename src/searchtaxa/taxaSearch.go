@@ -1,6 +1,6 @@
 // Performs taxonomy search for Kestrel program
 
-package main
+package searchtaxa
 
 import (
 	"fmt"

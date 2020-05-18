@@ -1,6 +1,6 @@
-// Deifnes scorer struct and methods for scoring taxonomy comparisons
+// Defines scorer struct and methods for scoring taxonomy comparisons
 
-package main
+package searchtaxa
 
 type scorer struct {
 	scores map[string]map[string]int

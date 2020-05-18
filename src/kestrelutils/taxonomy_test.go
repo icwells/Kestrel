@@ -1,6 +1,6 @@
 // Tests taxonomy methods
 
-package main
+package kestrelutils
 
 import (
 	"strings"

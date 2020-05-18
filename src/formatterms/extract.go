@@ -1,6 +1,6 @@
 // Defines extract functions
 
-package main
+package formatterms
 
 import (
 	"bytes"

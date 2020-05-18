@@ -1,6 +1,6 @@
 // Defines searcher struct and methods
 
-package main
+package searchtaxa
 
 import (
 	"fmt"

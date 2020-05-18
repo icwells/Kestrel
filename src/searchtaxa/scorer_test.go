@@ -1,6 +1,6 @@
 // Tests scorer struct and methods
 
-package main
+package searchtaxa
 
 import (
 	"testing"

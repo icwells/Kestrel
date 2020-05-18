@@ -1,6 +1,6 @@
 // Stores taxonomy hierarchy data for checkTaxonomies
 
-package main
+package kestrelutils
 
 import (
 	"fmt"

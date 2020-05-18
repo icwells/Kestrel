@@ -1,6 +1,6 @@
 // Heler functions and structs
 
-package main
+package kestrelutils
 
 import (
 	"fmt"

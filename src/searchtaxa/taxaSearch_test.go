@@ -1,6 +1,6 @@
 // Tests taxaSearch functions
 
-package main
+package searchtaxa
 
 import (
 	"strconv"
