@@ -146,12 +146,12 @@ func (s *searcher) keySlice() []string {
 	return ret
 }
 
-func searchTaxonomies(start time.Time) {
+func searchTaxonomies(outfile string, searchterms map[string]*Term) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	s := newSearcher(false)
-	s.termMap(*infile)
+	fmt.Println("\n\tSearching for taxonomy matches...")
 	if s.service.err == nil {
 		defer s.service.stop()
 	}
@@ -172,7 +172,6 @@ func searchTaxonomies(start time.Time) {
 	}
 	// Wait for remainging processes
 	fmt.Println("\n\tWaiting for search results...")
-	fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
 	wg.Wait()
 	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)

@@ -1,16 +1,51 @@
-// Defines extract functions
+// Defines term struct
 
-package formatterms
+package terms
 
 import (
-	"bytes"
-	"fmt"
-	"github.com/icwells/go-tools/iotools"
-	"path"
-	"regexp"
-	"strings"
-	"unicode"
+	"github.com/icwells/kestrel/src/kestrelutils"
 )
+
+type Term struct {
+	queries  []string
+	term     string
+	status   string
+	taxonomy kestrelutils.Taxonomy
+	sources  map[string]string
+}
+
+func newTerm(query string) *Term {
+	// Returns initialized term
+	t := new(Term)
+	if len(query) > 0 {
+		t.addQuery(query)
+	}
+	t.taxonomy = kestrelutils.NewTaxonomy()
+	t.sources = make(map[string]string)
+	return t
+}
+
+func (t *term) String() string {
+	// Returns formatted string
+	var ret []string
+	ret = append(ret, kestrelutils.PercentDecode(t.term))
+	ret = append(ret, t.taxonomy.String())
+	// Append url or NA for each source
+	for _, i := range []string{"IUCN", "NCBI", "WIKI", "EOL", "ITIS"} {
+		s, ex := t.sources[i]
+		if ex == true {
+			ret = append(ret, s)
+		} else {
+			ret = append(ret, "NA")
+		}
+	}
+	return strings.Join(ret, ",")
+}
+
+func (t *term) addQuery(query string) {
+	// Appends to query slice
+	t.queries = append(t.queries, query)
+}
 
 func (t *term) checkRunes() {
 	// Removes puntuation and numbers from term
@@ -106,29 +141,6 @@ func (t *term) reformat() {
 	}
 }
 
-func containsWithSpace(l, target string) bool {
-	// Returns true is target is in l and sperated by spaces/term boundary
-	var ret bool
-	idx := strings.Index(l, target)
-	if idx >= 0 {
-		next := idx + len(target)
-		if idx == 0 {
-			if next < len(l) && unicode.IsSpace(rune(l[next])) == true {
-				// First word
-				ret = true
-			}
-		} else if next < len(l) {
-			if unicode.IsSpace(rune(l[next])) == true && unicode.IsSpace(rune(l[idx-1])) == true {
-				ret = true
-			}
-		} else if unicode.IsSpace(rune(l[idx-1])) == true {
-			// Last word
-			ret = true
-		}
-	}
-	return ret
-}
-
 func (t *term) removeInfant() {
 	// Removes words referring to infancy from term
 	if strings.Count(t.term, " ") >= 1 {
@@ -182,47 +194,4 @@ func (t *term) filter() {
 	} else {
 		t.status = "tooShort"
 	}
-}
-
-func filterTerms(infile string, c int) ([][]string, [][]string) {
-	// Reads terms from given column and checks formatting
-	first := true
-	var d string
-	var pass, fail [][]string
-	f := iotools.OpenFile(infile)
-	defer f.Close()
-	scanner := iotools.GetScanner(f)
-	for scanner.Scan() {
-		line := string(scanner.Text())
-		if first == false {
-			s := strings.Split(line, d)
-			if len(s) > c {
-				t := newTerm(s[c])
-				if len(t.queries) >= 1 {
-					t.filter()
-					// Append terms with no fail reason to pass; else append to fail
-					if len(t.status) == 0 {
-						pass = append(pass, []string{t.queries[0], t.term})
-					} else {
-						fail = append(fail, []string{t.queries[0], t.term, t.status})
-					}
-				}
-			}
-		} else {
-			d = iotools.GetDelim(line)
-			first = false
-		}
-	}
-	return pass, fail
-}
-
-func extractSearchTerms() {
-	// Extracts and formats input terms
-	checkFile(*infile)
-	dir, _ := path.Split(*outfile)
-	misses := path.Join(dir, "KestrelRejected.csv")
-	pass, fail := filterTerms(*infile, *ecol)
-	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.\n", len(pass), len(fail))
-	iotools.WriteToCSV(*outfile, "Query,SearchTerm", pass)
-	iotools.WriteToCSV(misses, "Query,SearchTerm,Reason", fail)
 }

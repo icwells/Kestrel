@@ -1,6 +1,6 @@
 // Test checkTaxonomies and hiererchy functions
 
-package main
+package kestrelutils
 
 import (
 	"testing"

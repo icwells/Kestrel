@@ -5,7 +5,7 @@
 #	Requires:	Pytest
 ##############################################################################
 WD=$(pwd)
-SRC="$WD/src/*.go"
+SRC="$WD/src"
 
 EXTRACTINPUT="test/testInput.csv"
 EXPECTED="test/taxonomies.csv"
@@ -47,13 +47,14 @@ blackBoxTests () {
 }
 
 checkSource () {
-	# Runs go fmt/vet on source files (vet won't run in loop)
+	# Runs go fmt/vet on source files
 	echo ""
 	echo "Running go $1..."
-	#for I in $(ls); do
-		#if [ -d $I ]; then
-			go $1 $SRC
-		#fi
+	go $1 "$SRC/main.go"
+	#for I in $(ls $SRC); do
+	#	if [ -d $I ]; then
+	#		go $1 "$SRC/$I*.go"
+	#	fi
 	#done
 }
 
@@ -66,7 +67,6 @@ helpText () {
 	echo "help			Prints help text and exits."
 	echo "fmt		Runs go fmt on all source files."
 	echo "vet		Runs go vet on all source files."
-	echo ""
 }
 
 if [ $# -eq 0 ]; then
@@ -91,3 +91,4 @@ elif [ $1 = "help" ]; then
 else
 	helpText
 fi
+echo ""

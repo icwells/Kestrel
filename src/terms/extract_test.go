@@ -1,6 +1,6 @@
 // Tests functions in the extract script as well as percent encoding functions
 
-package formatterms
+package terms
 
 import (
 	"testing"

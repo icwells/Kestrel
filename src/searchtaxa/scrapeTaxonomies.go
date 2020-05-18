@@ -1,6 +1,6 @@
 // Scrapes taxononomies into taxonomy struct
 
-package main
+package searchtaxa
 
 import (
 	"encoding/json"

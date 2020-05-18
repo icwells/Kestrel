@@ -33,7 +33,7 @@ func (s *searcher) assignKey(line string) {
 func (s *searcher) apiKeys() {
 	// Reads api keys from file
 	infile := "API.txt"
-	checkFile(infile)
+	kestrelutils.CheckFile(infile)
 	fmt.Println("\tReading API keys from file...")
 	f := iotools.OpenFile(infile)
 	defer f.Close()
@@ -92,45 +92,6 @@ func newSearcher(test bool) searcher {
 		s.checkOutput(s.missed, "Query,SearchTerm")
 	}
 	return s
-}
-
-func (s *searcher) termMap(infile string) {
-	// Reads formatted species names
-	var d string
-	var unique, total int
-	first := true
-	checkFile(infile)
-	fmt.Println("\tReading search terms from file...")
-	f := iotools.OpenFile(infile)
-	defer f.Close()
-	scanner := iotools.GetScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(string(scanner.Text()))
-		if first == false {
-			l := strings.Split(line, d)
-			if len(l) >= 2 {
-				query := strings.TrimSpace(l[0])
-				searchterm := percentEncode(strings.TrimSpace(l[1]))
-				if ex, _ := s.done.InSet(query); !ex {
-					total++
-					if _, ex := s.terms[searchterm]; ex == false {
-						// Initialize new struct
-						unique++
-						t := newTerm(query)
-						t.term = searchterm
-						s.terms[searchterm] = &t
-					} else {
-						// Add to exisiting struct
-						s.terms[searchterm].addQuery(query)
-					}
-				}
-			}
-		} else {
-			d = iotools.GetDelim(line)
-			first = false
-		}
-	}
-	fmt.Printf("\tFound %d unique entries from %d total new entries.\n", unique, total)
 }
 
 func (s *searcher) writeMisses(k string) {
