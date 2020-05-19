@@ -10,7 +10,7 @@ type Term struct {
 	queries  []string
 	term     string
 	status   string
-	taxonomy kestrelutils.Taxonomy
+	taxonomy *kestrelutils.Taxonomy
 	sources  map[string]string
 }
 
@@ -25,7 +25,7 @@ func newTerm(query string) *Term {
 	return t
 }
 
-func (t *term) String() string {
+func (t *Term) String() string {
 	// Returns formatted string
 	var ret []string
 	ret = append(ret, kestrelutils.PercentDecode(t.term))
@@ -42,12 +42,12 @@ func (t *term) String() string {
 	return strings.Join(ret, ",")
 }
 
-func (t *term) addQuery(query string) {
+func (t *Term) addQuery(query string) {
 	// Appends to query slice
 	t.queries = append(t.queries, query)
 }
 
-func (t *term) checkRunes() {
+func (t *Term) checkRunes() {
 	// Removes puntuation and numbers from term
 	var name bytes.Buffer
 	for _, i := range []rune(t.term) {
@@ -70,7 +70,7 @@ func (t *term) checkRunes() {
 	}
 }
 
-func (t *term) sliceTerm(p1, p2 string) {
+func (t *Term) sliceTerm(p1, p2 string) {
 	// Removes item from between 2 puntuation marks
 	idx := strings.Index(t.term, p1)
 	ind := strings.LastIndex(t.term, p2)
@@ -91,7 +91,7 @@ func (t *term) sliceTerm(p1, p2 string) {
 	}
 }
 
-func (t *term) reformat() {
+func (t *Term) reformat() {
 	// Performs more complicated formatting steps
 	if strings.Contains(t.term, "(") == true || strings.Contains(t.term, ")") == true {
 		t.sliceTerm("(", ")")
@@ -141,7 +141,7 @@ func (t *term) reformat() {
 	}
 }
 
-func (t *term) removeInfant() {
+func (t *Term) removeInfant() {
 	// Removes words referring to infancy from term
 	if strings.Count(t.term, " ") >= 1 {
 		var buffer bytes.Buffer
@@ -161,7 +161,7 @@ func (t *term) removeInfant() {
 	}
 }
 
-func (t *term) checkCertainty() {
+func (t *Term) checkCertainty() {
 	// Sets t.status if term is unknown or hybrid
 	unk := "uncertainEntry"
 	hyb := "hybrid"
@@ -173,7 +173,7 @@ func (t *term) checkCertainty() {
 	}
 }
 
-func (t *term) filter() {
+func (t *Term) filter() {
 	// Filters input query
 	query := t.queries[0]
 	if len(query) >= 3 {

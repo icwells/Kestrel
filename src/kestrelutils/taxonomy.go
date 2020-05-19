@@ -3,35 +3,36 @@
 package kestrelutils
 
 import (
+	"github.com/icwells/go-tools/strarray"
 	"strings"
 )
 
-type taxonomy struct {
-	kingdom string
-	phylum  string
-	class   string
-	order   string
-	family  string
-	genus   string
-	species string
-	source  string
-	found   bool
+type Taxonomy struct {
+	Kingdom string
+	Phylum  string
+	Class   string
+	Order   string
+	Family  string
+	Genus   string
+	Species string
+	Source  string
+	Found   bool
 	nas     int
 	levels  []string
 }
 
-func newTaxonomy() taxonomy {
+func NewTaxonomy() *Taxonomy {
 	// Initializes taxonomy struct
-	var t taxonomy
-	t.kingdom = "NA"
-	t.phylum = "NA"
-	t.class = "NA"
-	t.order = "NA"
-	t.family = "NA"
-	t.genus = "NA"
-	t.species = "NA"
-	t.source = "NA"
-	t.found = false
+	t := make(Taxonomy)
+	t.Kingdom = "NA"
+	t.Phylum = "NA"
+	t.Class = "NA"
+	t.Order = "NA"
+	t.Family = "NA"
+	t.Genus = "NA"
+	t.Species = "NA"
+	t.Source = "NA"
+	t.Found = false
 	t.nas = 7
 	t.levels = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
 	return t
@@ -46,7 +47,7 @@ func (t *taxonomy) String() string {
 	return strings.Join(ret, ",")
 }
 
-func (t *taxonomy) copyTaxonomy(x taxonomy) {
+func (t *taxonomy) CopyTaxonomy(x taxonomy) {
 	// Deep copies x to t
 	t.kingdom = x.kingdom
 	t.phylum = x.phylum
@@ -60,10 +61,10 @@ func (t *taxonomy) copyTaxonomy(x taxonomy) {
 	t.nas = x.nas
 }
 
-func (t *taxonomy) countNAs() {
+func (t *taxonomy) CountNAs() {
 	// Rechecks nas
 	nas := 0
-	for _, i := range []string{t.kingdom, t.phylum, t.class, t.order, t.family, t.genus, t.species} {
+	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species} {
 		if strings.ToUpper(i) == "NA" {
 			nas++
 		}
@@ -79,7 +80,7 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 			if strings.Contains(l, " ") == true {
 				l = strings.Split(l, " ")[0]
 			}
-			l = titleCase(l)
+			l = strarray.TitleCase(l)
 		} else {
 			// Get binomial with proper capitalization
 			if strings.Contains(l, ".") == true {
@@ -100,7 +101,7 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 	return l
 }
 
-func (t *taxonomy) checkTaxa() {
+func (t *taxonomy) CheckTaxa() {
 	// Checks formatting
 	t.countNAs()
 	if t.nas <= 2 && strings.ToUpper(t.genus) != "NA" {
@@ -120,7 +121,7 @@ func (t *taxonomy) checkTaxa() {
 	}
 }
 
-func (t *taxonomy) setLevel(key, value string) {
+func (t *taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
 	if strings.Contains(value, "[") == false && strings.ToUpper(value) != "NA" && len(value) > 1 {
@@ -143,7 +144,7 @@ func (t *taxonomy) setLevel(key, value string) {
 	}
 }
 
-func (t *taxonomy) isLevel(s string) string {
+func (t *taxonomy) IsLevel(s string) string {
 	// Returns formatted string if s is a taxonomic level
 	s = strings.TrimSpace(strings.ToLower(strings.Replace(s, ":", "", -1)))
 	for _, i := range t.levels {

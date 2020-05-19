@@ -5,6 +5,7 @@ package searchtaxa
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"github.com/icwells/kestrel/src/terms"
 	"github.com/icwells/simpleset"
 	"path"
 	"strings"
@@ -15,11 +16,30 @@ type searcher struct {
 	missed  string
 	keys    map[string]string
 	done    *simpleset.Set
-	terms   map[string]*term
+	terms   map[string]*terms.Term
 	urls    apis
 	matches int
 	fails   int
 	service service
+}
+
+func newSearcher(searchterms map[string]*terms.Term, test bool) searcher {
+	// Reads api keys and existing output and initializes maps
+	var s searcher
+	s.outfile = *outfile
+	dir, _ := path.Split(s.outfile)
+	s.missed = path.Join(dir, "KestrelMissed.csv")
+	s.keys = make(map[string]string)
+	s.done = simpleset.NewStringSet()
+	s.terms = searchterms
+	s.urls = newAPIs()
+	if test == false {
+		s.service = newService()
+		s.apiKeys()
+		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
+		s.checkOutput(s.missed, "Query,SearchTerm")
+	}
+	return s
 }
 
 func (s *searcher) assignKey(line string) {
@@ -73,25 +93,6 @@ func (s *searcher) checkOutput(outfile, header string) {
 		defer out.Close()
 		out.WriteString(header + "\n")
 	}
-}
-
-func newSearcher(test bool) searcher {
-	// Reads api keys and existing output and initializes maps
-	var s searcher
-	s.outfile = *outfile
-	dir, _ := path.Split(s.outfile)
-	s.missed = path.Join(dir, "KestrelMissed.csv")
-	s.keys = make(map[string]string)
-	s.done = simpleset.NewStringSet()
-	s.terms = make(map[string]*term)
-	s.urls = newAPIs()
-	if test == false {
-		s.service = newService()
-		s.apiKeys()
-		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
-		s.checkOutput(s.missed, "Query,SearchTerm")
-	}
-	return s
 }
 
 func (s *searcher) writeMisses(k string) {

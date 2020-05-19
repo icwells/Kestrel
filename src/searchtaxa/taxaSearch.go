@@ -4,6 +4,7 @@ package searchtaxa
 
 import (
 	"fmt"
+	"github.com/icwells/kestrel/src/terms"
 	"strings"
 	"sync"
 	"time"
@@ -137,38 +138,31 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	s.writeResults(mut, k, found)
 }
 
-func (s *searcher) keySlice() []string {
-	// Returns slice of map keys
-	var ret []string
-	for k := range s.terms {
-		ret = append(ret, k)
-	}
-	return ret
-}
-
-func searchTaxonomies(outfile string, searchterms map[string]*Term) {
+func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
-	s := newSearcher(false)
+	count := 1
+	s := newSearcher(searchterms, false)
 	fmt.Println("\n\tSearching for taxonomy matches...")
 	if s.service.err == nil {
 		defer s.service.stop()
 	}
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming taxonomy search...")
-	for idx, i := range s.keySlice() {
+	for k := range s.terms() {
 		wg.Add(1)
 		go s.searchTerm(&wg, &mut, i)
-		fmt.Printf("\tDispatched %d of %d terms.\r", idx+1, len(s.terms))
-		if idx%10 == 0 {
+		fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
+		if count%10 == 0 {
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(time.Second)
 		}
-		if idx > 1 && idx%200 == 0 {
+		if count%200 == 0 {
 			// Pause to avoid using all available RAM
 			wg.Wait()
 		}
+		count++
 	}
 	// Wait for remainging processes
 	fmt.Println("\n\tWaiting for search results...")

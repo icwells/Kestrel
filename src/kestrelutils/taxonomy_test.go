@@ -9,7 +9,7 @@ import (
 
 func testtaxa(s []string, found bool, nas int) taxonomy {
 	// Loads data from slice into taxonomy struct
-	t := newTaxonomy()
+	t := NewTaxonomy()
 	t.kingdom = s[0]
 	t.phylum = s[1]
 	t.class = s[2]
@@ -22,9 +22,9 @@ func testtaxa(s []string, found bool, nas int) taxonomy {
 	return t
 }
 
-func taxaSlice() []taxonomy {
+func taxaSlice() []*Taxonomy {
 	// Initializes slice of test taxonomies
-	var ret []taxonomy
+	var ret []*Taxonomy
 	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Reptilia", "Squamata", "Anguidae", "Abronia", "Abronia graminea"}, true, 0))
 	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Actinopteri", "Na", "Pomacentridae", "NA", "NA saxatilis"}, false, 2))
 	ret = append(ret, testtaxa([]string{"Animalia", "Na", "NA", "Orthoptera", "NA", "Acheta", "Acheta domesticus"}, false, 3))
@@ -41,15 +41,15 @@ func compareLevels(t *testing.T, e, a, l string) {
 
 func compareTaxonomies(t *testing.T, e, a taxonomy) {
 	// Compares expected to actual taxonomies
-	compareLevels(t, e.kingdom, a.kingdom, "kingdom")
-	compareLevels(t, e.phylum, a.phylum, "phylum")
-	compareLevels(t, e.class, a.class, "class")
-	compareLevels(t, e.order, a.order, "order")
-	compareLevels(t, e.family, a.family, "family")
-	compareLevels(t, e.genus, a.genus, "genus")
-	compareLevels(t, e.species, a.species, "species")
-	if a.found != e.found {
-		t.Errorf("Actual found value %v does not equal expected: %v", a.found, e.found)
+	compareLevels(t, e.Kingdom, a.Kingdom, "kingdom")
+	compareLevels(t, e.Phylum, a.Phylum, "phylum")
+	compareLevels(t, e.Class, a.Class, "class")
+	compareLevels(t, e.Order, a.Order, "order")
+	compareLevels(t, e.Family, a.Family, "family")
+	compareLevels(t, e.Genus, a.Genus, "genus")
+	compareLevels(t, e.Species, a.Species, "species")
+	if a.Found != e.Found {
+		t.Errorf("Actual found value %v does not equal expected: %v", a.Found, e.Found)
 	}
 }
 
@@ -76,15 +76,15 @@ func TestCountNAs(t *testing.T) {
 func TestCheckLevel(t *testing.T) {
 	expected := taxaSlice()
 	for _, i := range expected {
-		class := i.checkLevel(strings.ToLower(i.class), false)
-		genus := i.checkLevel(strings.ToUpper(i.genus), false)
-		species := i.checkLevel(strings.Split(i.species, " ")[1], true)
-		if class != i.class {
-			t.Errorf("Actual class %s does not equal expected: %s", class, i.class)
-		} else if genus != i.genus {
-			t.Errorf("Actual genus %s does not equal expected: %s", genus, i.genus)
-		} else if species != i.species {
-			t.Errorf("Actual species %s does not equal expected: %s", species, i.species)
+		class := i.checkLevel(strings.ToLower(i.Class), false)
+		genus := i.checkLevel(strings.ToUpper(i.Genus), false)
+		species := i.checkLevel(strings.Split(i.Species, " ")[1], true)
+		if class != i.Class {
+			t.Errorf("Actual class %s does not equal expected: %s", class, i.Class)
+		} else if genus != i.Genus {
+			t.Errorf("Actual genus %s does not equal expected: %s", genus, i.Genus)
+		} else if species != i.Species {
+			t.Errorf("Actual species %s does not equal expected: %s", species, i.Species)
 		}
 	}
 }
@@ -95,7 +95,7 @@ func TestCheckTaxa(t *testing.T) {
 		a := newTaxonomy()
 		a.copyTaxonomy(i)
 		if idx == 3 {
-			a.kingdom = "Metazoa"
+			a.Kingdom = "Metazoa"
 		}
 		a.checkTaxa()
 		compareTaxonomies(t, i, a)
