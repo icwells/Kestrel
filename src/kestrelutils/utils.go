@@ -10,6 +10,23 @@ import (
 	"unicode"
 )
 
+func Getutils() string {
+	// Returns path to utils directory
+	return path.Join(iotools.GetGOPATH(), "src/github.com/icwells/kestrel/utils")
+}
+
+func GetAbsPath(f string) string {
+	// Prepends GOPATH to file name if needed
+	if !strings.Contains(f, string(os.PathSeparator)) {
+		f = path.Join(Getutils(), f)
+	}
+	if iotools.Exists(f) == false {
+		fmt.Printf("\n\t[Error] Cannot find %s file. Exiting.\n", f)
+		os.Exit(1)
+	}
+	return f
+}
+
 func CheckFile(infile string) {
 	// Makes sure imut file exists
 	if iotools.Exists(infile) == false {

@@ -1,0 +1,36 @@
+// Returns maps of curated taxonomies
+
+package taxonomy
+
+import (
+	"github.com/icwells/go-tools/iotools"
+	"github.com/icwells/kestrel/src/kestrelutils"
+	"strings"
+)
+
+func GetCorpus() (map[string]*Taxonomy, map[string]string) {
+	// Returns taxonomy and common names maps
+	taxa := make(map[string]*Taxonomy)
+	common := make(map[string]string)
+	corpus := kestrelutils.GetAbsPath("corpus.csv.gz")
+	kestrelutils.CheckFile(corpus)
+	rows, header := iotools.ReadFile(coprus, true)
+	for _, i := range rows {
+		t := NewTaxonomy()
+		c := strings.TrimSpace(i[header["Common"])
+		s := strings.TrimSpace(i[header["Species"])
+		if len(c) > 0 {
+			common[c] = s
+		}
+		t.Kingdom = strings.TrimSpace(i[header["Kingdom"])
+		t.Phylum = strings.TrimSpace(i[header["Phylum"])
+		t.Class = strings.TrimSpace(i[header["Class"])
+		t.Order = strings.TrimSpace(i[header["Order"])
+		t.Family = strings.TrimSpace(i[header["Family"])
+		t.Genus = strings.TrimSpace(i[header["Genus"])
+		t.Species = s
+		t.Source = strings.TrimSpace(i[header["Source"])
+		taxa[s] = t
+	}
+	return taxa, common
+}

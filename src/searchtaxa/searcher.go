@@ -80,7 +80,7 @@ func (s *searcher) assignKey(line string) {
 
 func (s *searcher) apiKeys() {
 	// Reads api keys from file
-	infile := "API.txt"
+	infile := kestrelutils.GetAbsPath("API.txt")
 	kestrelutils.CheckFile(infile)
 	fmt.Println("\tReading API keys from file...")
 	f := iotools.OpenFile(infile)
