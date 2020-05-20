@@ -25,7 +25,7 @@ type Taxonomy struct {
 	Species string
 	Source  string
 	Found   bool
-	nas     int
+	Nas     int
 	levels  []string
 }
 
@@ -41,7 +41,7 @@ func NewTaxonomy() *Taxonomy {
 	t.Species = "NA"
 	t.Source = "NA"
 	t.Found = false
-	t.nas = 7
+	t.Nas = 7
 	t.levels = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
 	return t
 }
@@ -66,7 +66,7 @@ func (t *Taxonomy) CopyTaxonomy(x *Taxonomy) {
 	t.Species = x.Species
 	t.Source = x.Source
 	t.Found = x.Found
-	t.nas = x.nas
+	t.Nas = x.Nas
 }
 
 func (t *Taxonomy) CountNAs() {
@@ -77,7 +77,7 @@ func (t *Taxonomy) CountNAs() {
 			nas++
 		}
 	}
-	t.nas = nas
+	t.Nas = nas
 }
 
 func (t *Taxonomy) checkLevel(l string, sp bool) string {
@@ -112,7 +112,7 @@ func (t *Taxonomy) checkLevel(l string, sp bool) string {
 func (t *Taxonomy) CheckTaxa() {
 	// Checks formatting
 	t.CountNAs()
-	if t.nas <= 2 && strings.ToUpper(t.Genus) != "NA" {
+	if t.Nas <= 2 && strings.ToUpper(t.Genus) != "NA" {
 		t.Found = true
 		if strings.ToLower(t.Kingdom) == "metazoa" {
 			// Correct NCBI kingdom

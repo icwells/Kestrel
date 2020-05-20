@@ -16,7 +16,7 @@ var (
 	app     = kingpin.New("Kestrel", "Kestrel will search online databases for taxonomy information.")
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().Short('o').String()
-	col     = search.Flag("column", "Column containing species names (integer starting from 0).").Default(0).Short('c').Int()
+	col     = search.Flag("column", "Column containing species names (integer starting from 0).").Default("0").Short('c').Int()
 
 	ver    = kingpin.Command("version", "Prints version info and exits.")
 	search = kingpin.Command("search", "Searches for taxonomy matches to input names.")
@@ -43,7 +43,7 @@ func main() {
 		version()
 	case search.FullCommand():
 		fmt.Println("\n\tExtracting search terms...")
-		searchterms := terms.ExtractSearchTerms(*infile, *outfile*col)
+		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col)
 		fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
 		fmt.Println("\n\tSearching for taxonomy matches...")
 		searchtaxa.SearchTaxonomies(*outfile, searchterms)

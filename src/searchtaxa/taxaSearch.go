@@ -15,7 +15,7 @@ func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]*taxonomy.Taxono
 	// Sets taxonomy in searcher map
 	if len(s2) > 0 {
 		s.terms[key].Sources[s2] = t[s2].Source
-		if t[s1].nas != 0 {
+		if t[s1].Nas != 0 {
 			// Attempt to resolve gaps
 			t[s1].FillTaxonomy(t[s2])
 		}
@@ -35,7 +35,7 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 		s1, s2 := s.getMax()
 		if len(s1) > 0 {
 			// Store key of most complete match and url of supporting match
-			if taxa[s1].nas <= taxa[s2].nas {
+			if taxa[s1].Nas <= taxa[s2].Nas {
 				k1 = s1
 				k2 = s2
 			} else {
@@ -46,8 +46,8 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 			// Return value with fewest NAs
 			min := 8
 			for key, v := range taxa {
-				if v.nas < min {
-					min = v.nas
+				if v.Nas < min {
+					min = v.Nas
 					k1 = key
 				}
 			}
@@ -66,7 +66,7 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 
 func checkMatch(taxa map[string]*taxonomy.Taxonomy, source string, t *taxonomy.Taxonomy) map[string]*taxonomy.Taxonomy {
 	// Appends t to taxonomy if a match was found
-	if t.found == true && t.nas <= 2 {
+	if t.Found && t.Nas <= 2 {
 		taxa[source] = t
 	}
 	return taxa
@@ -88,7 +88,7 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	// Performs api search for given term
 	defer wg.Done()
 	var found bool
-	l := strings.Count(s.terms[k].term, "%20") + 1
+	l := strings.Count(s.terms[k].Term, "%20") + 1
 	for l >= 1 {
 		taxa := make(map[string]*taxonomy.Taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
@@ -101,16 +101,16 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 		}
 		if found == false && l != 1 {
 			// Remove first word and try again
-			idx := strings.Index(s.terms[k].term, "%20")
-			s.terms[k].term = s.terms[k].term[idx+3:]
-			l = strings.Count(s.terms[k].term, "%20") + 1
+			idx := strings.Index(s.terms[k].Term, "%20")
+			s.terms[k].Term = s.terms[k].Term[idx+3:]
+			l = strings.Count(s.terms[k].Term, "%20") + 1
 		} else {
 			break
 		}
 	}
 	if found == false {
 		// Reset term to original
-		s.terms[k].term = k
+		s.terms[k].Term = k
 		if s.service.err == nil {
 			// Perform selenium search if service is running
 			found = s.getSearchResults(k)
@@ -130,9 +130,9 @@ func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term) {
 	}
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming taxonomy search...")
-	for k := range s.terms() {
+	for k := range s.terms {
 		wg.Add(1)
-		go s.searchTerm(&wg, &mut, i)
+		go s.searchTerm(&wg, &mut, k)
 		fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
 		if count%10 == 0 {
 			// Pause after 10 to avoid swamping apis

@@ -17,7 +17,11 @@ MISSED="test/KestrelMissed.csv"
 whiteBoxTests () {
 	echo ""
 	echo "Running white box tests..."
-	go test $SRC
+	for I in $(ls $SRC); do
+		if [ -d $I ]; then
+			go test "$SRC/$I*.go"
+		fi
+	done
 }
 
 testExtract () {
