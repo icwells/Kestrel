@@ -3,11 +3,10 @@
 package terms
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"path"
-	"regexp"
 	"strings"
 	"unicode"
 ) 
@@ -39,11 +38,10 @@ func mergeTerms(s []*Term) map[string]*Term {
 	// Merges terms which format to same spelling and tries to resolve abbreviations
 	ret := make(map[string]*Term)
 	for _, i := range s {
-		t, ex := ret[i.term]
-		if ex {
-			i.addQuery(i.query[0])
+		if _, ex := ret[i.Term]; ex {
+			i.addQuery(i.Queries[0])
 		} else {
-			ret[i.term] = i
+			ret[i.Term] = i
 			
 		}
 	}
@@ -66,27 +64,26 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 			s := strings.Split(line, d)
 			if len(s) > c {
 				t := newTerm(s[c])
-				if len(t.queries) >= 1 {
+				if len(t.Queries) >= 1 {
 					t.filter()
 					// Append terms with no fail reason to pass; else append to fail
-					if len(t.status) == 0 {
-						pass = append(pass, t})
+					if len(t.Status) == 0 {
+						pass = append(pass, t)
 					} else {
-						fail = append(fail, []string{t.queries[0], t.term, t.status})
+						fail = append(fail, []string{t.Queries[0], t.Term, t.Status})
 					}
 				}
 			}
 		} else {
-			d = iotools.GetDelim(line)
+			d, _ = iotools.GetDelim(line)
 			first = false
 		}
 	}
 	return pass, fail
 }
 
-func ExtractSearchTerms(infile, outfile string, col int) map[string]*Terms {
+func ExtractSearchTerms(infile, outfile string, col int) map[string]*Term {
 	// Extracts and formats input terms
-	fmt.Println("\n\tExtracting search terms...")
 	kestrelutils.CheckFile(infile)
 	dir, _ := path.Split(outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")

@@ -2,6 +2,10 @@
 
 package searchtaxa
 
+import (
+	"github.com/icwells/kestrel/src/taxonomy"
+)
+
 type scorer struct {
 	scores map[string]map[string]int
 }
@@ -46,23 +50,23 @@ func (s *scorer) scoreLevel(t1, t2 string) int {
 	}
 }
 
-func (s *scorer) score(t1, t2 taxonomy) int {
+func (s *scorer) score(t1, t2 *taxonomy.Taxonomy) int {
 	// Scores each taxonomy
 	ret := 0
-	ret += s.scoreLevel(t1.kingdom, t2.kingdom)
-	ret += s.scoreLevel(t1.phylum, t2.phylum)
-	ret += s.scoreLevel(t1.class, t2.class)
-	ret += s.scoreLevel(t1.order, t2.order)
-	ret += s.scoreLevel(t1.family, t2.family)
-	ret += s.scoreLevel(t1.genus, t2.genus)
-	ret += s.scoreLevel(t1.species, t2.species)
+	ret += s.scoreLevel(t1.Kingdom, t2.Kingdom)
+	ret += s.scoreLevel(t1.Phylum, t2.Phylum)
+	ret += s.scoreLevel(t1.Class, t2.Class)
+	ret += s.scoreLevel(t1.Order, t2.Order)
+	ret += s.scoreLevel(t1.Family, t2.Family)
+	ret += s.scoreLevel(t1.Genus, t2.Genus)
+	ret += s.scoreLevel(t1.Species, t2.Species)
 	return ret
 }
 
-func (s *scorer) setScores(taxa map[string]taxonomy) {
+func (s *scorer) setScores(taxa map[string]*taxonomy.Taxonomy) {
 	// Calculate scores for each pairing
 	var sources []string
-	var t []taxonomy
+	var t []*taxonomy.Taxonomy
 	for key, value := range taxa {
 		// Get linked slices to use indeces
 		sources = append(sources, key)

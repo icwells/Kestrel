@@ -5,6 +5,8 @@ package searchtaxa
 import (
 	"bytes"
 	"fmt"
+	"github.com/icwells/kestrel/src/kestrelutils"
+	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"net/http"
@@ -30,15 +32,15 @@ func getPage(url string) ([]byte, bool) {
 	return ret, pass
 }
 
-func (s *searcher) searchWikipedia(k string) taxonomy {
+func (s *searcher) searchWikipedia(k string) *taxonomy.Taxonomy {
 	// Scrapes taxonomy from Wikipedia entry
-	ret := newTaxonomy()
-	t := s.terms[k].term
+	ret := taxonomy.NewTaxonomy()
+	t := s.terms[k].Term
 	if strings.Contains(t, "%20") == true {
 		t = strings.Replace(t, "%20", "_", -1)
 	}
 	url := s.urls.wiki + t
-	ret.scrapeWiki(url)
+	ret.ScrapeWiki(url)
 	return ret
 }
 
@@ -70,16 +72,16 @@ func (s *searcher) espell(term string) string {
 	return term
 }
 
-func (s *searcher) searchNCBI(k string) taxonomy {
+func (s *searcher) searchNCBI(k string) *taxonomy.Taxonomy {
 	// Searches NCBI for species ID and uses id to query taxonomy
-	ret := newTaxonomy()
+	ret := taxonomy.NewTaxonomy()
 	if _, ex := s.keys["NCBI"]; ex == true {
-		res := s.espell(s.terms[k].term)
+		res := s.espell(s.terms[k].Term)
 		if len(res) > 0 {
 			id := s.esearch(res)
 			if len(id) > 0 {
 				url := fmt.Sprintf("%sefetch.fcgi?db=Taxonomy&id=%s$retmode=xml&api_key=%s", s.urls.ncbi, id, s.keys["NCBI"])
-				ret.scrapeNCBI(url)
+				ret.ScrapeNCBI(url)
 			}
 		}
 	}
@@ -111,7 +113,7 @@ func (s *searcher) getTID(term string) string {
 	// Gets taxon id from EOL search api
 	var ret string
 	score := len(term)
-	query := percentDecode(term)
+	query := kestrelutils.PercentDecode(term)
 	url := fmt.Sprintf("%s%sxml?q=%s&vetted=1&key=%s", s.urls.eol, s.urls.search, term, s.keys["EOL"])
 	page, err := goquery.NewDocument(url)
 	if err == nil {
@@ -147,9 +149,9 @@ func (s *searcher) getTID(term string) string {
 	return ret
 }
 
-func (s *searcher) searchEOL(k string) taxonomy {
+func (s *searcher) searchEOL(k string) *taxonomy.Taxonomy {
 	// Searches EOL for taxon id, hierarchy entry id, and taxonomy
-	ret := newTaxonomy()
+	ret := taxonomy.NewTaxonomy()
 	if _, ex := s.keys["EOL"]; ex == true {
 		tid := s.getTID(k)
 		if len(tid) >= 1 {
@@ -159,7 +161,7 @@ func (s *searcher) searchEOL(k string) taxonomy {
 				url := fmt.Sprintf("%s%sjson?id=%s&vetted=1&key=%s", s.urls.eol, s.urls.hier, hid, s.keys["EOL"])
 				result, pass := getPage(url)
 				if pass == true {
-					ret.scrapeEOL(result, url)
+					ret.ScrapeEOL(result, url)
 				}
 			}
 		}
@@ -167,14 +169,14 @@ func (s *searcher) searchEOL(k string) taxonomy {
 	return ret
 }
 
-func (s *searcher) searchIUCN(k string) taxonomy {
+func (s *searcher) searchIUCN(k string) *taxonomy.Taxonomy {
 	// Seaches IUCN Red List for match
-	ret := newTaxonomy()
+	ret := taxonomy.NewTaxonomy()
 	if _, ex := s.keys["IUCN"]; ex == true {
-		url := fmt.Sprintf("%s%s?token=%s", s.urls.iucn, s.terms[k].term, s.keys["IUCN"])
+		url := fmt.Sprintf("%s%s?token=%s", s.urls.iucn, s.terms[k].Term, s.keys["IUCN"])
 		result, pass := getPage(url)
 		if pass == true {
-			ret.scrapeIUCN(result, url)
+			ret.ScrapeIUCN(result, url)
 		}
 	}
 	return ret

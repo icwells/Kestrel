@@ -4,46 +4,27 @@ package searchtaxa
 
 import (
 	"fmt"
+	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"strings"
 	"sync"
 	"time"
 )
 
-func fillLevel(t1, t2 string) string {
-	// Returns non-NA value
-	if strings.ToUpper(t1) == "NA" && strings.ToUpper(t2) != "NA" {
-		t1 = t2
-	}
-	return t1
-}
-
-func fillTaxonomy(t, x taxonomy) taxonomy {
-	// Replaces NAs in t with values from x
-	t.kingdom = fillLevel(t.kingdom, x.kingdom)
-	t.phylum = fillLevel(t.phylum, x.phylum)
-	t.class = fillLevel(t.class, x.class)
-	t.order = fillLevel(t.order, x.order)
-	t.family = fillLevel(t.family, x.family)
-	t.genus = fillLevel(t.genus, x.genus)
-	t.species = fillLevel(t.species, x.species)
-	return t
-}
-
-func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]taxonomy) {
+func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]*taxonomy.Taxonomy) {
 	// Sets taxonomy in searcher map
 	if len(s2) > 0 {
-		s.terms[key].sources[s2] = t[s2].source
+		s.terms[key].Sources[s2] = t[s2].Source
 		if t[s1].nas != 0 {
 			// Attempt to resolve gaps
-			t[s1] = fillTaxonomy(t[s1], t[s2])
+			t[s1].FillTaxonomy(t[s2])
 		}
 	}
-	s.terms[key].taxonomy.copyTaxonomy(t[s1])
-	s.terms[key].sources[s1] = s.terms[key].taxonomy.source
+	s.terms[key].Taxonomy.CopyTaxonomy(t[s1])
+	s.terms[key].Sources[s1] = s.terms[key].Taxonomy.Source
 }
 
-func (s *searcher) getMatch(k string, taxa map[string]taxonomy) bool {
+func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	// Compares results and determines if there has been a match
 	ret := false
 	var k1, k2 string
@@ -83,7 +64,7 @@ func (s *searcher) getMatch(k string, taxa map[string]taxonomy) bool {
 	return ret
 }
 
-func checkMatch(taxa map[string]taxonomy, source string, t taxonomy) map[string]taxonomy {
+func checkMatch(taxa map[string]*taxonomy.Taxonomy, source string, t *taxonomy.Taxonomy) map[string]*taxonomy.Taxonomy {
 	// Appends t to taxonomy if a match was found
 	if t.found == true && t.nas <= 2 {
 		taxa[source] = t
@@ -109,7 +90,7 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	var found bool
 	l := strings.Count(s.terms[k].term, "%20") + 1
 	for l >= 1 {
-		taxa := make(map[string]taxonomy)
+		taxa := make(map[string]*taxonomy.Taxonomy)
 		// Search IUCN, NCBI, Wikipedia, and EOL
 		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
 		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
@@ -143,8 +124,7 @@ func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term) {
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	count := 1
-	s := newSearcher(searchterms, false)
-	fmt.Println("\n\tSearching for taxonomy matches...")
+	s := newSearcher(outfile, searchterms, false)
 	if s.service.err == nil {
 		defer s.service.stop()
 	}

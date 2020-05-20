@@ -45,7 +45,7 @@ func newTaxa(infile string) taxamerger {
 				t.taxa[s[h["Species"]]] = s[h["Kingdom"] : h["Species"]+1]
 			}
 		} else {
-			d = iotools.GetDelim(line)
+			d, _ = iotools.GetDelim(line)
 			h = getHeader(strings.Split(line, d))
 			first = false
 		}
@@ -86,7 +86,7 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, 
 				ret = append(ret, row)
 			}
 		} else {
-			d = iotools.GetDelim(line)
+			d, _ = iotools.GetDelim(line)
 			s := strings.Split(line, d)
 			if prepend == false {
 				header = strings.Join(s, ",") + ",Kingdom,Phylum,Class,Order,Family,Genus,ScientificName"
@@ -99,12 +99,12 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, 
 	return header, ret
 }
 
-func mergeResults() {
+func MergeResults(infile, resfile, outfile string, col int, prepend bool) {
 	// Merges search results with source file
-	checkFile(*infile)
-	checkFile(*resfile)
-	taxa := newTaxa(*resfile)
-	header, results := taxa.mergeTaxonomy(*infile, *mcol, *prepend)
+	CheckFile(infile)
+	CheckFile(resfile)
+	taxa := newTaxa(resfile)
+	header, results := taxa.mergeTaxonomy(infile, col, prepend)
 	fmt.Println("\tWriting output...")
-	iotools.WriteToCSV(*outfile, header, results)
+	iotools.WriteToCSV(outfile, header, results)
 }

@@ -1,11 +1,19 @@
 // Defines taxonomy struct and methods
 
-package kestrelutils
+package taxonomy
 
 import (
 	"github.com/icwells/go-tools/strarray"
 	"strings"
 )
+
+func fillLevel(t1, t2 string) string {
+	// Returns non-NA value
+	if strings.ToUpper(t1) == "NA" && strings.ToUpper(t2) != "NA" {
+		t1 = t2
+	}
+	return t1
+}
 
 type Taxonomy struct {
 	Kingdom string
@@ -23,7 +31,7 @@ type Taxonomy struct {
 
 func NewTaxonomy() *Taxonomy {
 	// Initializes taxonomy struct
-	t := make(Taxonomy)
+	t := new(Taxonomy)
 	t.Kingdom = "NA"
 	t.Phylum = "NA"
 	t.Class = "NA"
@@ -38,30 +46,30 @@ func NewTaxonomy() *Taxonomy {
 	return t
 }
 
-func (t *taxonomy) String() string {
+func (t *Taxonomy) String() string {
 	// Returns formatted string without source
 	var ret []string
-	for _, i := range []string{t.kingdom, t.phylum, t.class, t.order, t.family, t.genus, t.species} {
+	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species} {
 		ret = append(ret, i)
 	}
 	return strings.Join(ret, ",")
 }
 
-func (t *taxonomy) CopyTaxonomy(x taxonomy) {
+func (t *Taxonomy) CopyTaxonomy(x *Taxonomy) {
 	// Deep copies x to t
-	t.kingdom = x.kingdom
-	t.phylum = x.phylum
-	t.class = x.class
-	t.order = x.order
-	t.family = x.family
-	t.genus = x.genus
-	t.species = x.species
-	t.source = x.source
-	t.found = x.found
+	t.Kingdom = x.Kingdom
+	t.Phylum = x.Phylum
+	t.Class = x.Class
+	t.Order = x.Order
+	t.Family = x.Family
+	t.Genus = x.Genus
+	t.Species = x.Species
+	t.Source = x.Source
+	t.Found = x.Found
 	t.nas = x.nas
 }
 
-func (t *taxonomy) CountNAs() {
+func (t *Taxonomy) CountNAs() {
 	// Rechecks nas
 	nas := 0
 	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species} {
@@ -72,7 +80,7 @@ func (t *taxonomy) CountNAs() {
 	t.nas = nas
 }
 
-func (t *taxonomy) checkLevel(l string, sp bool) string {
+func (t *Taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
 	if strings.ToUpper(l) != "NA" {
 		l = strings.Replace(l, ",", "", -1)
@@ -88,7 +96,7 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 				l = strings.TrimSpace(l[strings.Index(l, ".")+1:])
 			}
 			if strings.Contains(l, " ") == false {
-				l = t.genus + " " + strings.ToLower(l)
+				l = t.Genus + " " + strings.ToLower(l)
 			} else {
 				s := strings.Split(l, " ")
 				l = strings.Title(s[0]) + " " + strings.ToLower(s[1])
@@ -101,50 +109,50 @@ func (t *taxonomy) checkLevel(l string, sp bool) string {
 	return l
 }
 
-func (t *taxonomy) CheckTaxa() {
+func (t *Taxonomy) CheckTaxa() {
 	// Checks formatting
-	t.countNAs()
-	if t.nas <= 2 && strings.ToUpper(t.genus) != "NA" {
-		t.found = true
-		if strings.ToLower(t.kingdom) == "metazoa" {
+	t.CountNAs()
+	if t.nas <= 2 && strings.ToUpper(t.Genus) != "NA" {
+		t.Found = true
+		if strings.ToLower(t.Kingdom) == "metazoa" {
 			// Correct NCBI kingdom
-			t.kingdom = "Animalia"
+			t.Kingdom = "Animalia"
 		} else {
-			t.kingdom = t.checkLevel(t.kingdom, false)
+			t.Kingdom = t.checkLevel(t.Kingdom, false)
 		}
-		t.phylum = t.checkLevel(t.phylum, false)
-		t.class = t.checkLevel(t.class, false)
-		t.order = t.checkLevel(t.order, false)
-		t.family = t.checkLevel(t.family, false)
-		t.genus = t.checkLevel(t.genus, false)
-		t.species = t.checkLevel(t.species, true)
+		t.Phylum = t.checkLevel(t.Phylum, false)
+		t.Class = t.checkLevel(t.Class, false)
+		t.Order = t.checkLevel(t.Order, false)
+		t.Family = t.checkLevel(t.Family, false)
+		t.Genus = t.checkLevel(t.Genus, false)
+		t.Species = t.checkLevel(t.Species, true)
 	}
 }
 
-func (t *taxonomy) SetLevel(key, value string) {
+func (t *Taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
 	if strings.Contains(value, "[") == false && strings.ToUpper(value) != "NA" && len(value) > 1 {
 		switch key {
 		case "kingdom":
-			t.kingdom = value
+			t.Kingdom = value
 		case "phylum":
-			t.phylum = value
+			t.Phylum = value
 		case "class":
-			t.class = value
+			t.Class = value
 		case "order":
-			t.order = value
+			t.Order = value
 		case "family":
-			t.family = value
+			t.Family = value
 		case "genus":
-			t.genus = value
+			t.Genus = value
 		case "species":
-			t.species = value
+			t.Species = value
 		}
 	}
 }
 
-func (t *taxonomy) IsLevel(s string) string {
+func (t *Taxonomy) IsLevel(s string) string {
 	// Returns formatted string if s is a taxonomic level
 	s = strings.TrimSpace(strings.ToLower(strings.Replace(s, ":", "", -1)))
 	for _, i := range t.levels {
@@ -153,4 +161,15 @@ func (t *taxonomy) IsLevel(s string) string {
 		}
 	}
 	return ""
+}
+
+func (t *Taxonomy) FillTaxonomy(x *Taxonomy) {
+	// Replaces NAs in t with values from x
+	t.Kingdom = fillLevel(t.Kingdom, x.Kingdom)
+	t.Phylum = fillLevel(t.Phylum, x.Phylum)
+	t.Class = fillLevel(t.Class, x.Class)
+	t.Order = fillLevel(t.Order, x.Order)
+	t.Family = fillLevel(t.Family, x.Family)
+	t.Genus = fillLevel(t.Genus, x.Genus)
+	t.Species = fillLevel(t.Species, x.Species)
 }

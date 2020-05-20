@@ -1,23 +1,23 @@
 // Tests taxonomy methods
 
-package kestrelutils
+package taxonomy
 
 import (
 	"strings"
 	"testing"
 )
 
-func testtaxa(s []string, found bool, nas int) taxonomy {
+func testtaxa(s []string, found bool, nas int) *Taxonomy {
 	// Loads data from slice into taxonomy struct
 	t := NewTaxonomy()
-	t.kingdom = s[0]
-	t.phylum = s[1]
-	t.class = s[2]
-	t.order = s[3]
-	t.family = s[4]
-	t.genus = s[5]
-	t.species = s[6]
-	t.found = found
+	t.Kingdom = s[0]
+	t.Phylum = s[1]
+	t.Class = s[2]
+	t.Order = s[3]
+	t.Family = s[4]
+	t.Genus = s[5]
+	t.Species = s[6]
+	t.Found = found
 	t.nas = nas
 	return t
 }
@@ -39,7 +39,7 @@ func compareLevels(t *testing.T, e, a, l string) {
 	}
 }
 
-func compareTaxonomies(t *testing.T, e, a taxonomy) {
+func compareTaxonomies(t *testing.T, e, a *Taxonomy) {
 	// Compares expected to actual taxonomies
 	compareLevels(t, e.Kingdom, a.Kingdom, "kingdom")
 	compareLevels(t, e.Phylum, a.Phylum, "phylum")
@@ -56,8 +56,8 @@ func compareTaxonomies(t *testing.T, e, a taxonomy) {
 func TestCopyTaxonomy(t *testing.T) {
 	expected := taxaSlice()
 	for _, i := range expected {
-		a := newTaxonomy()
-		a.copyTaxonomy(i)
+		a := NewTaxonomy()
+		a.CopyTaxonomy(i)
 		compareTaxonomies(t, i, a)
 	}
 }
@@ -66,7 +66,7 @@ func TestCountNAs(t *testing.T) {
 	expected := taxaSlice()
 	for _, i := range expected {
 		e := i.nas
-		i.countNAs()
+		i.CountNAs()
 		if e != i.nas {
 			t.Errorf("Actual NA count %d does not equal expected: %d", i.nas, e)
 		}
@@ -92,28 +92,28 @@ func TestCheckLevel(t *testing.T) {
 func TestCheckTaxa(t *testing.T) {
 	expected := taxaSlice()
 	for idx, i := range expected {
-		a := newTaxonomy()
-		a.copyTaxonomy(i)
+		a := NewTaxonomy()
+		a.CopyTaxonomy(i)
 		if idx == 3 {
 			a.Kingdom = "Metazoa"
 		}
-		a.checkTaxa()
+		a.CheckTaxa()
 		compareTaxonomies(t, i, a)
 	}
 }
 
 func TestSetLevel(t *testing.T) {
 	expected := testtaxa([]string{"Animalia", "NA", "Reptilia", "Squamata", "Anguidae", "NA", "Abronia graminea"}, false, 0)
-	a := newTaxonomy()
+	a := NewTaxonomy()
 	taxa := map[string]string{"kingdom": " Animalia", "phylum": "na", "class": "Reptilia", "order": "Squamata", "family": "Anguidae ", "genus": "a", "species": " Abronia graminea "}
 	for k, v := range taxa {
-		a.setLevel(k, v)
+		a.SetLevel(k, v)
 	}
 	compareTaxonomies(t, expected, a)
 }
 
 func TestIsLevel(t *testing.T) {
-	taxa := newTaxonomy()
+	taxa := NewTaxonomy()
 	expected := []struct {
 		input, expected string
 	}{
@@ -123,7 +123,7 @@ func TestIsLevel(t *testing.T) {
 		{"Famil", ""},
 	}
 	for _, i := range expected {
-		a := taxa.isLevel(i.input)
+		a := taxa.IsLevel(i.input)
 		if a != i.expected {
 			t.Errorf("Actual isLevel output %s, does not equal expected: %s", a, i.expected)
 		}

@@ -5,11 +5,39 @@ package searchtaxa
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/terms"
 	"github.com/icwells/simpleset"
 	"path"
 	"strings"
 )
+
+type apis struct {
+	itis   string
+	ncbi   string
+	wiki   string
+	iucn   string
+	eol    string
+	search string
+	pages  string
+	hier   string
+}
+
+func newAPIs() *apis {
+	// Returns api struct
+	a := new(apis)
+	a.itis = "https://www.itis.gov/"
+	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+	a.iucn = "http://apiv3.iucnredlist.org/api/v3/species/"
+	a.wiki = "https://en.wikipedia.org/wiki/"
+	a.eol = "http://eol.org/api/"
+	a.search = "search/1.0."
+	a.pages = "pages/1.0."
+	a.hier = "hierarchy_entries/1.0."
+	return a
+}
+
+//----------------------------------------------------------------------------
 
 type searcher struct {
 	outfile string
@@ -17,16 +45,16 @@ type searcher struct {
 	keys    map[string]string
 	done    *simpleset.Set
 	terms   map[string]*terms.Term
-	urls    apis
+	urls    *apis
 	matches int
 	fails   int
 	service service
 }
 
-func newSearcher(searchterms map[string]*terms.Term, test bool) searcher {
+func newSearcher(outfile string, searchterms map[string]*terms.Term, test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
-	s.outfile = *outfile
+	s.outfile = outfile
 	dir, _ := path.Split(s.outfile)
 	s.missed = path.Join(dir, "KestrelMissed.csv")
 	s.keys = make(map[string]string)
@@ -82,7 +110,7 @@ func (s *searcher) checkOutput(outfile, header string) {
 				// Store queries (distinct lines)
 				s.done.Add(strings.TrimSpace(l[0]))
 			} else {
-				d = iotools.GetDelim(line)
+				d, _ = iotools.GetDelim(line)
 				first = false
 			}
 		}
@@ -99,8 +127,8 @@ func (s *searcher) writeMisses(k string) {
 	// Writes terms with no match to missed file
 	out := iotools.AppendFile(s.missed)
 	defer out.Close()
-	t := percentDecode(k)
-	for _, i := range s.terms[k].queries {
+	t := kestrelutils.PercentDecode(k)
+	for _, i := range s.terms[k].Queries {
 		out.WriteString(fmt.Sprintf("%s,%s\n", i, t))
 		s.fails++
 	}
@@ -111,7 +139,7 @@ func (s *searcher) writeMatches(k string) {
 	out := iotools.AppendFile(s.outfile)
 	defer out.Close()
 	match := s.terms[k].String()
-	for _, i := range s.terms[k].queries {
+	for _, i := range s.terms[k].Queries {
 		out.WriteString(fmt.Sprintf("%s,%s\n", i, match))
 		s.matches++
 	}

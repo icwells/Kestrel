@@ -3,6 +3,8 @@
 package searchtaxa
 
 import (
+	"github.com/icwells/kestrel/src/kestrelutils"
+	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/tebeka/selenium"
 	"log"
@@ -10,25 +12,25 @@ import (
 	"strings"
 )
 
-func (s *searcher) parseURLs(urls map[string]string) map[string]taxonomy {
+func (s *searcher) parseURLs(urls map[string]string) map[string]*taxonomy.Taxonomy {
 	// Attempts to find taxonomy from given urls
-	taxa := make(map[string]taxonomy)
+	taxa := make(map[string]*taxonomy.Taxonomy)
 	for k, v := range urls {
 		var source string
-		t := newTaxonomy()
+		t := taxonomy.NewTaxonomy()
 		if strings.Contains(v, "#") == true {
 			// Remove subheader link
 			v = v[:strings.Index(v, "#")]
 		}
 		switch k {
 		case s.urls.wiki:
-			t.scrapeWiki(v)
+			t.ScrapeWiki(v)
 			source = "WIKI"
 		case s.urls.itis:
-			t.scrapeItis(v)
+			t.ScrapeItis(v)
 			source = "ITIS"
 		}
-		if t.found == true {
+		if t.Found == true {
 			taxa[source] = t
 		}
 	}
@@ -70,7 +72,7 @@ func (s *searcher) seleniumSearch(k string) string {
 		if er == nil {
 			elem, err := browser.FindElement(selenium.ByName, "q")
 			if err == nil {
-				elem.SendKeys(percentDecode(k) + " taxonomy" + selenium.ReturnKey)
+				elem.SendKeys(kestrelutils.PercentDecode(k) + " taxonomy" + selenium.ReturnKey)
 				ret, err = browser.PageSource()
 				if err != nil {
 					// Ensure empty return
@@ -91,7 +93,7 @@ func (s *searcher) getSearchResults(k string) bool {
 	taxa := s.parseURLs(urls)
 	if len(taxa) >= 1 {
 		// Only attempt getMatch once
-		found = s.getMatch(s.terms[k].term, taxa)
+		found = s.getMatch(s.terms[k].Term, taxa)
 	}
 	return found
 }

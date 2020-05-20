@@ -1,11 +1,9 @@
 // Stores taxonomy hierarchy data for checkTaxonomies
 
-package kestrelutils
+package taxonomy
 
 import (
-	"fmt"
-	"github.com/icwells/go-tools/iotools"
-	"os"
+	"github.com/icwells/go-tools/strarray"
 	"strings"
 )
 
@@ -51,7 +49,7 @@ func (h *hierarchy) getParent(level, name string) string {
 	// Returns parent level name for given level
 	var parent string
 	var ex bool
-	name = titleCase(name)
+	name = strarray.TitleCase(name)
 	switch level {
 	case "Phylum":
 		parent, ex = h.phylum[name]
@@ -93,8 +91,8 @@ func (h *hierarchy) checkHierarchy(s []string) []string {
 func (h *hierarchy) setParent(level, parent, child string) {
 	// Stores child as key in level map with parent as key (i.e. stores parent level for each child level)
 	if child != "NA" && parent != "NA" {
-		parent = titleCase(parent)
-		child = titleCase(child)
+		parent = strarray.TitleCase(parent)
+		child = strarray.TitleCase(child)
 		switch level {
 		case "Phylum":
 			if _, ex := h.phylum[child]; ex == false {
@@ -120,34 +118,6 @@ func (h *hierarchy) setParent(level, parent, child string) {
 			if _, ex := h.species[child]; ex == false {
 				h.species[child] = parent
 			}
-		}
-	}
-}
-
-func (h *hierarchy) setLevels(infile string) {
-	// Parses input file and stores taxonomy hierarchy
-	var d string
-	first := true
-	f := iotools.OpenFile(infile)
-	defer f.Close()
-	scanner := iotools.GetScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(string(scanner.Text()))
-		if first == false {
-			s := strings.Split(line, d)
-			for k, v := range h.parents {
-				h.setParent(k, s[h.header[v]], s[h.header[k]])
-			}
-		} else {
-			d = iotools.GetDelim(line)
-			h.header = getHeader(strings.Split(line, d))
-			for _, i := range h.levels {
-				if _, ex := h.header[i]; ex == false {
-					fmt.Printf("\n\t[Error] %s not found in header. Exiting.\n\n", i)
-					os.Exit(200)
-				}
-			}
-			first = false
 		}
 	}
 }

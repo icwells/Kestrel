@@ -10,31 +10,6 @@ import (
 	"unicode"
 )
 
-type Apis struct {
-	itis   string
-	ncbi   string
-	wiki   string
-	iucn   string
-	eol    string
-	search string
-	pages  string
-	hier   string
-}
-
-func NewAPIs() *Apis {
-	// Returns api struct
-	a := new(Apis)
-	a.Itis = "https://www.itis.gov/"
-	a.Ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-	a.Iucn = "http://apiv3.iucnredlist.org/api/v3/species/"
-	a.Wiki = "https://en.wikipedia.org/wiki/"
-	a.Eol = "http://eol.org/api/"
-	a.Search = "search/1.0."
-	a.Pages = "pages/1.0."
-	a.Hier = "hierarchy_entries/1.0."
-	return a
-}
-
 func CheckFile(infile string) {
 	// Makes sure imut file exists
 	if iotools.Exists(infile) == false {
