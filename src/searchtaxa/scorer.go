@@ -17,7 +17,7 @@ func newScorer() scorer {
 	return s
 }
 
-func (s *scorer) getMax() (string, string) {
+func (s *scorer) getMax() (string, string, int) {
 	// Returns keys of highest scoring match
 	var r1, r2 string
 	max := -8
@@ -36,7 +36,7 @@ func (s *scorer) getMax() (string, string) {
 		r1 = ""
 		r2 = ""
 	}
-	return r1, r2
+	return r1, r2, max
 }
 
 func (s *scorer) scoreLevel(t1, t2 string) int {

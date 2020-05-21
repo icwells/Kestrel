@@ -6,8 +6,14 @@ import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"os"
+	"path"
 	"strings"
 	"unicode"
+)
+
+var (
+	APOSTROPHE = "%27"
+	SPACE = "%20"
 )
 
 func Getutils() string {
@@ -37,14 +43,14 @@ func CheckFile(infile string) {
 
 func PercentEncode(term string) string {
 	// Percent encodes apostrophes and spaces
-	term = strings.Replace(term, " ", "%20", -1)
-	return strings.Replace(term, "'", "%27", -1)
+	term = strings.Replace(term, " ", SPACE, -1)
+	return strings.Replace(term, "'", APOSTROPHE, -1)
 }
 
 func PercentDecode(term string) string {
 	// Removes percent encoding from web search
-	term = strings.Replace(term, "%20", " ", -1)
-	return strings.Replace(term, "%27", "'", -1)
+	term = strings.Replace(term, SPACE, " ", -1)
+	return strings.Replace(term, APOSTROPHE, "'", -1)
 }
 
 func RemoveKey(url string) string {

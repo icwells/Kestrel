@@ -20,7 +20,7 @@ type hierarchy struct {
 	species  map[string]string
 }
 
-func newHierarchy() hierarchy {
+func NewHierarchy(taxa map[string]*Taxonomy) hierarchy {
 	// Initializes new taxonomy hierarchy
 	var h hierarchy
 	h.levels = []string{"Species", "Genus", "Family", "Order", "Class", "Phylum", "Kingdom"}
@@ -42,7 +42,37 @@ func newHierarchy() hierarchy {
 	h.family = make(map[string]string)
 	h.genus = make(map[string]string)
 	h.species = make(map[string]string)
+	h.setHierarchy(taxa)
 	return h
+}
+
+func (h *hierarchy) AddTaxonomy(t *Taxonomy) {
+	// Adds individual taxa to hierarchy
+	if _, ex := h.phylum[t.Phylum]; !ex {
+		h.phylum[t.Phylum] = t.Kingdom
+	}
+	if _, ex := h.class[t.Class]; !ex {
+		h.class[t.Class] = t.Phylum
+	}
+	if _, ex := h.order[t.Order]; !ex {
+		h.order[t.Order] = t.Class
+	}
+	if _, ex := h.family[t.Family]; !ex {
+		h.family[t.Family] = t.Order
+	}
+	if _, ex := h.genus[t.Genus]; !ex {
+		h.genus[t.Genus] = t.Family
+	}
+	if _, ex := h.species[t.Species]; !ex {
+		h.species[t.Species] = t.Genus
+	}
+}
+
+func (h *hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
+	// Stores corpus in hierarchy
+	for _, v := range taxa {
+		h.AddTaxonomy(v)
+	}
 }
 
 func (h *hierarchy) getParent(level, name string) string {

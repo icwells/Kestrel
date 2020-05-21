@@ -4,6 +4,7 @@ package searchtaxa
 
 import (
 	"fmt"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"strings"
@@ -14,25 +15,24 @@ import (
 func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]*taxonomy.Taxonomy) {
 	// Sets taxonomy in searcher map
 	if len(s2) > 0 {
-		s.terms[key].Sources[s2] = t[s2].Source
 		if t[s1].Nas != 0 {
 			// Attempt to resolve gaps
 			t[s1].FillTaxonomy(t[s2])
 		}
 	}
-	s.terms[key].Taxonomy.CopyTaxonomy(t[s1])
-	s.terms[key].Sources[s1] = s.terms[key].Taxonomy.Source
+	s.terms[key].Taxonomy.Copy(t[s1])
 }
 
 func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	// Compares results and determines if there has been a match
 	ret := false
-	var k1, k2 string
+	var k1, k2, s1, s2 string
+	var score int
 	if len(taxa) > 1 {
 		// Score each pair
 		s := newScorer()
 		s.setScores(taxa)
-		s1, s2 := s.getMax()
+		s1, s2, score = s.getMax()
 		if len(s1) > 0 {
 			// Store key of most complete match and url of supporting match
 			if taxa[s1].Nas <= taxa[s2].Nas {
@@ -59,6 +59,9 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	}
 	if len(k1) > 0 {
 		s.setTaxonomy(k, k1, k2, taxa)
+		if score >= 7 || s.terms[k].Taxonomy.Species == k {
+			s.terms[k].Confirmed = true
+		}
 		ret = true
 	}
 	return ret
@@ -84,31 +87,47 @@ func (s *searcher) writeResults(mut *sync.RWMutex, k string, found bool) {
 	mut.Unlock()
 }
 
+func (s *searcher) searchCorpus(t *terms.Term) bool {
+	// Compares search term to existing taxonomy corpus
+	var ret bool
+	species := t.Term
+	if k, ex := s.common[t.Term]; ex {
+		species = k
+	}
+	if match, ex := s.taxa[species]; ex {
+		t.Taxonomy.Copy(match)
+		ret = true
+	}
+	return ret
+}
+
 func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	// Performs api search for given term
 	defer wg.Done()
-	var found bool
-	l := strings.Count(s.terms[k].Term, "%20") + 1
-	for l >= 1 {
-		taxa := make(map[string]*taxonomy.Taxonomy)
-		// Search IUCN, NCBI, Wikipedia, and EOL
-		taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-		taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-		taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
-		taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
-		if len(taxa) >= 1 {
-			found = s.getMatch(k, taxa)
-		}
-		if found == false && l != 1 {
-			// Remove first word and try again
-			idx := strings.Index(s.terms[k].Term, "%20")
-			s.terms[k].Term = s.terms[k].Term[idx+3:]
-			l = strings.Count(s.terms[k].Term, "%20") + 1
-		} else {
-			break
+	found := s.searchCorpus(s.terms[k])
+	if !found {
+		l := strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
+		for l >= 1 {
+			taxa := make(map[string]*taxonomy.Taxonomy)
+			// Search IUCN, NCBI, Wikipedia, and EOL
+			taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
+			taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
+			taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
+			taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+			if len(taxa) >= 1 {
+				found = s.getMatch(k, taxa)
+			}
+			if !found && l != 1 {
+				// Remove first word and try again
+				idx := strings.Index(s.terms[k].Term, "%20")
+				s.terms[k].Term = s.terms[k].Term[idx+3:]
+				l = strings.Count(s.terms[k].Term, "%20") + 1
+			} else {
+				break
+			}
 		}
 	}
-	if found == false {
+	if !found {
 		// Reset term to original
 		s.terms[k].Term = k
 		if s.service.err == nil {

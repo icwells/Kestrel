@@ -49,13 +49,13 @@ func NewTaxonomy() *Taxonomy {
 func (t *Taxonomy) String() string {
 	// Returns formatted string without source
 	var ret []string
-	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species} {
+	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species, t.Source} {
 		ret = append(ret, i)
 	}
 	return strings.Join(ret, ",")
 }
 
-func (t *Taxonomy) CopyTaxonomy(x *Taxonomy) {
+func (t *Taxonomy) Copy(x *Taxonomy) {
 	// Deep copies x to t
 	t.Kingdom = x.Kingdom
 	t.Phylum = x.Phylum

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"github.com/icwells/simpleset"
 	"path"
@@ -40,15 +41,17 @@ func newAPIs() *apis {
 //----------------------------------------------------------------------------
 
 type searcher struct {
-	outfile string
-	missed  string
-	keys    map[string]string
+	common	map[string]string
 	done    *simpleset.Set
+	fails   int
+	keys    map[string]string
+	matches int
+	missed  string
+	outfile string
+	service service
+	taxa	map[string]*taxonomy.Taxonomy
 	terms   map[string]*terms.Term
 	urls    *apis
-	matches int
-	fails   int
-	service service
 }
 
 func newSearcher(outfile string, searchterms map[string]*terms.Term, test bool) searcher {
@@ -59,12 +62,13 @@ func newSearcher(outfile string, searchterms map[string]*terms.Term, test bool) 
 	s.missed = path.Join(dir, "KestrelMissed.csv")
 	s.keys = make(map[string]string)
 	s.done = simpleset.NewStringSet()
+	s.taxa, s.common = taxonomy.GetCorpus()
 	s.terms = searchterms
 	s.urls = newAPIs()
 	if test == false {
 		s.service = newService()
 		s.apiKeys()
-		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,IUCN,NCBI,Wikipedia,EOL,ITIS")
+		s.checkOutput(s.outfile, "Query,SearchTerm,Kingdom,Phylum,Class,Order,Family,Genus,Species,Source,Confirmed")
 		s.checkOutput(s.missed, "Query,SearchTerm")
 	}
 	return s

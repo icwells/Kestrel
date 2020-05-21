@@ -12,11 +12,11 @@ import (
 )
 
 type Term struct {
-	Queries  []string
-	Term     string
-	Status   string
-	Taxonomy *taxonomy.Taxonomy
-	Sources  map[string]string
+	Confirmed bool
+	Queries   []string
+	Status    string
+	Taxonomy  *taxonomy.Taxonomy
+	Term      string
 }
 
 func newTerm(query string) *Term {
@@ -26,7 +26,6 @@ func newTerm(query string) *Term {
 		t.addQuery(query)
 	}
 	t.Taxonomy = taxonomy.NewTaxonomy()
-	t.Sources = make(map[string]string)
 	return t
 }
 
@@ -35,14 +34,10 @@ func (t *Term) String() string {
 	var ret []string
 	ret = append(ret, kestrelutils.PercentDecode(t.Term))
 	ret = append(ret, t.Taxonomy.String())
-	// Append url or NA for each source
-	for _, i := range []string{"IUCN", "NCBI", "WIKI", "EOL", "ITIS"} {
-		s, ex := t.Sources[i]
-		if ex == true {
-			ret = append(ret, s)
-		} else {
-			ret = append(ret, "NA")
-		}
+	if t.Confirmed {
+		ret = append(ret, "yes")
+	} else {
+		ret = append(ret, "no")
 	}
 	return strings.Join(ret, ",")
 }
