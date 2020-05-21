@@ -4,10 +4,9 @@ package taxonomy
 
 import (
 	"github.com/icwells/go-tools/strarray"
-	"strings"
 )
 
-type hierarchy struct {
+type Hierarchy struct {
 	header   map[string]int
 	levels   []string
 	parents  map[string]string
@@ -20,9 +19,9 @@ type hierarchy struct {
 	species  map[string]string
 }
 
-func NewHierarchy(taxa map[string]*Taxonomy) hierarchy {
+func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
 	// Initializes new taxonomy hierarchy
-	var h hierarchy
+	h := new(Hierarchy)
 	h.levels = []string{"Species", "Genus", "Family", "Order", "Class", "Phylum", "Kingdom"}
 	h.parents = map[string]string{"Phylum": "Kingdom",
 		"Class":   "Phylum",
@@ -46,7 +45,29 @@ func NewHierarchy(taxa map[string]*Taxonomy) hierarchy {
 	return h
 }
 
-func (h *hierarchy) AddTaxonomy(t *Taxonomy) {
+func (h *Hierarchy) FillTaxonomy(t *Taxonomy) {
+	// Replaces NAs with value from hierarchy
+	if t.Genus == "NA" {
+		t.Genus = h.species[t.Species]
+	}
+	if t.Family == "NA" {
+		t.Family = h.genus[t.Genus]
+	}
+	if t.Order == "NA" {
+		t.Order = h.family[t.Family]
+	}
+	if t.Class == "NA" {
+		t.Class = h.order[t.Order]
+	}
+	if t.Phylum == "NA" {
+		t.Phylum = h.class[t.Class]
+	}
+	if t.Kingdom == "NA" {
+		t.Kingdom = h.phylum[t.Phylum]
+	}
+}
+
+func (h *Hierarchy) AddTaxonomy(t *Taxonomy) {
 	// Adds individual taxa to hierarchy
 	if _, ex := h.phylum[t.Phylum]; !ex {
 		h.phylum[t.Phylum] = t.Kingdom
@@ -68,14 +89,14 @@ func (h *hierarchy) AddTaxonomy(t *Taxonomy) {
 	}
 }
 
-func (h *hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
+func (h *Hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
 	// Stores corpus in hierarchy
 	for _, v := range taxa {
 		h.AddTaxonomy(v)
 	}
 }
 
-func (h *hierarchy) getParent(level, name string) string {
+func (h *Hierarchy) getParent(level, name string) string {
 	// Returns parent level name for given level
 	var parent string
 	var ex bool
@@ -100,7 +121,7 @@ func (h *hierarchy) getParent(level, name string) string {
 	return ""
 }
 
-func (h *hierarchy) checkHierarchy(s []string) []string {
+/*func (h *Hierarchy) checkHierarchy(s []string) []string {
 	// Checks row for NAs and replaces if parent is found in struct
 	// Iterate backwards starting from genus to fill multiple empty cells
 	for _, level := range h.levels[1:] {
@@ -118,7 +139,7 @@ func (h *hierarchy) checkHierarchy(s []string) []string {
 	return s
 }
 
-func (h *hierarchy) setParent(level, parent, child string) {
+func (h *Hierarchy) setParent(level, parent, child string) {
 	// Stores child as key in level map with parent as key (i.e. stores parent level for each child level)
 	if child != "NA" && parent != "NA" {
 		parent = strarray.TitleCase(parent)
@@ -150,4 +171,4 @@ func (h *hierarchy) setParent(level, parent, child string) {
 			}
 		}
 	}
-}
+}*/

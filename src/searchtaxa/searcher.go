@@ -44,6 +44,7 @@ type searcher struct {
 	common	map[string]string
 	done    *simpleset.Set
 	fails   int
+	hier	*taxonomy.Hierarchy
 	keys    map[string]string
 	matches int
 	missed  string
@@ -63,6 +64,7 @@ func newSearcher(outfile string, searchterms map[string]*terms.Term, test bool) 
 	s.keys = make(map[string]string)
 	s.done = simpleset.NewStringSet()
 	s.taxa, s.common = taxonomy.GetCorpus()
+	s.hier = taxonomy.NewHierarchy(s.taxa)
 	s.terms = searchterms
 	s.urls = newAPIs()
 	if test == false {

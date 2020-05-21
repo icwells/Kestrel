@@ -17,7 +17,7 @@ func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]*taxonomy.Taxono
 	if len(s2) > 0 {
 		if t[s1].Nas != 0 {
 			// Attempt to resolve gaps
-			t[s1].FillTaxonomy(t[s2])
+			s.hier.FillTaxonomy(t[s1])
 		}
 	}
 	s.terms[key].Taxonomy.Copy(t[s1])
