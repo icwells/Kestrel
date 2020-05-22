@@ -3,7 +3,7 @@
 package taxonomy
 
 import (
-	"github.com/icwells/go-tools/strarray"
+	"strings"
 )
 
 type Hierarchy struct {
@@ -47,24 +47,25 @@ func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
 
 func (h *Hierarchy) FillTaxonomy(t *Taxonomy) {
 	// Replaces NAs with value from hierarchy
-	if t.Genus == "NA" {
+	if strings.ToUpper(t.Genus) == "NA" {
 		t.Genus = h.species[t.Species]
 	}
-	if t.Family == "NA" {
+	if strings.ToUpper(t.Family) == "NA" {
 		t.Family = h.genus[t.Genus]
 	}
-	if t.Order == "NA" {
+	if strings.ToUpper(t.Order) == "NA" {
 		t.Order = h.family[t.Family]
 	}
-	if t.Class == "NA" {
+	if strings.ToUpper(t.Class) == "NA" {
 		t.Class = h.order[t.Order]
 	}
-	if t.Phylum == "NA" {
+	if strings.ToUpper(t.Phylum) == "NA" {
 		t.Phylum = h.class[t.Class]
 	}
-	if t.Kingdom == "NA" {
+	if strings.ToUpper(t.Kingdom) == "NA" {
 		t.Kingdom = h.phylum[t.Phylum]
 	}
+	t.CountNAs()
 }
 
 func (h *Hierarchy) AddTaxonomy(t *Taxonomy) {
@@ -96,7 +97,7 @@ func (h *Hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
 	}
 }
 
-func (h *Hierarchy) getParent(level, name string) string {
+/*func (h *Hierarchy) getParent(level, name string) string {
 	// Returns parent level name for given level
 	var parent string
 	var ex bool
@@ -121,7 +122,7 @@ func (h *Hierarchy) getParent(level, name string) string {
 	return ""
 }
 
-/*func (h *Hierarchy) checkHierarchy(s []string) []string {
+func (h *Hierarchy) checkHierarchy(s []string) []string {
 	// Checks row for NAs and replaces if parent is found in struct
 	// Iterate backwards starting from genus to fill multiple empty cells
 	for _, level := range h.levels[1:] {

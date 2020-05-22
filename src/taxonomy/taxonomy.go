@@ -7,14 +7,6 @@ import (
 	"strings"
 )
 
-func fillLevel(t1, t2 string) string {
-	// Returns non-NA value
-	if strings.ToUpper(t1) == "NA" && strings.ToUpper(t2) != "NA" {
-		t1 = t2
-	}
-	return t1
-}
-
 type Taxonomy struct {
 	Kingdom string
 	Phylum  string
@@ -39,7 +31,7 @@ func NewTaxonomy() *Taxonomy {
 	t.Family = "NA"
 	t.Genus = "NA"
 	t.Species = "NA"
-	t.Source = "NA"
+	t.Source = ""
 	t.Found = false
 	t.Nas = 7
 	t.levels = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
@@ -85,21 +77,21 @@ func (t *Taxonomy) checkLevel(l string, sp bool) string {
 	if strings.ToUpper(l) != "NA" {
 		l = strings.Replace(l, ",", "", -1)
 		if sp == false {
-			if strings.Contains(l, " ") == true {
+			if strings.Contains(l, " ") {
 				l = strings.Split(l, " ")[0]
 			}
 			l = strarray.TitleCase(l)
 		} else {
 			// Get binomial with proper capitalization
-			if strings.Contains(l, ".") == true {
+			if strings.Contains(l, ".") {
 				// Remove genus abbreviations
 				l = strings.TrimSpace(l[strings.Index(l, ".")+1:])
 			}
-			if strings.Contains(l, " ") == false {
+			if !strings.Contains(l, " ") {
 				l = t.Genus + " " + strings.ToLower(l)
 			} else {
 				s := strings.Split(l, " ")
-				l = strings.Title(s[0]) + " " + strings.ToLower(s[1])
+				l = strarray.TitleCase(s[0]) + " " + strings.ToLower(s[1])
 			}
 		}
 	} else {
@@ -161,15 +153,4 @@ func (t *Taxonomy) IsLevel(s string) string {
 		}
 	}
 	return ""
-}
-
-func (t *Taxonomy) FillTaxonomy(x *Taxonomy) {
-	// Replaces NAs in t with values from x
-	t.Kingdom = fillLevel(t.Kingdom, x.Kingdom)
-	t.Phylum = fillLevel(t.Phylum, x.Phylum)
-	t.Class = fillLevel(t.Class, x.Class)
-	t.Order = fillLevel(t.Order, x.Order)
-	t.Family = fillLevel(t.Family, x.Family)
-	t.Genus = fillLevel(t.Genus, x.Genus)
-	t.Species = fillLevel(t.Species, x.Species)
 }

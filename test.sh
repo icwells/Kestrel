@@ -14,14 +14,16 @@ SEARCHOUTPUT="test/searchResults.csv"
 REJECTED="test/KestrelRejected.csv"
 MISSED="test/KestrelMissed.csv"
 
+SEARCHTAXA="$SRC/searchtaxa/*.go"
+TAXONOMY="$SRC/taxonomy/*.go"
+TERMS="$SRC/terms/*.go"
+
 whiteBoxTests () {
 	echo ""
 	echo "Running white box tests..."
-	for I in $(ls $SRC); do
-		if [ -d $I ]; then
-			go test "$SRC/$I*.go"
-		fi
-	done
+	go test $SEARCHTAXA
+	go test $TAXONOMY
+	go test $TERMS
 }
 
 testExtract () {
@@ -55,11 +57,9 @@ checkSource () {
 	echo ""
 	echo "Running go $1..."
 	go $1 "$SRC/main.go"
-	#for I in $(ls $SRC); do
-	#	if [ -d $I ]; then
-	#		go $1 "$SRC/$I*.go"
-	#	fi
-	#done
+	go $1 $SEARCHTAXA
+	go $1 $TAXONOMY
+	go $1 $TERMS
 }
 
 helpText () {
