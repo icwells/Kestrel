@@ -23,7 +23,7 @@ func newTerm(query string) *Term {
 	// Returns initialized term
 	t := new(Term)
 	if len(query) > 0 {
-		t.addQuery(query)
+		t.AddQuery(query)
 	}
 	t.Taxonomy = taxonomy.NewTaxonomy()
 	return t
@@ -42,7 +42,7 @@ func (t *Term) String() string {
 	return strings.Join(ret, ",")
 }
 
-func (t *Term) addQuery(query string) {
+func (t *Term) AddQuery(query string) {
 	// Appends to query slice
 	t.Queries = append(t.Queries, query)
 }

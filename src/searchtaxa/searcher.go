@@ -41,16 +41,16 @@ func newAPIs() *apis {
 //----------------------------------------------------------------------------
 
 type searcher struct {
-	common	map[string]string
+	common  map[string]string
 	done    *simpleset.Set
 	fails   int
-	hier	*taxonomy.Hierarchy
+	hier    *taxonomy.Hierarchy
 	keys    map[string]string
 	matches int
 	missed  string
 	outfile string
 	service service
-	taxa	map[string]*taxonomy.Taxonomy
+	taxa    map[string]*taxonomy.Taxonomy
 	terms   map[string]*terms.Term
 	urls    *apis
 }

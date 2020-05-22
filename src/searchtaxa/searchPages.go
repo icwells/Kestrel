@@ -5,9 +5,9 @@ package searchtaxa
 import (
 	"bytes"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"net/http"
 	"strconv"

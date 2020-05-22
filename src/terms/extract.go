@@ -39,7 +39,7 @@ func mergeTerms(s []*Term) map[string]*Term {
 	ret := make(map[string]*Term)
 	for _, i := range s {
 		if _, ex := ret[i.Term]; ex {
-			i.addQuery(i.Queries[0])
+			i.AddQuery(i.Queries[0])
 		} else {
 			ret[i.Term] = i
 		}

@@ -3,9 +3,9 @@
 package searchtaxa
 
 import (
+	"github.com/PuerkitoBio/goquery"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/tebeka/selenium"
 	"log"
 	"os"
