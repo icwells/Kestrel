@@ -4,8 +4,8 @@ package taxonomy
 
 import (
 	"encoding/json"
-	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/icwells/kestrel/src/kestrelutils"
 )
 
 func (t *Taxonomy) ScrapeWiki(url string) {

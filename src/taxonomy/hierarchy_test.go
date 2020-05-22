@@ -17,7 +17,7 @@ func taxaMap() map[string]*Taxonomy {
 }
 
 func TestHierarchy(t *testing.T) {
-	taxa := taxaMap() 
+	taxa := taxaMap()
 	h := NewHierarchy(taxa)
 	for _, i := range taxa {
 		if _, ex := h.species[i.Species]; !ex {
@@ -55,8 +55,8 @@ func TestFillTaxonomy(t *testing.T) {
 		h.FillTaxonomy(i)
 		if i.Nas != 0 {
 			t.Errorf("%s contains %d NAs.", i.Species, i.Nas)
-		//} else if i.Genus != h.species[i.Species] {
-			
+			//} else if i.Genus != h.species[i.Species] {
+
 		}
 	}
 }

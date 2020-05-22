@@ -3,6 +3,8 @@
 package terms
 
 import (
+	"github.com/icwells/go-tools/strarray"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"testing"
 )
 
@@ -42,11 +44,11 @@ func TestFilter(t *testing.T) {
 		a := newTerm(e.query)
 		a.filter()
 		if len(e.status) > 0 {
-			if a.status != e.status {
-				t.Errorf("%s actual status %s does not equal expected: %s", e.query, a.status, e.status)
+			if a.Status != e.status {
+				t.Errorf("%s actual status %s does not equal expected: %s", e.query, a.Status, e.status)
 			}
-		} else if a.term != e.term {
-			t.Errorf("%s actual term %s does not equal expected: %s", e.query, a.term, e.term)
+		} else if a.Term != e.term {
+			t.Errorf("%s actual term %s does not equal expected: %s", e.query, a.Term, e.term)
 		}
 	}
 }
@@ -60,7 +62,7 @@ func TestTitleCase(t *testing.T) {
 		{"PIPING` x GUAN ", "Piping` Guan"},
 	}
 	for _, i := range str {
-		a := titleCase(i.input)
+		a := strarray.TitleCase(i.input)
 		if a != i.expected {
 			t.Errorf("Actual term %s does not equal expected: %s", a, i.expected)
 		}
@@ -76,11 +78,11 @@ func TestEncoding(t *testing.T) {
 		{"Sharp shinned Hawk", "Sharp%20shinned%20Hawk"},
 	}
 	for _, e := range expected {
-		encoded := percentEncode(e.input)
+		encoded := kestrelutils.PercentEncode(e.input)
 		if encoded != e.output {
 			t.Errorf("Actual encoded string %s does not equal expected: %s", encoded, e.output)
 		}
-		decoded := percentDecode(e.output)
+		decoded := kestrelutils.PercentDecode(e.output)
 		if decoded != e.input {
 			t.Errorf("Actual decoded string %s does not equal expected: %s", decoded, e.input)
 		}

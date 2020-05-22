@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 	"unicode"
-) 
+)
 
 func containsWithSpace(l, target string) bool {
 	// Returns true is target is in l and sperated by spaces/term boundary
