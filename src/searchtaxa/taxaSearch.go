@@ -59,7 +59,7 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	}
 	if len(k1) > 0 {
 		s.setTaxonomy(k, k1, k2, taxa)
-		if score >= 7 || s.terms[k].Taxonomy.Species == k {
+		if score >= 7 || strings.ToLower(s.terms[k].Taxonomy.Species) == strings.ToLower(k) {
 			s.terms[k].Confirmed = true
 		}
 		ret = true

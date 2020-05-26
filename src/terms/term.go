@@ -19,7 +19,7 @@ type Term struct {
 	Term      string
 }
 
-func newTerm(query string) *Term {
+func NewTerm(query string) *Term {
 	// Returns initialized term
 	t := new(Term)
 	if len(query) > 0 {

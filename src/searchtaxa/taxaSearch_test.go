@@ -41,8 +41,7 @@ func getTestSearcher() searcher {
 		[]string{"Acridotheres tristis", "Acridotheres tristis"},
 	}
 	for _, i := range queries {
-		var t *terms.Term
-		t.AddQuery(i[0])
+		t := terms.NewTerm(i[0])
 		t.Term = i[1]
 		exp[i[1]] = t
 	}
@@ -58,7 +57,7 @@ func getTestSearcher() searcher {
 	if k2 != "" && s.terms[key].sources[k2] != taxa[k2].source {
 		t.Errorf("Actual source %s does not equal expected: %s", s.terms[key].sources[k2], taxa[k2].source)
 	}
-}*/
+}
 
 func testTaxonomy() (map[string]*taxonomy.Taxonomy, []string) {
 	// Returns taxonomy map for testing
@@ -79,7 +78,7 @@ func testTaxonomy() (map[string]*taxonomy.Taxonomy, []string) {
 func TestGetMatch(t *testing.T) {
 	s := getTestSearcher()
 	taxa, _ := testTaxonomy()
-	a := s.getMatch("Fish", taxa)
+	a := s.getMatch("cricket", taxa)
 	if a != true {
 		t.Error("Taxonomy match not found.")
 	}
@@ -88,7 +87,7 @@ func TestGetMatch(t *testing.T) {
 	if a != true {
 		t.Error("Taxonomy match not found.")
 	}
-}
+}*/
 
 func TestCheckMatch(t *testing.T) {
 	count := 0

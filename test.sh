@@ -6,13 +6,13 @@
 ##############################################################################
 WD=$(pwd)
 SRC="$WD/src"
+TEST="$WD/test"
 
-EXTRACTINPUT="test/testInput.csv"
-EXPECTED="test/taxonomies.csv"
-EXTRACTOUTPUT="test/extracted.csv"
-SEARCHOUTPUT="test/searchResults.csv"
-REJECTED="test/KestrelRejected.csv"
-MISSED="test/KestrelMissed.csv"
+EXTRACTINPUT="$TEST/testInput.csv"
+EXPECTED="$TEST/taxonomies.csv"
+SEARCHOUTPUT="$TEST/searchResults.csv"
+REJECTED="$TEST/KestrelRejected.csv"
+MISSED="$TEST/KestrelMissed.csv"
 
 SEARCHTAXA="$SRC/searchtaxa/*.go"
 TAXONOMY="$SRC/taxonomy/*.go"
@@ -26,14 +26,9 @@ whiteBoxTests () {
 	go test $TERMS
 }
 
-testExtract () {
-	# Extract names and compare output
-	kestrel extract -c 0 -i $EXTRACTINPUT -o $EXTRACTOUTPUT
-	go test blackBox_test.go --run TestExtract
-}
-
 testSearch () {
 	# Run search and comapre output
+	cd $TEST
 	kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	go test blackBox_test.go --run TestSearch
 }
@@ -47,7 +42,6 @@ cleanup () {
 blackBoxTests () {
 	# Wraps calls to testSearch and testExtract
 	./install.sh
-	testExtract
 	testSearch
 	cleanup
 }
@@ -60,6 +54,7 @@ checkSource () {
 	go $1 $SEARCHTAXA
 	go $1 $TAXONOMY
 	go $1 $TERMS
+	go $1 "$TEST/blackBox_test.go"
 }
 
 helpText () {
@@ -74,11 +69,7 @@ helpText () {
 }
 
 if [ $# -eq 0 ]; then
-	whiteBoxTests
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
+	helpText
 elif [ $1 = "whitebox" ]; then
 	whiteBoxTests
 elif [ $1 = "blackbox" ]; then

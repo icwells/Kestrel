@@ -62,7 +62,7 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 		if first == false {
 			s := strings.Split(line, d)
 			if len(s) > c {
-				t := newTerm(s[c])
+				t := NewTerm(s[c])
 				if len(t.Queries) >= 1 {
 					t.filter()
 					// Append terms with no fail reason to pass; else append to fail

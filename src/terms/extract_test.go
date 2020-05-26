@@ -41,7 +41,7 @@ func newExtractInput() []extractinput {
 func TestFilter(t *testing.T) {
 	exp := newExtractInput()
 	for _, e := range exp {
-		a := newTerm(e.query)
+		a := NewTerm(e.query)
 		a.filter()
 		if len(e.status) > 0 {
 			if a.Status != e.status {
