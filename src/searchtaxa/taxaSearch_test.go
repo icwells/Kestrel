@@ -49,33 +49,7 @@ func getTestSearcher() searcher {
 	return s
 }
 
-/*func checkSetTaxonomy(t *testing.T, s searcher, key, k1, k2 string, taxa map[string]taxonomy) {
-	compareTaxonomies(t, s.terms[key].Taxonomy, taxa[k1])
-	if s.terms[key].sources[k1] != taxa[k1].source {
-		t.Errorf("Actual source %s does not equal expected: %s", s.terms[key].sources[k1], taxa[k1].source)
-	}
-	if k2 != "" && s.terms[key].sources[k2] != taxa[k2].source {
-		t.Errorf("Actual source %s does not equal expected: %s", s.terms[key].sources[k2], taxa[k2].source)
-	}
-}
-
-func testTaxonomy() (map[string]*taxonomy.Taxonomy, []string) {
-	// Returns taxonomy map for testing
-	var keys []string
-	taxa := make(map[string]*taxonomy.Taxonomy)
-	sli := taxaSlice()
-	for idx, i := range sli {
-		k := strconv.Itoa(idx)
-		i.Source = k
-		taxa = checkMatch(taxa, k, i)
-		if _, ex := taxa[k]; ex == true {
-			keys = append(keys, k)
-		}
-	}
-	return taxa, keys
-}
-
-func TestGetMatch(t *testing.T) {
+/*func TestGetMatch(t *testing.T) {
 	s := getTestSearcher()
 	taxa, _ := testTaxonomy()
 	a := s.getMatch("cricket", taxa)
