@@ -3,16 +3,21 @@
 package terms
 
 import (
+	//"fmt"
 	"github.com/icwells/go-tools/strarray"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
+	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/trustmaster/go-aspell"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode"
 )
 
 type Term struct {
 	Confirmed bool
+	Corrected string
 	Queries   []string
 	Status    string
 	Taxonomy  *taxonomy.Taxonomy
@@ -45,6 +50,26 @@ func (t *Term) String() string {
 func (t *Term) AddQuery(query string) {
 	// Appends to query slice
 	t.Queries = append(t.Queries, query)
+}
+
+func (t *Term) checkSpelling(speller aspell.Speller) {
+	// Stores potential corrected spelling in t.Corrected if word is incorrectly spelled
+	if !speller.Check(t.Term) {
+		var builder strings.Builder
+		for idx, i := range strings.Split(t.Term, " ") {
+			matches := fuzzy.RankFindFold(i, speller.Suggest(i))
+			if matches.Len() > 0 {
+				sort.Sort(matches)
+				if idx > 0 {
+					builder.WriteByte(' ')
+					builder.WriteString(strings.ToLower(matches[0].Target))
+				} else {
+					builder.WriteString(strarray.TitleCase(matches[0].Target))
+				}
+			}
+		}
+		t.Corrected = builder.String()
+	}
 }
 
 func (t *Term) checkRunes() {
@@ -173,8 +198,26 @@ func (t *Term) checkCertainty() {
 	}
 }
 
-func (t *Term) filter() {
+func (t *Term) speciesCaps() {
+	// Properly capitalizes species name
+	s := strings.Split(strings.ToLower(t.Term), " ")
+	if len(s) > 1 {
+		// Save with genus capitalized and species in lower case
+		var builder strings.Builder
+		builder.WriteString(strarray.TitleCase(s[0]))
+		for _, i := range s[1:] {
+			builder.WriteByte(' ')
+			builder.WriteString(i)
+		}
+		t.Term = builder.String()
+	} else {
+		t.Term = strarray.TitleCase(t.Term)
+	}
+}
+
+func (t *Term) filter(speller aspell.Speller) {
 	// Filters input query
+	short := "tooShort"
 	query := t.Queries[0]
 	if len(query) >= 3 {
 		r := regexp.MustCompile(` +`)
@@ -183,15 +226,17 @@ func (t *Term) filter() {
 		t.checkCertainty()
 		if len(t.Status) == 0 {
 			// Convert to title case after checking for ? and x
-			t.Term = strarray.TitleCase(t.Term)
+			t.speciesCaps()
 			t.removeInfant()
 			t.reformat()
 			t.checkRunes()
 			if len(t.Status) == 0 && len(t.Term) < 3 {
-				t.Status = "tooShort"
+				t.Status = short
+			} else {
+				t.checkSpelling(speller)
 			}
 		}
 	} else {
-		t.Status = "tooShort"
+		t.Status = short
 	}
 }

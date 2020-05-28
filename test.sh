@@ -35,7 +35,9 @@ testSearch () {
 
 cleanup () {
 	for I in $REJECTED $MISSED $EXTRACTOUTPUT $SEARCHOUTPUT; do
-		rm $I
+		if [ -f $I ]; then
+			rm $I
+		fi
 	done
 }
 

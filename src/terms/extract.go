@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"github.com/trustmaster/go-aspell"
 	"path"
 	"strings"
 	"unicode"
@@ -54,6 +55,7 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 	var d string
 	var fail [][]string
 	var pass []*Term
+	speller, _ := aspell.NewSpeller(map[string]string{"lang": "en_US"})
 	f := iotools.OpenFile(infile)
 	defer f.Close()
 	scanner := iotools.GetScanner(f)
@@ -64,7 +66,7 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 			if len(s) > c {
 				t := NewTerm(s[c])
 				if len(t.Queries) >= 1 {
-					t.filter()
+					t.filter(speller)
 					// Append terms with no fail reason to pass; else append to fail
 					if len(t.Status) == 0 {
 						pass = append(pass, t)

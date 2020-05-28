@@ -5,13 +5,15 @@ package terms
 import (
 	"github.com/icwells/go-tools/strarray"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"github.com/trustmaster/go-aspell"
 	"testing"
 )
 
 type extractinput struct {
-	query  string
-	term   string
-	status string
+	corrected string
+	query     string
+	status    string
+	term      string
 }
 
 func extractentry(s []string) extractinput {
@@ -19,36 +21,40 @@ func extractentry(s []string) extractinput {
 	var ret extractinput
 	ret.query = s[0]
 	ret.term = s[1]
-	ret.status = s[2]
+	ret.corrected = s[2]
+	ret.status = s[3]
 	return ret
 }
 
 func newExtractInput() []extractinput {
 	// Returns initialized slice of test data
 	var ret []extractinput
-	ret = append(ret, extractentry([]string{"FISH (CARDINAL TETRA OR PENCIL FISH)", "Fish", ""}))
-	ret = append(ret, extractentry([]string{"PIPING` GUAN ", "Piping Guan", ""}))
-	ret = append(ret, extractentry([]string{`SEBA'S  STRIPED FINGERFISH "Sheila"`, "Seba's Striped Fingerfish", ""}))
-	ret = append(ret, extractentry([]string{"axolotl-5", "Axolotl", ""}))
-	ret = append(ret, extractentry([]string{"unknown fish", "", "uncertainEntry"}))
-	ret = append(ret, extractentry([]string{"ferret?", "", "uncertainEntry"}))
-	ret = append(ret, extractentry([]string{"canine mix", "", "hybrid"}))
-	ret = append(ret, extractentry([]string{"corgi x", "", "hybrid"}))
-	ret = append(ret, extractentry([]string{"xy", "", "tooShort"}))
+	ret = append(ret, extractentry([]string{"FISH (CARDINAL TETRA OR PENCIL FISH)", "Fish", "", ""}))
+	ret = append(ret, extractentry([]string{"PIPING` GUAN ", "Piping guan", "Piping guano", ""}))
+	ret = append(ret, extractentry([]string{`SEBA'S  STRIPED FINGERFISH "Sheila"`, "Seba's striped fingerfish", "Sheba's striped finger fish", ""}))
+	ret = append(ret, extractentry([]string{"axolotl-5", "Axolotl", "", ""}))
+	ret = append(ret, extractentry([]string{"unknown fish", "", "", "uncertainEntry"}))
+	ret = append(ret, extractentry([]string{"ferret?", "", "", "uncertainEntry"}))
+	ret = append(ret, extractentry([]string{"canine mix", "", "", "hybrid"}))
+	ret = append(ret, extractentry([]string{"corgi x", "", "", "hybrid"}))
+	ret = append(ret, extractentry([]string{"xy", "", "", "tooShort"}))
 	return ret
 }
 
 func TestFilter(t *testing.T) {
+	speller, _ := aspell.NewSpeller(map[string]string{"lang": "en_US"})
 	exp := newExtractInput()
 	for _, e := range exp {
 		a := NewTerm(e.query)
-		a.filter()
+		a.filter(speller)
 		if len(e.status) > 0 {
 			if a.Status != e.status {
 				t.Errorf("%s actual status %s does not equal expected: %s", e.query, a.Status, e.status)
 			}
 		} else if a.Term != e.term {
 			t.Errorf("%s actual term %s does not equal expected: %s", e.query, a.Term, e.term)
+		} else if a.Corrected != e.corrected {
+			t.Errorf("%s actual spell-checked term %s does not equal expected: %s", e.query, a.Corrected, e.corrected)
 		}
 	}
 }

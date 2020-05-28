@@ -7,6 +7,7 @@ import (
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -89,16 +90,23 @@ func (s *searcher) writeResults(mut *sync.RWMutex, k string, found bool) {
 
 func (s *searcher) searchCorpus(t *terms.Term) bool {
 	// Compares search term to existing taxonomy corpus
-	var ret bool
-	species := t.Term
-	if k, ex := s.common[t.Term]; ex {
-		species = k
+	for idx, i := range []string{t.Term, t.Corrected} {
+		if len(i) > 1 {
+			species := i
+			if k, ex := s.common[i]; ex {
+				species = k
+			}
+			if match, ex := s.taxa[species]; ex {
+				t.Taxonomy.Copy(match)
+				if idx > 0 {
+					// Assign corrected to term if it was found
+					t.Term = i
+				}
+				return true
+			}
+		}
 	}
-	if match, ex := s.taxa[species]; ex {
-		t.Taxonomy.Copy(match)
-		ret = true
-	}
-	return ret
+	return false
 }
 
 func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
@@ -168,4 +176,8 @@ func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term) {
 	wg.Wait()
 	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)
+	if s.fails == 0 {
+		// Remove unused missed file
+		os.Remove(s.missed)
+	}
 }
