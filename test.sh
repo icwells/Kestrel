@@ -9,7 +9,7 @@ SRC="$WD/src"
 TEST="$WD/test"
 
 EXTRACTINPUT="$TEST/testInput.csv"
-EXPECTED="$TEST/taxonomies.csv"
+EXPECTED="$WD/utils/corpus.csv.gz"
 SEARCHOUTPUT="$TEST/searchResults.csv"
 REJECTED="$TEST/KestrelRejected.csv"
 MISSED="$TEST/KestrelMissed.csv"
@@ -28,9 +28,20 @@ whiteBoxTests () {
 
 testSearch () {
 	# Run search and comapre output
+	./install.sh
 	cd $TEST
 	kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	go test blackBox_test.go --run TestSearch
+	cleanup
+}
+
+fullSearch () {
+	# Runs large scale black box tests
+	./install.sh
+	cd $TEST
+	kestrel search -i $EXPECTED -o $SEARCHOUTPUT -c 0
+	go test blackBox_test.go --run TestFullSearch
+	cleanup
 }
 
 cleanup () {
@@ -39,13 +50,6 @@ cleanup () {
 			rm $I
 		fi
 	done
-}
-
-blackBoxTests () {
-	# Wraps calls to testSearch and testExtract
-	./install.sh
-	testSearch
-	cleanup
 }
 
 checkSource () {
@@ -65,9 +69,10 @@ helpText () {
 	echo "all			Runs all tests."
 	echo "whitebox		Runs white box tests only."
 	echo "blackbox		Runs black box tests only."
-	echo "help			Prints help text and exits."
+	echo "full			Performs large scale black box test."
 	echo "fmt		Runs go fmt on all source files."
 	echo "vet		Runs go vet on all source files."
+	echo "help			Prints help text and exits."
 }
 
 if [ $# -eq 0 ]; then
@@ -75,10 +80,12 @@ if [ $# -eq 0 ]; then
 elif [ $1 = "whitebox" ]; then
 	whiteBoxTests
 elif [ $1 = "blackbox" ]; then
-	blackBoxTests
+	testSearch
 elif [ $1 = "all" ]; then
 	whiteBoxTests
 	blackBoxTests
+elif [ $1 = "full" ]; then
+
 elif [ $1 = "fmt" ]; then
 	checkSource $1
 elif [ $1 = "vet" ]; then
