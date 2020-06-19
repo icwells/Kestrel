@@ -42,6 +42,7 @@ func newAPIs() *apis {
 
 type searcher struct {
 	common  map[string]string
+	corpus  bool
 	done    *simpleset.Set
 	fails   int
 	hier    *taxonomy.Hierarchy
@@ -55,9 +56,10 @@ type searcher struct {
 	urls    *apis
 }
 
-func newSearcher(outfile string, searchterms map[string]*terms.Term, test bool) searcher {
+func newSearcher(outfile string, searchterms map[string]*terms.Term, nocorpus, test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
+	s.corpus = !nocorpus
 	s.outfile = outfile
 	dir, _ := path.Split(s.outfile)
 	s.missed = path.Join(dir, "KestrelMissed.csv")

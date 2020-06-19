@@ -112,7 +112,10 @@ func (s *searcher) searchCorpus(t *terms.Term) bool {
 func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	// Performs api search for given term
 	defer wg.Done()
-	found := s.searchCorpus(s.terms[k])
+	var found bool
+	if s.corpus {
+		found = s.searchCorpus(s.terms[k])
+	}
 	if !found {
 		l := strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
 		for l >= 1 {
@@ -146,12 +149,12 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	s.writeResults(mut, k, found)
 }
 
-func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term) {
+func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, nocorpus bool) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	count := 1
-	s := newSearcher(outfile, searchterms, false)
+	s := newSearcher(outfile, searchterms, nocorpus, false)
 	if s.service.err == nil {
 		defer s.service.stop()
 	}

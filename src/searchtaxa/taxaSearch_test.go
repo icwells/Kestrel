@@ -45,7 +45,7 @@ func getTestSearcher() searcher {
 		t.Term = i[1]
 		exp[i[1]] = t
 	}
-	s := newSearcher("", exp, true)
+	s := newSearcher("", exp, true, true)
 	return s
 }
 

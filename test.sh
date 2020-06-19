@@ -83,9 +83,9 @@ elif [ $1 = "blackbox" ]; then
 	testSearch
 elif [ $1 = "all" ]; then
 	whiteBoxTests
-	blackBoxTests
+	testSearch
 elif [ $1 = "full" ]; then
-
+	fullSearch
 elif [ $1 = "fmt" ]; then
 	checkSource $1
 elif [ $1 = "vet" ]; then
