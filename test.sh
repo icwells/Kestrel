@@ -39,7 +39,7 @@ fullSearch () {
 	# Runs large scale black box tests
 	./install.sh
 	cd $TEST
-	kestrel search -i $EXPECTED -o $SEARCHOUTPUT -c 0
+	kestrel search --nocorpus -i $EXPECTED -o $SEARCHOUTPUT -c 0
 	go test blackBox_test.go --run TestFullSearch
 	cleanup
 }
