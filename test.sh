@@ -37,10 +37,8 @@ testSearch () {
 
 fullSearch () {
 	# Runs large scale black box tests
-	./install.sh
 	cd $TEST
-	kestrel search --nocorpus -i $EXPECTED -o $SEARCHOUTPUT -c 0
-	go test blackBox_test.go --run TestFullSearch
+	go run accuracyTest.go
 	cleanup
 }
 
@@ -61,6 +59,7 @@ checkSource () {
 	go $1 $TAXONOMY
 	go $1 $TERMS
 	go $1 "$TEST/blackBox_test.go"
+	go $1 "$TEST/accuracyTest.go"
 }
 
 helpText () {

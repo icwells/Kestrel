@@ -149,7 +149,7 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	s.writeResults(mut, k, found)
 }
 
-func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, nocorpus bool) {
+func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
@@ -168,7 +168,7 @@ func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, nocorp
 			// Pause after 10 to avoid swamping apis
 			time.Sleep(time.Second)
 		}
-		if count%200 == 0 {
+		if count%proc == 0 {
 			// Pause to avoid using all available RAM
 			wg.Wait()
 		}
