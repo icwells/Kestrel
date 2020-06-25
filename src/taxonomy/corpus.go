@@ -17,8 +17,8 @@ func GetCorpus() (map[string]*Taxonomy, map[string]string) {
 	rows, header := iotools.ReadFile(infile, true)
 	for _, i := range rows {
 		t := NewTaxonomy()
-		c := strings.TrimSpace(i[header["Common"]])
-		s := strings.TrimSpace(i[header["Species"]])
+		c := t.SpeciesCaps(i[header["Common"]])
+		s := t.SpeciesCaps(i[header["Species"]])
 		if len(c) > 0 {
 			common[c] = s
 		}

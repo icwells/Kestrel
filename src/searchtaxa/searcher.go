@@ -104,6 +104,7 @@ func (s *searcher) apiKeys() {
 
 func (s *searcher) checkOutput(outfile, header string) {
 	// Reads in completed searches
+	l := s.done.Length()
 	if iotools.Exists(outfile) == true {
 		var d string
 		first := true
@@ -122,7 +123,7 @@ func (s *searcher) checkOutput(outfile, header string) {
 				first = false
 			}
 		}
-		fmt.Printf("\tFound %d completed entries.\n", s.done.Length())
+		fmt.Printf("\tFound %d completed entries.\n", s.done.Length()-l)
 	} else {
 		fmt.Println("\tGenerating new output file...")
 		out := iotools.CreateFile(outfile)

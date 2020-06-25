@@ -38,7 +38,7 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]*taxonomy.Taxono
 }
 
 func (s *searcher) getURLs(res string) map[string]string {
-	// Returns slice os urls to scrape
+	// Returns slice of urls to scrape
 	ret := make(map[string]string)
 	page, err := goquery.NewDocumentFromReader(strings.NewReader(res))
 	if err == nil {

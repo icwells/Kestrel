@@ -61,6 +61,24 @@ func (t *Taxonomy) Copy(x *Taxonomy) {
 	t.Nas = x.Nas
 }
 
+func (t *Taxonomy) SpeciesCaps(name string) string {
+	// Properly capitalizes species name
+	name = strings.TrimSpace(strings.ToLower(name))
+	s := strings.Split(name, " ")
+	if len(s) > 1 {
+		// Save with genus capitalized and species in lower case
+		var builder strings.Builder
+		builder.WriteString(strarray.TitleCase(s[0]))
+		for _, i := range s[1:] {
+			builder.WriteByte(' ')
+			builder.WriteString(i)
+		}
+		return builder.String()
+	} else {
+		return strarray.TitleCase(name)
+	}
+}
+
 func (t *Taxonomy) CountNAs() {
 	// Rechecks nas
 	nas := 0

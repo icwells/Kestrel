@@ -3,7 +3,6 @@
 package terms
 
 import (
-	//"fmt"
 	"github.com/icwells/go-tools/strarray"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
@@ -200,19 +199,7 @@ func (t *Term) checkCertainty() {
 
 func (t *Term) speciesCaps() {
 	// Properly capitalizes species name
-	s := strings.Split(strings.ToLower(t.Term), " ")
-	if len(s) > 1 {
-		// Save with genus capitalized and species in lower case
-		var builder strings.Builder
-		builder.WriteString(strarray.TitleCase(s[0]))
-		for _, i := range s[1:] {
-			builder.WriteByte(' ')
-			builder.WriteString(i)
-		}
-		t.Term = builder.String()
-	} else {
-		t.Term = strarray.TitleCase(t.Term)
-	}
+	t.Term = t.Taxonomy.SpeciesCaps(t.Term)
 }
 
 func (t *Term) filter(speller aspell.Speller) {

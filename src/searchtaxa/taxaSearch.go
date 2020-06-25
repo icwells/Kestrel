@@ -101,6 +101,8 @@ func (s *searcher) searchCorpus(t *terms.Term) bool {
 				if idx > 0 {
 					// Assign corrected to term if it was found
 					t.Term = i
+				} else {
+					t.Confirmed = true
 				}
 				return true
 			}
@@ -149,6 +151,20 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	s.writeResults(mut, k, found)
 }
 
+func (s *searcher) searchDone() {
+	// Removes previously completed searches
+	var completed int
+	for k := range s.terms {
+		if ex, _ := s.done.InSet(s.terms[k].Term); ex {
+			delete(s.terms, k)
+			completed++
+		}
+	}
+	if completed > 0 {
+		fmt.Printf("\tFound %d terms in previous output.\n", completed)
+	}
+}
+
 func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
@@ -160,23 +176,27 @@ func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, proc i
 	}
 	// Concurrently perform api search
 	fmt.Println("\n\tPerforming taxonomy search...")
-	for k := range s.terms {
-		wg.Add(1)
-		go s.searchTerm(&wg, &mut, k)
-		fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
-		if count%10 == 0 {
-			// Pause after 10 to avoid swamping apis
-			time.Sleep(time.Second)
+	s.searchDone()
+	if len(s.terms) > 0 {
+		fmt.Println("\tPerforming API search...")
+		for k := range s.terms {
+			wg.Add(1)
+			go s.searchTerm(&wg, &mut, k)
+			fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
+			if count%10 == 0 {
+				// Pause after 10 to avoid swamping apis
+				time.Sleep(time.Second)
+			}
+			if count%proc == 0 {
+				// Pause to avoid using all available RAM
+				wg.Wait()
+			}
+			count++
 		}
-		if count%proc == 0 {
-			// Pause to avoid using all available RAM
-			wg.Wait()
-		}
-		count++
+		// Wait for remainging processes
+		fmt.Println("\n\tWaiting for search results...")
+		wg.Wait()
 	}
-	// Wait for remainging processes
-	fmt.Println("\n\tWaiting for search results...")
-	wg.Wait()
 	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
 	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)
 	if s.fails == 0 {

@@ -9,23 +9,41 @@ import (
 	"github.com/icwells/kestrel/src/searchtaxa"
 	"github.com/icwells/kestrel/src/terms"
 	"math/rand"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
 var (
-	infile  = "../utils/corpus.csv.gz"
-	outfile   = "searchResults.csv"
+	infile   = "../utils/corpus.csv.gz"
+	outfile  = "searchResults.csv"
 	col      = 0
 	nocorpus = false
 	proc     = 100
+	total    = 500
 )
 
 func formatPercent(a, b int) string {
 	// Returns a/b as percent
 	return strconv.FormatFloat(float64(a)/float64(b)*100.0, 'f', 3, 64) + "%"
+}
+
+func speciesCaps(name string) string {
+	// Properly capitalizes species name
+	name = strings.TrimSpace(strings.ToLower(name))
+	s := strings.Split(name, " ")
+	if len(s) > 1 {
+		// Save with genus capitalized and species in lower case
+		var builder strings.Builder
+		builder.WriteString(strarray.TitleCase(s[0]))
+		for _, i := range s[1:] {
+			builder.WriteByte(' ')
+			builder.WriteString(i)
+		}
+		return builder.String()
+	} else {
+		return strarray.TitleCase(name)
+	}
 }
 
 type comparison struct {
@@ -48,7 +66,7 @@ func (c *comparison) String() string {
 func compareResults(act, exp *dataframe.Dataframe) {
 	// Counts total number of correct, missed, etc.
 	c := new(comparison)
-	c.total = exp.Length()
+	c.total = total
 	c.matches = act.Length()
 	for k := range act.Index {
 		pass := true
@@ -78,9 +96,7 @@ func subsetTerms(searchterms map[string]*terms.Term) map[string]*terms.Term {
 	for k := range searchterms {
 		keys = append(keys, k)
 	}
-	fmt.Println(keys)
-	os.Exit(0)
-	for len(searchterms) > 500 {
+	for len(searchterms) > total {
 		idx := rand.Intn(len(keys))
 		delete(searchterms, keys[idx])
 		keys = strarray.DeleteSliceIndex(keys, idx)
@@ -99,9 +115,9 @@ func main() {
 	fmt.Println("\tComparing output...")
 	exp, _ := dataframe.FromFile(infile, col)
 	exp.DeleteColumn("Source")
-	exp.RenameColumn("Common", "SearchTerm")
+	//exp.RenameColumn("Common", "SearchTerm")
 	act, _ := dataframe.FromFile(outfile, 1)
+	act.DeleteColumn("Query")
 	act.DeleteColumn("Source")
-	act.DeleteColumn("Confirmed")
 	compareResults(act, exp)
 }
