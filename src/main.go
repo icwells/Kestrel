@@ -17,7 +17,8 @@ var (
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().Short('o').String()
 
-	ver      = kingpin.Command("version", "Prints version info and exits.")
+	ver = kingpin.Command("version", "Prints version info and exits.")
+
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0).").Default("0").Short('c').Int()
 	nocorpus = search.Flag("nocorpus", "Perform web search without searching stored corpus.").Default("false").Bool()

@@ -20,7 +20,7 @@ var (
 	col      = 0
 	nocorpus = false
 	proc     = 100
-	total    = 500
+	total    = 100
 )
 
 func formatPercent(a, b int) string {
