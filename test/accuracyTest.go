@@ -20,7 +20,7 @@ var (
 	col      = 0
 	nocorpus = false
 	proc     = 100
-	total    = 100
+	total    = 20
 )
 
 func formatPercent(a, b int) string {
@@ -69,6 +69,10 @@ func compareResults(act, exp *dataframe.Dataframe) {
 	c.total = total
 	c.matches = act.Length()
 	for k := range act.Index {
+		key := k
+		if _, ex := exp.Index[k]; !ex {
+			key, _ = act.GetCell(k, "Species")
+		}
 		pass := true
 		if conf, _ := act.GetCell(k, "Confirmed"); conf == "yes" {
 			c.confirmed++
@@ -77,7 +81,7 @@ func compareResults(act, exp *dataframe.Dataframe) {
 		}
 		for col := range exp.Header {
 			a, _ := act.GetCell(k, col)
-			e, _ := exp.GetCell(k, col)
+			e, _ := exp.GetCell(key, col)
 			if a != e {
 				pass = false
 				break
@@ -115,7 +119,6 @@ func main() {
 	fmt.Println("\tComparing output...")
 	exp, _ := dataframe.FromFile(infile, col)
 	exp.DeleteColumn("Source")
-	//exp.RenameColumn("Common", "SearchTerm")
 	act, _ := dataframe.FromFile(outfile, 1)
 	act.DeleteColumn("Query")
 	act.DeleteColumn("Source")
