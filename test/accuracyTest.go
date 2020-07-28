@@ -5,9 +5,11 @@ package main
 import (
 	"fmt"
 	"github.com/icwells/go-tools/dataframe"
+	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/go-tools/strarray"
 	"github.com/icwells/kestrel/src/searchtaxa"
 	"github.com/icwells/kestrel/src/terms"
+	"github.com/icwells/simpleset"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -18,9 +20,9 @@ var (
 	infile   = "../utils/corpus.csv.gz"
 	outfile  = "searchResults.csv"
 	col      = 0
-	nocorpus = false
+	nocorpus = true
 	proc     = 100
-	total    = 20
+	total    = 100
 )
 
 func formatPercent(a, b int) string {
@@ -69,10 +71,6 @@ func compareResults(act, exp *dataframe.Dataframe) {
 	c.total = total
 	c.matches = act.Length()
 	for k := range act.Index {
-		key := k
-		if _, ex := exp.Index[k]; !ex {
-			key, _ = act.GetCell(k, "Species")
-		}
 		pass := true
 		if conf, _ := act.GetCell(k, "Confirmed"); conf == "yes" {
 			c.confirmed++
@@ -81,7 +79,7 @@ func compareResults(act, exp *dataframe.Dataframe) {
 		}
 		for col := range exp.Header {
 			a, _ := act.GetCell(k, col)
-			e, _ := exp.GetCell(key, col)
+			e, _ := exp.GetCell(k, col)
 			if a != e {
 				pass = false
 				break
@@ -108,6 +106,34 @@ func subsetTerms(searchterms map[string]*terms.Term) map[string]*terms.Term {
 	return searchterms
 }
 
+func setExpected() *dataframe.Dataframe {
+	// Reads expected dataframe without duplicate indeces
+	var exp [][]string
+	set := simpleset.NewStringSet()
+	rows, header := iotools.ReadFile(infile, true)
+	head := make([]string, len(header))
+	for k, v := range header {
+		head[v] = k
+	}
+	for _, i := range rows {
+		if len(rows[0]) == 0 {
+			// Ignore rows without common names
+			break
+		}
+		if ex, _ := set.InSet(i[col]); !ex {
+			exp = append(exp, i)
+		}
+		set.Add(i[col])
+	}
+	exp = append([][]string{head}, exp...)
+	ret, err := dataframe.FromSlice(exp, col)
+	if err != nil {
+		panic(err)
+	}
+	ret.DeleteColumn("Source")
+	return ret
+}
+
 func main() {
 	start := time.Now()
 	fmt.Println("\n\tExtracting search terms...")
@@ -117,8 +143,7 @@ func main() {
 	searchtaxa.SearchTaxonomies(outfile, subsetTerms(searchterms), proc, nocorpus)
 	fmt.Printf("\tFinished. Run time: %v\n\n", time.Since(start))
 	fmt.Println("\tComparing output...")
-	exp, _ := dataframe.FromFile(infile, col)
-	exp.DeleteColumn("Source")
+	exp := setExpected()
 	act, _ := dataframe.FromFile(outfile, 1)
 	act.DeleteColumn("Query")
 	act.DeleteColumn("Source")

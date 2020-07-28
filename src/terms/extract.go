@@ -13,7 +13,7 @@ import (
 )
 
 func containsWithSpace(l, target string) bool {
-	// Returns true is target is in l and sperated by spaces/term boundary
+	// Returns true if target is in l and sperated by spaces/term boundary
 	var ret bool
 	idx := strings.Index(l, target)
 	if idx >= 0 {

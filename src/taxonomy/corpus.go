@@ -38,32 +38,3 @@ func GetCorpus() (map[string]*Taxonomy, map[string]string) {
 	}
 	return taxa, common
 }
-
-func headerString(h map[string]int) string {
-	// Returns header as string
-	ret := make([]string, len(h))
-	for k, v := range h {
-		ret[v] = k
-	}
-	return strings.Join(ret, ",")
-}
-
-/*func FormatCorpus(infile string) {
-	// Formats corpus for later searching
-	var res [][]string
-	t := NewTaxonomy()
-	outfile := kestrelutils.GetAbsPath(CORPUS)
-	kestrelutils.CheckFile(infile)
-	rows, header := iotools.ReadFile(infile, true)
-	for _, row := range rows {
-		var r []string
-		c := t.SpeciesCaps(i[header["Query"]])
-		s := t.SpeciesCaps(i[header["Species"]])
-
-		for _, i := range row {
-			r = append(r, t.SpeciesCaps(i))
-		}
-		res = append(res, r)
-	}
-	iotools.WriteToCSV(outfile, headerString(header), res)
-}*/
