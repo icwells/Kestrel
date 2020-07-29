@@ -51,6 +51,11 @@ func (t *Term) AddQuery(query string) {
 	t.Queries = append(t.Queries, query)
 }
 
+func (t *Term) Confirm() {
+	// Sets confirmed to true
+	t.Confirmed = true
+}
+
 func (t *Term) checkSpelling(speller aspell.Speller) {
 	// Stores potential corrected spelling in t.Corrected if word is incorrectly spelled
 	if !speller.Check(t.Term) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/searchtaxa"
+	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
@@ -15,9 +16,11 @@ import (
 var (
 	app     = kingpin.New("Kestrel", "Kestrel will search online databases for taxonomy information.")
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
-	outfile = kingpin.Flag("outfile", "Path to output csv file.").Required().Short('o').String()
+	outfile = kingpin.Flag("outfile", "Path to output csv file.").Default("").Short('o').String()
 
 	ver = kingpin.Command("version", "Prints version info and exits.")
+
+	format = kingpin.Command("format", "Formats new corpus for searching. New corpus is specified with the '-i' option. Output is written to the utils folder.")
 
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0).").Default("0").Short('c').Int()
@@ -44,6 +47,8 @@ func main() {
 	switch kingpin.Parse() {
 	case ver.FullCommand():
 		version()
+	case format.FullCommand():
+		taxonomy.FormatCorpus(*infile)
 	case search.FullCommand():
 		fmt.Println("\n\tExtracting search terms...")
 		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col)

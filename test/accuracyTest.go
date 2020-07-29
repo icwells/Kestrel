@@ -20,7 +20,7 @@ var (
 	infile   = "../utils/corpus.csv.gz"
 	outfile  = "searchResults.csv"
 	col      = 0
-	nocorpus = false
+	nocorpus = true
 	proc     = 50
 	total    = 100
 )

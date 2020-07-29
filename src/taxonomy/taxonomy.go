@@ -39,7 +39,7 @@ func NewTaxonomy() *Taxonomy {
 }
 
 func (t *Taxonomy) String() string {
-	// Returns formatted string without source
+	// Returns formatted string
 	var ret []string
 	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species, t.Source} {
 		ret = append(ret, i)
@@ -142,6 +142,7 @@ func (t *Taxonomy) CheckTaxa() {
 func (t *Taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
+	key = strings.ToLower(key)
 	if strings.Contains(value, "[") == false && strings.ToUpper(value) != "NA" && len(value) > 1 {
 		switch key {
 		case "kingdom":

@@ -68,83 +68,9 @@ func (h *Hierarchy) FillTaxonomy(t *Taxonomy) {
 	t.CountNAs()
 }
 
-func (h *Hierarchy) AddTaxonomy(t *Taxonomy) {
-	// Adds individual taxa to hierarchy
-	if _, ex := h.phylum[t.Phylum]; !ex {
-		h.phylum[t.Phylum] = t.Kingdom
-	}
-	if _, ex := h.class[t.Class]; !ex {
-		h.class[t.Class] = t.Phylum
-	}
-	if _, ex := h.order[t.Order]; !ex {
-		h.order[t.Order] = t.Class
-	}
-	if _, ex := h.family[t.Family]; !ex {
-		h.family[t.Family] = t.Order
-	}
-	if _, ex := h.genus[t.Genus]; !ex {
-		h.genus[t.Genus] = t.Family
-	}
-	if _, ex := h.species[t.Species]; !ex {
-		h.species[t.Species] = t.Genus
-	}
-}
-
-func (h *Hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
-	// Stores corpus in hierarchy
-	for _, v := range taxa {
-		h.AddTaxonomy(v)
-	}
-}
-
-/*func (h *Hierarchy) getParent(level, name string) string {
-	// Returns parent level name for given level
-	var parent string
-	var ex bool
-	name = strarray.TitleCase(name)
-	switch level {
-	case "Phylum":
-		parent, ex = h.phylum[name]
-	case "Class":
-		parent, ex = h.class[name]
-	case "Order":
-		parent, ex = h.order[name]
-	case "Family":
-		parent, ex = h.family[name]
-	case "Genus":
-		parent, ex = h.genus[name]
-	case "Species":
-		parent, ex = h.species[name]
-	}
-	if ex == true {
-		return parent
-	}
-	return ""
-}
-
-func (h *Hierarchy) checkHierarchy(s []string) []string {
-	// Checks row for NAs and replaces if parent is found in struct
-	// Iterate backwards starting from genus to fill multiple empty cells
-	for _, level := range h.levels[1:] {
-		idx := h.header[level]
-		if strings.ToLower(s[idx]) == "na" {
-			// Get name and index of child level
-			child := h.children[level]
-			ind := h.header[child]
-			parent := h.getParent(child, s[ind])
-			if len(parent) >= 1 {
-				s[idx] = parent
-			}
-		}
-	}
-	return s
-}
-
 func (h *Hierarchy) setParent(level, parent, child string) {
 	// Stores child as key in level map with parent as key (i.e. stores parent level for each child level)
 	if child != "NA" && parent != "NA" {
-		parent = strarray.TitleCase(parent)
-		child = strarray.TitleCase(child)
 		switch level {
 		case "Phylum":
 			if _, ex := h.phylum[child]; ex == false {
@@ -172,4 +98,35 @@ func (h *Hierarchy) setParent(level, parent, child string) {
 			}
 		}
 	}
-}*/
+}
+
+func (h *Hierarchy) AddTaxonomy(t *Taxonomy) {
+	// Adds individual taxa to hierarchy
+	if _, ex := h.phylum[t.Phylum]; !ex {
+		h.setParent("Phylum", t.Kingdom, t.Phylum)
+	}
+	if _, ex := h.class[t.Class]; !ex {
+		h.setParent("Class", t.Phylum, t.Class)
+	}
+	if _, ex := h.order[t.Order]; !ex {
+		h.setParent("Order", t.Class, t.Order)
+	}
+	if _, ex := h.family[t.Family]; !ex {
+		h.setParent("Family", t.Order, t.Family)
+	}
+	if _, ex := h.genus[t.Genus]; !ex {
+		h.setParent("Genus", t.Family, t.Genus)
+	}
+	if _, ex := h.species[t.Species]; !ex {
+		h.setParent("Species", t.Genus, t.Species)
+	}
+}
+
+func (h *Hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
+	// Stores corpus in hierarchy
+	for _, v := range taxa {
+		if v.Nas == 0 {
+			h.AddTaxonomy(v)
+		}
+	}
+}

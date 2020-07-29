@@ -10,11 +10,10 @@ import (
 
 var CORPUS = "corpus.csv.gz"
 
-func GetCorpus() (map[string]*Taxonomy, map[string]string) {
-	// Returns taxonomy and common names maps
+func setCorpus(infile string) (map[string]*Taxonomy, map[string]string) {
+	// Returns taxonomy and common names maps from given file
 	taxa := make(map[string]*Taxonomy)
 	common := make(map[string]string)
-	infile := kestrelutils.GetAbsPath(CORPUS)
 	kestrelutils.CheckFile(infile)
 	rows, header := iotools.ReadFile(infile, true)
 	for _, i := range rows {
@@ -37,4 +36,51 @@ func GetCorpus() (map[string]*Taxonomy, map[string]string) {
 		taxa[s] = t
 	}
 	return taxa, common
+}
+
+func GetCorpus() (map[string]*Taxonomy, map[string]string) {
+	// Returns taxonomy and common names maps from corpus file
+	infile := kestrelutils.GetAbsPath(CORPUS)
+	return setCorpus(infile)
+}
+
+func corpusHeader() string {
+	// Returns Header for corpus
+	var ret strings.Builder
+	t := NewTaxonomy()
+	ret.WriteString("SearchTerm")
+	for _, i := range t.levels {
+		ret.WriteByte(',')
+		ret.WriteString(t.SpeciesCaps(i))
+	}
+	return ret.String()
+}
+
+func FormatCorpus(infile string) {
+	// Formats new coprus for later searches
+	var res [][]string
+	taxa, common := setCorpus(infile)
+	for _, v := range taxa {
+		// Format taxonomy entries
+		v.CheckTaxa()
+	}
+	for i := 0; i <= 1; i++ {
+		// Check hierarchy twice to account for corrected NAs
+		h := NewHierarchy(taxa)
+		for _, v := range taxa {
+			h.FillTaxonomy(v)
+		}
+	}
+	for k, v := range common {
+		// Store results on second pass (species with no common name will return an empty string)
+		if _, ex := taxa[v]; !ex {
+			panic(v)
+		}
+		res = append(res, []string{k, taxa[v].String()})
+		delete(taxa, k)
+	}
+	for _, v := range taxa {
+		res = append(res, []string{"", v.String()})
+	}
+	iotools.WriteToCSV(kestrelutils.GetAbsPath("corpus.csv"), corpusHeader(), res)
 }
