@@ -98,11 +98,10 @@ func (s *searcher) searchCorpus(t *terms.Term) bool {
 			}
 			if match, ex := s.taxa[species]; ex {
 				t.Taxonomy.Copy(match)
+				t.Confirmed = true
 				if idx > 0 {
 					// Assign corrected to term if it was found
 					t.Term = i
-				} else {
-					t.Confirmed = true
 				}
 				return true
 			}
@@ -130,6 +129,12 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			if len(taxa) >= 1 {
 				found = s.getMatch(k, taxa)
 			}
+			if !found {
+				if s.service.err == nil {
+					// Perform selenium search if service is running
+					found = s.getSearchResults(k)
+				}
+			}
 			if !found && l != 1 {
 				// Remove first word and try again
 				idx := strings.Index(s.terms[k].Term, "%20")
@@ -140,14 +145,14 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			}
 		}
 	}
-	if !found {
+	/*if !found {
 		// Reset term to original
 		s.terms[k].Term = k
 		if s.service.err == nil {
 			// Perform selenium search if service is running
 			found = s.getSearchResults(k)
 		}
-	}
+	}*/
 	s.writeResults(mut, k, found)
 }
 

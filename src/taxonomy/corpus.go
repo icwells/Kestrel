@@ -21,7 +21,7 @@ func GetCorpus() (map[string]*Taxonomy, map[string]string) {
 		t := NewTaxonomy()
 		c := t.SpeciesCaps(i[header["SearchTerm"]])
 		s := t.SpeciesCaps(i[header["Species"]])
-		if len(c) > 0 && c != s {
+		if len(c) > 0 {
 			common[c] = s
 		}
 		t.Kingdom = strings.TrimSpace(i[header["Kingdom"]])
