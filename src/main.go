@@ -48,6 +48,7 @@ func main() {
 	case ver.FullCommand():
 		version()
 	case format.FullCommand():
+		fmt.Println("\n\tFormatting new corpus...")
 		taxonomy.FormatCorpus(*infile)
 	case search.FullCommand():
 		fmt.Println("\n\tExtracting search terms...")

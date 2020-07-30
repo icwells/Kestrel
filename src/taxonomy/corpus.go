@@ -3,8 +3,10 @@
 package taxonomy
 
 import (
+	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"path"
 	"strings"
 )
 
@@ -53,12 +55,14 @@ func corpusHeader() string {
 		ret.WriteByte(',')
 		ret.WriteString(t.SpeciesCaps(i))
 	}
+	ret.WriteString("Source")
 	return ret.String()
 }
 
 func FormatCorpus(infile string) {
 	// Formats new coprus for later searches
 	var res [][]string
+	outfile := path.Join(kestrelutils.Getutils(), CORPUS)
 	taxa, common := setCorpus(infile)
 	for _, v := range taxa {
 		// Format taxonomy entries
@@ -72,15 +76,20 @@ func FormatCorpus(infile string) {
 		}
 	}
 	for k, v := range common {
-		// Store results on second pass (species with no common name will return an empty string)
-		if _, ex := taxa[v]; !ex {
-			panic(v)
+		if t, ex := taxa[v]; ex {
+			if t.Nas == 0 {
+				// Write common names and associated taxonomy and remove from map
+				res = append(res, []string{k, t.String()})
+			}
+			delete(taxa, k)
 		}
-		res = append(res, []string{k, taxa[v].String()})
-		delete(taxa, k)
 	}
 	for _, v := range taxa {
-		res = append(res, []string{"", v.String()})
+		if v.Nas == 0 {
+			// Write remaining taxa without commoon names
+			res = append(res, []string{"", v.String()})
+		}
 	}
-	iotools.WriteToCSV(kestrelutils.GetAbsPath("corpus.csv"), corpusHeader(), res)
+	fmt.Printf("\tWriting new corpus to %s\n", outfile)
+	iotools.WriteToCSV(outfile, corpusHeader(), res)
 }
