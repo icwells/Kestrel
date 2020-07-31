@@ -90,36 +90,27 @@ func (s *searcher) writeResults(mut *sync.RWMutex, k string, found bool) {
 
 func (s *searcher) searchCorpus(t *terms.Term) bool {
 	// Compares search term to existing taxonomy corpus
-	for idx, i := range []string{t.Term, t.Corrected} {
-		if len(i) > 1 {
-			species := i
-			if k, ex := s.common[i]; ex {
-				species = k
-			}
-			if match, ex := s.taxa[species]; ex {
-				t.Taxonomy.Copy(match)
-				t.Confirmed = true
-				if idx > 0 {
-					// Assign corrected to term if it was found
-					t.Term = i
-				}
-				return true
-			}
-		}
+	species := t.Term
+	if k, ex := s.common[t.Term]; ex {
+		species = k
+	}
+	if match, ex := s.taxa[species]; ex {
+		t.Taxonomy.Copy(match)
+		t.Confirmed = true
+		return true
 	}
 	return false
 }
 
-func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
+func (s *searcher) dispatchTerm(k string) bool {
 	// Performs api search for given term
-	defer wg.Done()
 	var found bool
-	if s.corpus {
-		found = s.searchCorpus(s.terms[k])
-	}
-	if !found {
-		l := strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
-		for l >= 1 {
+	l := strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
+	for l >= 1 {
+		if s.corpus {
+			found = s.searchCorpus(s.terms[k])
+		}
+		if !found {
 			taxa := make(map[string]*taxonomy.Taxonomy)
 			// Search IUCN, NCBI, Wikipedia, and EOL
 			taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
@@ -129,40 +120,56 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 			if len(taxa) >= 1 {
 				found = s.getMatch(k, taxa)
 			}
-			if !found {
-				if s.service.err == nil {
-					// Perform selenium search if service is running
-					found = s.getSearchResults(k)
-				}
-			}
-			if !found && l != 1 {
-				// Remove first word and try again
-				idx := strings.Index(s.terms[k].Term, "%20")
-				s.terms[k].Term = s.terms[k].Term[idx+3:]
-				l = strings.Count(s.terms[k].Term, "%20") + 1
-			} else {
-				break
-			}
 		}
-	}
-	/*if !found {
-		// Reset term to original
-		s.terms[k].Term = k
-		if s.service.err == nil {
+		if !found && s.service.err == nil {
 			// Perform selenium search if service is running
 			found = s.getSearchResults(k)
 		}
-	}*/
+		if !found && l != 1 {
+			// Remove first word and try again
+			idx := strings.Index(s.terms[k].Term, "%20")
+			s.terms[k].Term = strings.TrimSpace(s.terms[k].Term[idx+3:])
+			l = strings.Count(s.terms[k].Term, "%20") + 1
+		} else {
+			if l == 1 {
+				// Reset term
+				s.terms[k].Term = k
+			}
+			break
+		}
+	}
+	return found
+}
+
+func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
+	// Performs api search for given and corrected term
+	defer wg.Done()
+	var found bool
+	for idx, i := range []string{s.terms[k].Term, s.terms[k].Corrected} {
+		if !found && len(i) > 0 {
+			if idx == 1 {
+				// Set corrected term as term
+				s.terms[k].Term, s.terms[k].Corrected = s.terms[k].Corrected, s.terms[k].Term
+			}
+			found = s.dispatchTerm(k)
+			if idx == 1 && !found {
+				// Reset original search term
+				s.terms[k].Term, s.terms[k].Corrected = s.terms[k].Corrected, s.terms[k].Term
+			}
+		}
+	}
 	s.writeResults(mut, k, found)
 }
 
 func (s *searcher) searchDone() {
 	// Removes previously completed searches
 	var completed int
-	for k := range s.terms {
-		if ex, _ := s.done.InSet(s.terms[k].Term); ex {
-			delete(s.terms, k)
-			completed++
+	if s.done.Length() > 0 {
+		for k := range s.terms {
+			if ex, _ := s.done.InSet(s.terms[k].Term); ex {
+				delete(s.terms, k)
+				completed++
+			}
 		}
 	}
 	if completed > 0 {

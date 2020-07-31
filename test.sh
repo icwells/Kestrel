@@ -38,8 +38,8 @@ testSearch () {
 fullSearch () {
 	# Runs large scale black box tests
 	cd $TEST
+	cleanup
 	go run accuracyTest.go
-	#cleanup
 }
 
 cleanup () {

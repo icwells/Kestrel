@@ -55,6 +55,7 @@ func corpusHeader() string {
 		ret.WriteByte(',')
 		ret.WriteString(t.SpeciesCaps(i))
 	}
+	ret.WriteByte(',')
 	ret.WriteString("Source")
 	return ret.String()
 }
