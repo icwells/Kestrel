@@ -197,7 +197,10 @@ func (t *Term) checkCertainty() {
 	l := strings.ToLower(t.Term)
 	if strings.Contains(l, "?") == true || strings.Contains(l, "unknown") == true || containsWithSpace(l, "not") == true {
 		t.Status = unk
-	} else if strings.Contains(l, "hybrid") == true || containsWithSpace(l, "x") == true || containsWithSpace(l, "mix") == true {
+	} else if strings.Contains(l, "hybrid") == true && !containsWithSpace(l, "hybrida") {
+		// Exclude hyrids but keep scientific name 'hybrida'
+		t.status = hyb
+	} else if containsWithSpace(l, "x") == true || containsWithSpace(l, "mix") == true {
 		t.Status = hyb
 	}
 }

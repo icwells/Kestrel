@@ -49,6 +49,7 @@ type searcher struct {
 	keys    map[string]string
 	matches int
 	missed  string
+	names   []string
 	outfile string
 	service service
 	taxa    map[string]*taxonomy.Taxonomy
@@ -76,6 +77,18 @@ func newSearcher(outfile string, searchterms map[string]*terms.Term, nocorpus, t
 		s.checkOutput(s.missed, "Query,SearchTerm")
 	}
 	return s
+}
+
+func (s *searcher) setCorpusNames() {
+	// Stores corpus names for fuzzy matching
+	set := simpleset.NewStringSet()
+	for k := range s.common {
+		set.Add(k)
+	}
+	for k := range s.taxa {
+		set.Add(k)
+	}
+	s.names = set.ToStringSlice()
 }
 
 func (s *searcher) assignKey(line string) {

@@ -7,7 +7,9 @@ import (
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -88,16 +90,35 @@ func (s *searcher) writeResults(mut *sync.RWMutex, k string, found bool) {
 	mut.Unlock()
 }
 
+func (s *searcher) corpusMatch(name string) string {
+	// Returns key for taxa map if found
+	if k, ex := s.common[name]; ex {
+		name = k
+	}
+	if _, ex := s.taxa[name]; ex {
+		return name
+	}
+	return ""
+}
+
 func (s *searcher) searchCorpus(t *terms.Term) bool {
 	// Compares search term to existing taxonomy corpus
-	species := t.Term
-	if k, ex := s.common[t.Term]; ex {
-		species = k
-	}
-	if match, ex := s.taxa[species]; ex {
-		t.Taxonomy.Copy(match)
+	if k := s.corpusMatch(t.Term); k != "" {
+		t.Taxonomy.Copy(s.taxa[k])
 		t.Confirmed = true
 		return true
+	} else {
+		// Attempt to find fuzzy match
+		matches := fuzzy.RankFindFold(t.Term, s.names)
+		if matches.Len() > 0 {
+			sort.Sort(matches)
+			if matches[0].Distance <= int(float64(len(t.Term)) * 0.1) {
+				if k := s.corpusMatch(matches[0].Target); k != "" {
+					t.Taxonomy.Copy(s.taxa[k])
+					return true
+				}
+			}
+		}
 	}
 	return false
 }
