@@ -28,9 +28,8 @@ whiteBoxTests () {
 
 testSearch () {
 	# Run search and comapre output
-	./install.sh
+	go run src/main.go search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	cd $TEST
-	kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	go test blackBox_test.go --run TestSearch
 	cleanup
 }
