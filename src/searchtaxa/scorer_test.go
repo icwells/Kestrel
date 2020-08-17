@@ -1,6 +1,6 @@
 // Tests scorer struct and methods
 
-package main
+package searchtaxa
 
 import (
 	"testing"
@@ -13,9 +13,11 @@ func TestGetMax(t *testing.T) {
 	s.scores["a"]["b"] = 5
 	s.scores["a"]["c"] = 7
 	s.scores["b"]["c"] = 6
-	a1, a2 := s.getMax()
+	a1, a2, max := s.getMax()
 	if a1 != "a" || a2 != "c" {
 		t.Errorf("Actual match keys %s %s do not equal expected: ac", a1, a2)
+	} else if max != 7 {
+		t.Errorf("Actual max score %d does not equal 7.", max)
 	}
 }
 

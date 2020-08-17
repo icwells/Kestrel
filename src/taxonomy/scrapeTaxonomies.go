@@ -1,19 +1,20 @@
 // Scrapes taxononomies into taxonomy struct
 
-package main
+package taxonomy
 
 import (
 	"encoding/json"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/icwells/kestrel/src/kestrelutils"
 )
 
-func (t *taxonomy) scrapeWiki(url string) {
+func (t *Taxonomy) ScrapeWiki(url string) {
 	// Marshalls html taxonomy into struct
-	t.source = url
+	t.Source = url
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		page.Find("td").Each(func(i int, s *goquery.Selection) {
-			level := t.isLevel(s.Text())
+			level := t.IsLevel(s.Text())
 			if len(level) > 0 {
 				var a *goquery.Selection
 				n := s.Next()
@@ -22,35 +23,35 @@ func (t *taxonomy) scrapeWiki(url string) {
 				} else {
 					a = n.Find("i")
 				}
-				t.setLevel(level, a.Text())
+				t.SetLevel(level, a.Text())
 			}
 		})
-		t.checkTaxa()
+		t.CheckTaxa()
 	}
 }
 
-func (t *taxonomy) scrapeNCBI(url string) {
+func (t *Taxonomy) ScrapeNCBI(url string) {
 	// Scrapes taxonomy form NCBI efetch results
-	t.source = removeKey(url)
+	t.Source = kestrelutils.RemoveKey(url)
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		taxa := page.Find("Taxon")
 		// Get species name
 		n := taxa.Find("ScientificName").First()
 		r := taxa.Find("Rank").First()
-		level := t.isLevel(r.Text())
+		level := t.IsLevel(r.Text())
 		if len(level) > 0 {
-			t.setLevel(level, n.Text())
+			t.SetLevel(level, n.Text())
 		}
 		lineage := taxa.Find("LineageEx")
 		lineage.Find("Taxon").Each(func(i int, s *goquery.Selection) {
 			r = s.Find("Rank")
-			level = t.isLevel(r.Text())
+			level = t.IsLevel(r.Text())
 			if len(level) > 0 {
-				t.setLevel(level, s.Find("ScientificName").Text())
+				t.SetLevel(level, s.Find("ScientificName").Text())
 			}
 		})
-		t.checkTaxa()
+		t.CheckTaxa()
 	}
 }
 
@@ -64,26 +65,26 @@ type eolstruct struct {
 	} `json:"ancestors"`
 }
 
-func (t *taxonomy) scrapeEOL(result []byte, url string) {
+func (t *Taxonomy) ScrapeEOL(result []byte, url string) {
 	// Scrapes taxonomy from EOL hierarchy entry
-	t.source = removeKey(url)
+	t.Source = kestrelutils.RemoveKey(url)
 	var j eolstruct
 	err := json.Unmarshal(result, &j)
 	if err == nil {
-		t.setLevel("species", j.Entry.Species)
+		t.SetLevel("species", j.Entry.Species)
 		for _, a := range j.Ancestors {
-			level := t.isLevel(a.TaxonRank)
+			level := t.IsLevel(a.TaxonRank)
 			if len(level) >= 1 {
-				t.setLevel(level, a.ScientificName)
+				t.SetLevel(level, a.ScientificName)
 			}
 		}
-		t.checkTaxa()
+		t.CheckTaxa()
 	}
 }
 
-func (t *taxonomy) scrapeItis(url string) {
+func (t *Taxonomy) ScrapeItis(url string) {
 	// Scrapes taxonomy info from itis
-	t.source = url
+	t.Source = url
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		found := 0
@@ -92,12 +93,12 @@ func (t *taxonomy) scrapeItis(url string) {
 				tr.Find("td").Each(func(j int, td *goquery.Selection) {
 					str := td.Text()
 					if len(str) > 0 {
-						level := t.isLevel(str)
+						level := t.IsLevel(str)
 						if len(level) > 0 {
 							if level == "species" {
-								t.setLevel(level, removeNonBreakingSpaces(td.Next().Text()))
+								t.SetLevel(level, kestrelutils.RemoveNonBreakingSpaces(td.Next().Text()))
 							} else {
-								t.setLevel(level, removeNonBreakingSpaces(td.Next().Find("a").Text()))
+								t.SetLevel(level, kestrelutils.RemoveNonBreakingSpaces(td.Next().Find("a").Text()))
 							}
 							found++
 						}
@@ -111,7 +112,7 @@ func (t *taxonomy) scrapeItis(url string) {
 			}
 			return true
 		})
-		t.checkTaxa()
+		t.CheckTaxa()
 	}
 }
 
@@ -128,23 +129,23 @@ type iucnstruct struct {
 	} `json:"result"`
 }
 
-func (t *taxonomy) scrapeIUCN(result []byte, url string) {
+func (t *Taxonomy) ScrapeIUCN(result []byte, url string) {
 	// Marshalls json array into struct
-	t.source = removeKey(url)
+	t.Source = kestrelutils.RemoveKey(url)
 	var j iucnstruct
 	err := json.Unmarshal(result, &j)
 	if err == nil {
 		// Map from iucnstruct struct to taxonomy struct
 		for _, a := range j.Result {
 			//a := j.result[0]
-			t.kingdom = a.Kingdom
-			t.phylum = a.Phylum
-			t.class = a.Class
-			t.order = a.Order
-			t.family = a.Family
-			t.genus = a.Genus
-			t.species = a.Species
-			t.checkTaxa()
+			t.Kingdom = a.Kingdom
+			t.Phylum = a.Phylum
+			t.Class = a.Class
+			t.Order = a.Order
+			t.Family = a.Family
+			t.Genus = a.Genus
+			t.Species = a.Species
+			t.CheckTaxa()
 		}
 	}
 }

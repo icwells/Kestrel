@@ -1,6 +1,6 @@
 // Defines service struct for selenium
 
-package main
+package searchtaxa
 
 import (
 	"fmt"
@@ -52,7 +52,7 @@ func (s *service) stop() {
 func newService() service {
 	// Initializes new struct
 	var s service
-	s.port = 8080
+	s.port = 8090
 	s.browser = "chrome"
 	s.startService()
 	return s

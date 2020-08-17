@@ -5,64 +5,92 @@
 #	Requires:	Pytest
 ##############################################################################
 WD=$(pwd)
-SRC="$WD/src/*.go"
+SRC="$WD/src"
+TEST="$WD/test"
 
-EXTRACTINPUT="test/testInput.csv"
-EXPECTED="test/taxonomies.csv"
-EXTRACTOUTPUT="test/extracted.csv"
-SEARCHOUTPUT="test/searchResults.csv"
-REJECTED="test/KestrelRejected.csv"
-MISSED="test/KestrelMissed.csv"
+EXTRACTINPUT="$TEST/testInput.csv"
+EXPECTED="$WD/utils/corpus.csv.gz"
+SEARCHOUTPUT="$TEST/searchResults.csv"
+REJECTED="$TEST/KestrelRejected.csv"
+MISSED="$TEST/KestrelMissed.csv"
+
+SEARCHTAXA="$SRC/searchtaxa/*.go"
+TAXONOMY="$SRC/taxonomy/*.go"
+TERMS="$SRC/terms/*.go"
 
 whiteBoxTests () {
 	echo ""
 	echo "Running white box tests..."
-	go test $SRC
-}
-
-testExtract () {
-	# Extract names and compare output
-	./kestrel extract -c 0 -i $EXTRACTINPUT -o $EXTRACTOUTPUT
-	go test blackBox_test.go --run TestExtract
+	go test $SEARCHTAXA
+	go test $TAXONOMY
+	go test $TERMS
 }
 
 testSearch () {
 	# Run search and comapre output
-	./kestrel search -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	go run src/main.go search -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	cd $TEST
 	go test blackBox_test.go --run TestSearch
+	cleanup
+}
+
+fullSearch () {
+	# Runs large scale black box tests
+	cd $TEST
+	cleanup
+	go run accuracyTest.go
 }
 
 cleanup () {
 	for I in $REJECTED $MISSED $EXTRACTOUTPUT $SEARCHOUTPUT; do
-		rm $I
+		if [ -f $I ]; then
+			rm $I
+		fi
 	done
 }
 
-if [ $# -eq 0 ]; then
-	whiteBoxTests
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
-elif [ $1 = "whitebox" ]; then
-	whiteBoxTests
-elif [ $1 = "blackbox" ]; then
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
-elif [ $1 = "all" ]; then
-	whiteBoxTests
-	cd bin/
-	testExtract
-	testSearch
-	cleanup
-elif [ $1 = "help" ]; then
+checkSource () {
+	# Runs go fmt/vet on source files
+	echo ""
+	echo "Running go $1..."
+	go $1 "$SRC/main.go"
+	go $1 $SEARCHTAXA
+	go $1 $TAXONOMY
+	go $1 $TERMS
+	go $1 "$TEST/blackBox_test.go"
+	go $1 "$TEST/accuracyTest.go"
+}
+
+helpText () {
 	echo "Installs Go scripts for Kestrel"
 	echo ""
 	echo "all			Runs all tests."
 	echo "whitebox		Runs white box tests only."
 	echo "blackbox		Runs black box tests only."
+	echo "full			Performs large scale black box test."
+	echo "fmt		Runs go fmt on all source files."
+	echo "vet		Runs go vet on all source files."
 	echo "help			Prints help text and exits."
-	echo ""
+}
+
+if [ $# -eq 0 ]; then
+	helpText
+elif [ $1 = "whitebox" ]; then
+	whiteBoxTests
+elif [ $1 = "blackbox" ]; then
+	testSearch
+elif [ $1 = "all" ]; then
+	whiteBoxTests
+	testSearch
+elif [ $1 = "full" ]; then
+	fullSearch
+elif [ $1 = "fmt" ]; then
+	checkSource $1
+elif [ $1 = "vet" ]; then
+	checkSource $1
+elif [ $1 = "help" ]; then
+	helpText
+else
+	helpText
 fi
+echo ""
