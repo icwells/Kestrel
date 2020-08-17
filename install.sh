@@ -13,11 +13,25 @@ installSelenium () {
 	# Installs selenium package
 	echo "Installing Selenium driver..."
 	WD=$(pwd)
-	installPackage $SE
-	cd $GOPATH/$SE/vendor
+	cd "$GOPATH/src/$SE/vendor"
 	go get -d ./...
 	go run init.go --alsologtostderr
 	cd $WD
+}
+
+installPackages () {
+	echo "Installing dependencies..."
+	GOQUERY="github.com/PuerkitoBio/goquery"
+	DATAFRAME="github.com/icwells/go-tools/dataframe"
+	IOTOOLS="github.com/icwells/go-tools/iotools"
+	STRARRAY="github.com/icwells/go-tools/strarray"
+	KINGPIN="gopkg.in/alecthomas/kingpin.v2"
+	SIMPLESET="github.com/icwells/simpleset"
+	FUZZY="github.com/lithammer/fuzzysearch/fuzzy"
+	ASPELL="github.com/trustmaster/go-aspell"
+	for I in $GOQUERY $DATAFRAME $IOTOOLS $STRARRAY $KINGPIN $SIMPLESET $FUZZY $ASPELL $SE; do
+		go get $I
+	done
 }
 
 installMain () {
@@ -33,6 +47,7 @@ echo ""
 if [ $# -eq 0 ]; then
 	installMain
 elif [ $1 = "all" ]; then
+	installPackages
 	installSelenium
 	installMain
 elif [ $1 = "help" ]; then
