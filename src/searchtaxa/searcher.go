@@ -17,6 +17,7 @@ type apis struct {
 	itis   string
 	ncbi   string
 	wiki   string
+	wksp   string
 	iucn   string
 	eol    string
 	search string
@@ -31,6 +32,7 @@ func newAPIs() *apis {
 	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 	a.iucn = "http://apiv3.iucnredlist.org/api/v3/species/"
 	a.wiki = "https://en.wikipedia.org/wiki/"
+	a.wksp = "https://species.wikimedia.org/wiki/"
 	a.eol = "http://eol.org/api/"
 	a.search = "search/1.0."
 	a.pages = "pages/1.0."

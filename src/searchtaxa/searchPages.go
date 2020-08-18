@@ -32,15 +32,28 @@ func getPage(url string) ([]byte, bool) {
 	return ret, pass
 }
 
+func (s *searcher) formatWikiTerm(k string) string {
+	// Replaces percent encoding with underscore for wikimedia sites
+	ret := s.terms[k].Term
+	if strings.Contains(ret, "%20") == true {
+		ret = strings.Replace(ret, "%20", "_", -1)
+	}
+	return ret
+}
+
 func (s *searcher) searchWikipedia(k string) *taxonomy.Taxonomy {
 	// Scrapes taxonomy from Wikipedia entry
 	ret := taxonomy.NewTaxonomy()
-	t := s.terms[k].Term
-	if strings.Contains(t, "%20") == true {
-		t = strings.Replace(t, "%20", "_", -1)
-	}
-	url := s.urls.wiki + t
+	url := s.urls.wiki + s.formatWikiTerm(k)
 	ret.ScrapeWiki(url)
+	return ret
+}
+
+func (s *searcher) searchWikiSpecies(k string) *taxonomy.Taxonomy {
+	// Scrapes taxonomy from WikiSpecies entry
+	ret := taxonomy.NewTaxonomy()
+	url := s.urls.wksp + s.formatWikiTerm(k)
+	ret.ScrapeWikiSpecies(url)
 	return ret
 }
 

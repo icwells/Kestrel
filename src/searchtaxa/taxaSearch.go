@@ -15,21 +15,19 @@ import (
 	"time"
 )
 
-func (s *searcher) setTaxonomy(key, s1, s2 string, t map[string]*taxonomy.Taxonomy) {
+func (s *searcher) setTaxonomy(k, key string, t map[string]*taxonomy.Taxonomy) {
 	// Sets taxonomy in searcher map
-	if len(s2) > 0 {
-		if t[s1].Nas != 0 {
-			// Attempt to resolve gaps
-			s.hier.FillTaxonomy(t[s1])
-		}
+	if t[key].Nas != 0 {
+		// Attempt to resolve gaps
+		s.hier.FillTaxonomy(t[key])
 	}
-	s.terms[key].Taxonomy.Copy(t[s1])
+	s.terms[k].Taxonomy.Copy(t[key])
 }
 
 func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	// Compares results and determines if there has been a match
 	ret := false
-	var k1, k2, s1, s2 string
+	var key, s1, s2 string
 	var score int
 	if len(taxa) > 1 {
 		// Score each pair
@@ -39,29 +37,27 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 		if len(s1) > 0 {
 			// Store key of most complete match and url of supporting match
 			if taxa[s1].Nas <= taxa[s2].Nas {
-				k1 = s1
-				k2 = s2
+				key = s1
 			} else {
-				k1 = s2
-				k2 = s1
+				key = s2
 			}
 		} else {
 			// Return value with fewest NAs
 			min := 8
-			for key, v := range taxa {
+			for name, v := range taxa {
 				if v.Nas < min {
 					min = v.Nas
-					k1 = key
+					key = name
 				}
 			}
 		}
 	} else if len(taxa) == 1 {
-		for key := range taxa {
-			k1 = key
+		for name := range taxa {
+			key = name
 		}
 	}
-	if len(k1) > 0 {
-		s.setTaxonomy(k, k1, k2, taxa)
+	if len(key) > 0 {
+		s.setTaxonomy(k, key, taxa)
 		if score >= 7 || strings.ToLower(s.terms[k].Taxonomy.Species) == strings.ToLower(k) {
 			s.terms[k].Confirm()
 		} else if v := s.corpusMatch(k); v != "" {
@@ -140,6 +136,7 @@ func (s *searcher) dispatchTerm(k string) bool {
 			taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
 			taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
 			taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
+			taxa = checkMatch(taxa, "WikiSpecies", s.searchWikiSpecies(k))
 			if len(taxa) >= 1 {
 				found = s.getMatch(k, taxa)
 			}

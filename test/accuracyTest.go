@@ -73,7 +73,7 @@ func compareResults(act, exp *dataframe.Dataframe) {
 		pass := true
 		if conf, _ := act.GetCell(k, "Confirmed"); conf == "yes" {
 			c.confirmed++
-		} else if sp, _ := act.GetCell(k, "Species"); sp == "NA" {
+		} else if sp, _ := act.GetCell(k, "Species"); strings.TrimSpace(sp) == "NA" {
 			c.nas++
 		}
 		for col := range exp.Header {

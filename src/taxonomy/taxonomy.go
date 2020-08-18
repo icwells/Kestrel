@@ -154,8 +154,8 @@ func (t *Taxonomy) CheckTaxa() {
 func (t *Taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
-	key = strings.ToLower(key)
-	if strings.Contains(value, "[") == false && strings.ToUpper(value) != "NA" && len(value) > 1 {
+	if len(value) > 1 && !strings.Contains(value, "[") && strings.ToUpper(value) != "NA" {
+		key = strings.ToLower(key)
 		switch key {
 		case "kingdom":
 			t.Kingdom = value
@@ -175,13 +175,31 @@ func (t *Taxonomy) SetLevel(key, value string) {
 	}
 }
 
-func (t *Taxonomy) IsLevel(s string) string {
+func (t *Taxonomy) latinToEnglish(key string) string {
+	// Translates Latin level names to English
+	switch key {
+	case "regnum":
+		key = "kingdom"
+	// Phylum is the same
+	case "classis":
+		key = "class"
+	case "ordo":
+		key = "order"
+	case "familia":
+		key = "family"
+	// Genus and species are also the same
+	}
+	return key
+}
+
+func (t *Taxonomy) IsLevel(s string, translate bool) string {
 	// Returns formatted string if s is a taxonomic level
 	s = strings.TrimSpace(strings.ToLower(strings.Replace(s, ":", "", -1)))
-	for _, i := range t.levels {
-		if i == s {
-			return s
-		}
+	if translate {
+		s = t.latinToEnglish(s)
+	}
+	if strarray.InSliceStr(t.levels, s) {
+		return s
 	}
 	return ""
 }

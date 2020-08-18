@@ -1,3 +1,8 @@
 # Renamed API file and log
 utils/API.txt
 seleniumLog.txt
+
+# tTest files
+test/KestrelMissed.csv
+test/searchResults.csv
+

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"strings"
 )
 
 func (t *Taxonomy) ScrapeWiki(url string) {
@@ -14,7 +15,7 @@ func (t *Taxonomy) ScrapeWiki(url string) {
 	page, err := goquery.NewDocument(url)
 	if err == nil {
 		page.Find("td").Each(func(i int, s *goquery.Selection) {
-			level := t.IsLevel(s.Text())
+			level := t.IsLevel(s.Text(), false)
 			if len(level) > 0 {
 				n := s.Next()
 				name := n.Find("i").Text()
@@ -22,6 +23,33 @@ func (t *Taxonomy) ScrapeWiki(url string) {
 					name = n.Find("a").Text()
 				}
 				t.SetLevel(level, name)
+			}
+		})
+		t.CheckTaxa()
+	}
+}
+
+func (t *Taxonomy) ScrapeWikiSpecies(url string) {
+	// Marshalls html taxonomy into struct
+	t.Source = url
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		page.Find("p").Each(func(i int, s *goquery.Selection) {
+			p := s.Text()
+			// check first word of paragraph
+			if idx := strings.Index(p, ":"); idx > 0 {
+				first := p[:idx]
+				if first == "Superregnum" || first == "Familia" {
+					for _, i := range strings.Split(p, "\n") {
+						row := strings.Split(i, ":")
+						if len(row) > 1 {
+							if level := t.IsLevel(strings.TrimSpace(row[0]), true); level != "" {
+								name := strings.TrimSpace(row[1])
+								t.SetLevel(level, name)
+							}
+						}
+					}
+				}
 			}
 		})
 		t.CheckTaxa()
@@ -37,14 +65,14 @@ func (t *Taxonomy) ScrapeNCBI(url string) {
 		// Get species name
 		n := taxa.Find("ScientificName").First()
 		r := taxa.Find("Rank").First()
-		level := t.IsLevel(r.Text())
+		level := t.IsLevel(r.Text(), false)
 		if len(level) > 0 {
 			t.SetLevel(level, n.Text())
 		}
 		lineage := taxa.Find("LineageEx")
 		lineage.Find("Taxon").Each(func(i int, s *goquery.Selection) {
 			r = s.Find("Rank")
-			level = t.IsLevel(r.Text())
+			level = t.IsLevel(r.Text(), false)
 			if len(level) > 0 {
 				t.SetLevel(level, s.Find("ScientificName").Text())
 			}
@@ -71,7 +99,7 @@ func (t *Taxonomy) ScrapeEOL(result []byte, url string) {
 	if err == nil {
 		t.SetLevel("species", j.Entry.Species)
 		for _, a := range j.Ancestors {
-			level := t.IsLevel(a.TaxonRank)
+			level := t.IsLevel(a.TaxonRank, false)
 			if len(level) >= 1 {
 				t.SetLevel(level, a.ScientificName)
 			}
@@ -91,7 +119,7 @@ func (t *Taxonomy) ScrapeItis(url string) {
 				tr.Find("td").Each(func(j int, td *goquery.Selection) {
 					str := td.Text()
 					if len(str) > 0 {
-						level := t.IsLevel(str)
+						level := t.IsLevel(str, false)
 						if len(level) > 0 {
 							if level == "species" {
 								t.SetLevel(level, kestrelutils.RemoveNonBreakingSpaces(td.Next().Text()))
@@ -135,7 +163,6 @@ func (t *Taxonomy) ScrapeIUCN(result []byte, url string) {
 	if err == nil {
 		// Map from iucnstruct struct to taxonomy struct
 		for _, a := range j.Result {
-			//a := j.result[0]
 			t.Kingdom = a.Kingdom
 			t.Phylum = a.Phylum
 			t.Class = a.Class
