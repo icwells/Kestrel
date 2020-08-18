@@ -28,6 +28,7 @@ whiteBoxTests () {
 
 testSearch () {
 	# Run search and comapre output
+	cleanup
 	go run src/main.go search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	cd $TEST
 	go test blackBox_test.go --run TestSearch

@@ -16,14 +16,12 @@ func (t *Taxonomy) ScrapeWiki(url string) {
 		page.Find("td").Each(func(i int, s *goquery.Selection) {
 			level := t.IsLevel(s.Text())
 			if len(level) > 0 {
-				var a *goquery.Selection
 				n := s.Next()
-				if level != "species" {
-					a = n.Find("a")
-				} else {
-					a = n.Find("i")
+				name := n.Find("i").Text()
+				if len(name) == 0 {
+					name = n.Find("a").Text()
 				}
-				t.SetLevel(level, a.Text())
+				t.SetLevel(level, name)
 			}
 		})
 		t.CheckTaxa()

@@ -5,6 +5,7 @@ package taxonomy
 import (
 	"github.com/icwells/go-tools/strarray"
 	"strings"
+	"unicode"
 )
 
 type Taxonomy struct {
@@ -90,6 +91,17 @@ func (t *Taxonomy) CountNAs() {
 	t.Nas = nas
 }
 
+func (t *Taxonomy) removePunctuation(s string) string {
+	// Removes punctuation from line
+	var ret strings.Builder
+	for _, i := range []rune(s) {
+		if !unicode.IsPunct(i) {
+			ret.WriteRune(i)
+		}
+	}
+	return ret.String()
+}
+
 func (t *Taxonomy) checkLevel(l string, sp bool) string {
 	// Returns formatted name
 	if strings.ToUpper(l) != "NA" {
@@ -116,7 +128,7 @@ func (t *Taxonomy) checkLevel(l string, sp bool) string {
 		// Standardize NAs
 		l = strings.ToUpper(l)
 	}
-	return l
+	return t.removePunctuation(l)
 }
 
 func (t *Taxonomy) CheckTaxa() {

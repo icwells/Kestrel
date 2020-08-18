@@ -114,7 +114,7 @@ func (s *searcher) searchCorpus(t *terms.Term) bool {
 		matches := fuzzy.RankFindFold(t.Term, s.names)
 		if matches.Len() > 0 {
 			sort.Sort(matches)
-			if matches[0].Distance <= int(float64(len(t.Term)) * 0.1) {
+			if matches[0].Distance <= int(float64(len(t.Term))*0.1) {
 				if k := s.corpusMatch(matches[0].Target); k != "" {
 					t.Taxonomy.Copy(s.taxa[k])
 					return true

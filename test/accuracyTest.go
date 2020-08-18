@@ -22,7 +22,6 @@ var (
 	col      = 0
 	nocorpus = true
 	proc     = 50
-	total    = 100
 )
 
 func formatPercent(a, b int) string {
@@ -68,7 +67,7 @@ func (c *comparison) String() string {
 func compareResults(act, exp *dataframe.Dataframe) {
 	// Counts total number of correct, missed, etc.
 	c := new(comparison)
-	c.total = total
+	c.total = proc
 	c.matches = act.Length()
 	for k := range act.Index {
 		pass := true
@@ -99,7 +98,7 @@ func subsetTerms(searchterms map[string]*terms.Term) map[string]*terms.Term {
 	for k := range searchterms {
 		keys = append(keys, k)
 	}
-	for len(searchterms) > total {
+	for len(searchterms) > proc {
 		idx := rand.Intn(len(keys))
 		delete(searchterms, keys[idx])
 		keys = strarray.DeleteSliceIndex(keys, idx)
