@@ -121,11 +121,16 @@ func (s *searcher) searchCorpus(t *terms.Term) bool {
 	return false
 }
 
+func (s *searcher) wordCount(k string) int {
+	// Returns number of words
+	return strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
+}
+
 func (s *searcher) dispatchTerm(k string) bool {
 	// Performs api search for given term
 	var found bool
-	l := strings.Count(s.terms[k].Term, kestrelutils.SPACE) + 1
-	for l >= 1 {
+	for !found {
+		l := s.wordCount(k)
 		if s.corpus {
 			found = s.searchCorpus(s.terms[k])
 		}
@@ -149,13 +154,10 @@ func (s *searcher) dispatchTerm(k string) bool {
 			// Remove first word and try again
 			idx := strings.Index(s.terms[k].Term, "%20")
 			s.terms[k].Term = strings.TrimSpace(s.terms[k].Term[idx+3:])
-			l = strings.Count(s.terms[k].Term, "%20") + 1
-		} else {
-			if l == 1 {
-				// Reset term
-				s.terms[k].Term = k
-			}
-			break
+			l = s.wordCount(k)
+		} else if l == 1 {
+			// Reset term
+			s.terms[k].Term = k
 		}
 	}
 	return found

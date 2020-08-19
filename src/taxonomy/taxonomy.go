@@ -180,14 +180,13 @@ func (t *Taxonomy) latinToEnglish(key string) string {
 	switch key {
 	case "regnum":
 		key = "kingdom"
-	// Phylum is the same
+	// Phylum, genus, and specie are the same
 	case "classis":
 		key = "class"
 	case "ordo":
 		key = "order"
 	case "familia":
 		key = "family"
-	// Genus and species are also the same
 	}
 	return key
 }
