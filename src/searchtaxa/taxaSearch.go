@@ -158,6 +158,7 @@ func (s *searcher) dispatchTerm(k string) bool {
 		} else if l == 1 {
 			// Reset term
 			s.terms[k].Term = k
+			break
 		}
 	}
 	return found

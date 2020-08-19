@@ -10,9 +10,12 @@ import (
 	"strings"
 )
 
-var CORPUS = "corpus.csv.gz"
+var (
+	CITES = "citesAnimalia.csv.gz"
+	CORPUS = "corpus.csv.gz"
+)
 
-func setCorpus(infile string) (map[string]*Taxonomy, map[string]string) {
+func setCorpus(infile string, cites bool) (map[string]*Taxonomy, map[string]string) {
 	// Returns taxonomy and common names maps from given file
 	taxa := make(map[string]*Taxonomy)
 	common := make(map[string]string)
@@ -20,10 +23,12 @@ func setCorpus(infile string) (map[string]*Taxonomy, map[string]string) {
 	rows, header := iotools.ReadFile(infile, true)
 	for _, i := range rows {
 		t := NewTaxonomy()
-		c := t.SpeciesCaps(i[header["SearchTerm"]])
 		s := t.SpeciesCaps(i[header["Species"]])
-		if len(c) > 0 {
-			common[c] = s
+		if !cites {
+			c := t.SpeciesCaps(i[header["SearchTerm"]])
+			if len(c) > 0 {
+				common[c] = s
+			}
 		}
 		t.Kingdom = strings.TrimSpace(i[header["Kingdom"]])
 		t.Phylum = strings.TrimSpace(i[header["Phylum"]])
@@ -42,8 +47,15 @@ func setCorpus(infile string) (map[string]*Taxonomy, map[string]string) {
 
 func GetCorpus() (map[string]*Taxonomy, map[string]string) {
 	// Returns taxonomy and common names maps from corpus file
-	infile := kestrelutils.GetAbsPath(CORPUS)
-	return setCorpus(infile)
+	ret, _ := setCorpus(kestrelutils.GetAbsPath(CITES), true)
+	taxa, common := setCorpus(kestrelutils.GetAbsPath(CORPUS), false)
+	for k, v := range taxa {
+		// Merge taxa maps
+		if _, ex := ret[k]; !ex {
+			ret[k] = v
+		}
+	}
+	return ret, common
 }
 
 func corpusHeader() string {
@@ -64,7 +76,7 @@ func FormatCorpus(infile string) {
 	// Formats new coprus for later searches
 	var res [][]string
 	outfile := path.Join(kestrelutils.Getutils(), CORPUS)
-	taxa, common := setCorpus(infile)
+	taxa, common := setCorpus(infile, false)
 	for _, v := range taxa {
 		// Format taxonomy entries
 		v.CheckTaxa()
