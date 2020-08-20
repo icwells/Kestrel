@@ -16,7 +16,6 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]*taxonomy.Taxono
 	// Attempts to find taxonomy from given urls
 	taxa := make(map[string]*taxonomy.Taxonomy)
 	for k, v := range urls {
-		var source string
 		t := taxonomy.NewTaxonomy()
 		if strings.Contains(v, "#") == true {
 			// Remove subheader link
@@ -25,13 +24,15 @@ func (s *searcher) parseURLs(urls map[string]string) map[string]*taxonomy.Taxono
 		switch k {
 		case s.urls.wiki:
 			t.ScrapeWiki(v)
-			source = "WIKI"
+		case s.urls.wksp:
+			t.ScrapeWikiSpecies(k)
 		case s.urls.itis:
 			t.ScrapeItis(v)
-			source = "ITIS"
+		case s.urls.adw:
+			t.ScrapeAnimalDiversityWeb(k)
 		}
 		if t.Found == true {
-			taxa[source] = t
+			taxa[t.Source] = t
 		}
 	}
 	return taxa
@@ -47,7 +48,7 @@ func (s *searcher) getURLs(res string) map[string]string {
 			url, ex := r.Attr("href")
 			if ex == true && strings.Count(url, ":") <= 1 && strings.Contains(url, "(") == false {
 				// Skip urls from webcaches and disambiguation pages
-				for _, i := range []string{s.urls.wiki, s.urls.itis} {
+				for _, i := range []string{s.urls.wiki, s.urls.itis, s.urls.wksp, s.urls.adw} {
 					if strings.Contains(url, i) == true {
 						if _, exists := ret[i]; exists == false {
 							ret[i] = url

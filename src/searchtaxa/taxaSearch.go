@@ -68,10 +68,10 @@ func (s *searcher) getMatch(k string, taxa map[string]*taxonomy.Taxonomy) bool {
 	return ret
 }
 
-func checkMatch(taxa map[string]*taxonomy.Taxonomy, source string, t *taxonomy.Taxonomy) map[string]*taxonomy.Taxonomy {
+func checkMatch(taxa map[string]*taxonomy.Taxonomy, t *taxonomy.Taxonomy) map[string]*taxonomy.Taxonomy {
 	// Appends t to taxonomy if a match was found
 	if t.Found && t.Nas <= 2 {
-		taxa[source] = t
+		taxa[t.Source] = t
 	}
 	return taxa
 }
@@ -137,11 +137,11 @@ func (s *searcher) dispatchTerm(k string) bool {
 		if !found {
 			taxa := make(map[string]*taxonomy.Taxonomy)
 			// Search IUCN, NCBI, Wikipedia, and EOL
-			taxa = checkMatch(taxa, "IUCN", s.searchIUCN(k))
-			taxa = checkMatch(taxa, "NCBI", s.searchNCBI(k))
-			taxa = checkMatch(taxa, "EOL", s.searchEOL(k))
-			taxa = checkMatch(taxa, "WIKI", s.searchWikipedia(k))
-			taxa = checkMatch(taxa, "WikiSpecies", s.searchWikiSpecies(k))
+			taxa = checkMatch(taxa, s.searchIUCN(k))
+			taxa = checkMatch(taxa, s.searchNCBI(k))
+			taxa = checkMatch(taxa, s.searchEOL(k))
+			taxa = checkMatch(taxa, s.searchWikipedia(k))
+			taxa = checkMatch(taxa, s.searchWikiSpecies(k))
 			if len(taxa) >= 1 {
 				found = s.getMatch(k, taxa)
 			}

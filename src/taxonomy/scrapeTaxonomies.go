@@ -56,6 +56,11 @@ func (t *Taxonomy) ScrapeWikiSpecies(url string) {
 	}
 }
 
+func (t *Taxonomy) ScrapeAnimalDiversityWeb(url string) {
+	// Scrapes html taxonomy into struct
+	t.Source = url
+}
+
 func (t *Taxonomy) ScrapeNCBI(url string) {
 	// Scrapes taxonomy form NCBI efetch results
 	t.Source = kestrelutils.RemoveKey(url)

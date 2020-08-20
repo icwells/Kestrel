@@ -14,29 +14,31 @@ import (
 )
 
 type apis struct {
+	adw    string
+	eol    string
+	hier   string
 	itis   string
+	iucn   string
 	ncbi   string
+	pages  string
+	search string
 	wiki   string
 	wksp   string
-	iucn   string
-	eol    string
-	search string
-	pages  string
-	hier   string
 }
 
 func newAPIs() *apis {
 	// Returns api struct
 	a := new(apis)
+	a.adw = "https://animaldiversity.org/"
+	a.eol = "http://eol.org/api/"
+	a.hier = "hierarchy_entries/1.0."
 	a.itis = "https://www.itis.gov/"
-	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 	a.iucn = "http://apiv3.iucnredlist.org/api/v3/species/"
+	a.ncbi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+	a.pages = "pages/1.0."
+	a.search = "search/1.0."
 	a.wiki = "https://en.wikipedia.org/wiki/"
 	a.wksp = "https://species.wikimedia.org/wiki/"
-	a.eol = "http://eol.org/api/"
-	a.search = "search/1.0."
-	a.pages = "pages/1.0."
-	a.hier = "hierarchy_entries/1.0."
 	return a
 }
 

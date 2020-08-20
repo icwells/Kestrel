@@ -27,8 +27,8 @@ func getPage(url string) ([]byte, bool) {
 			ret = buf.Bytes()
 			pass = true
 		}
+		defer resp.Body.Close()
 	}
-	defer resp.Body.Close()
 	return ret, pass
 }
 

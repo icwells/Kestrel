@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	CITES = "citesAnimalia.csv.gz"
+	CITES  = "citesAnimalia.csv.gz"
 	CORPUS = "corpus.csv.gz"
 )
 

@@ -69,7 +69,7 @@ func TestCheckMatch(t *testing.T) {
 	s := taxaSlice()
 	for idx, i := range s {
 		k := strconv.Itoa(idx)
-		taxa := checkMatch(taxa, k, i)
+		taxa := checkMatch(taxa, i)
 		_, ex := taxa[k]
 		if i.Found == false || i.Nas > 2 {
 			if ex == true {
