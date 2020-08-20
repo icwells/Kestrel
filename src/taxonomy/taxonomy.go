@@ -202,3 +202,14 @@ func (t *Taxonomy) IsLevel(s string, translate bool) string {
 	}
 	return ""
 }
+
+func (t *Taxonomy) ContainsLevel(s string) string {
+	// Returns level if s contains one
+	s = strings.ToLower(s)
+	for _, i := range t.levels {
+		if strings.Contains(s, i) {
+			return i
+		}
+	}
+	return ""
+}
