@@ -59,6 +59,27 @@ func (t *Taxonomy) ScrapeWikiSpecies(url string) {
 func (t *Taxonomy) ScrapeAnimalDiversityWeb(url string) {
 	// Scrapes html taxonomy into struct
 	t.Source = url
+	page, err := goquery.NewDocument(url)
+	if err == nil {
+		page.Find("ul").Each(func(i int, sel *goquery.Selection) {
+			if cl, ex := sel.Attr("class"); ex && cl == "unstyled" {
+				sel.Find("li").Each(func(j int, s *goquery.Selection) {
+					sp := s.Find("span")
+					if cl, ex := sp.Attr("class"); ex && cl == "rank" {
+						if l := sp.Text(); len(l) > 7 {
+							if level := t.ContainsLevel(l[:7]); level != "" {
+								name := sp.NextFiltered("a").Text()
+								if !strings.Contains(name, ":") {
+									t.SetLevel(level, name)
+								}
+							}
+						}
+					}
+				})
+			}
+		})
+		t.CheckTaxa()
+	}
 }
 
 func (t *Taxonomy) ScrapeNCBI(url string) {
