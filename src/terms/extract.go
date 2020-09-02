@@ -60,11 +60,19 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 	defer f.Close()
 	scanner := iotools.GetScanner(f)
 	for scanner.Scan() {
-		line := string(scanner.Text())
-		if first == false {
-			s := strings.Split(line, d)
-			if len(s) > c {
-				t := NewTerm(s[c])
+		line := strings.TrimSpace(string(scanner.Text()))
+		if !first {
+			var query string
+			if c >= 0 {
+				s := strings.Split(line, d)
+				if len(s) > c {
+					query = s[c]
+				}
+			} else {
+				query = line
+			}
+			if query != "" {
+				t := NewTerm(query)
 				if len(t.Queries) >= 1 {
 					t.filter(speller)
 					// Append terms with no fail reason to pass; else append to fail

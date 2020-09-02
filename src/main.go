@@ -23,7 +23,7 @@ var (
 	format = kingpin.Command("format", "Formats new corpus for searching. New corpus is specified with the '-i' option. Output is written to the utils folder.")
 
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
-	col      = search.Flag("column", "Column containing species names (integer starting from 0).").Default("0").Short('c').Int()
+	col      = search.Flag("column", "Column containing species names (integer starting from 0; use -1 for a single column file).").Default("-1").Short('c').Int()
 	nocorpus = search.Flag("nocorpus", "Perform web search without searching stored corpus.").Default("false").Bool()
 	proc     = search.Flag("proc", "The maximum number of concurrent processes (more will use more RAM, but will finish more quickly).").Default("200").Short('p').Int()
 

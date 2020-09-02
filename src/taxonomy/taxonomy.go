@@ -43,7 +43,7 @@ func (t *Taxonomy) String() string {
 	// Returns formatted string
 	var ret []string
 	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species, t.Source} {
-		ret = append(ret, i)
+		ret = append(ret, strings.Replace(i, `"`, "", -1))
 	}
 	return strings.Join(ret, ",")
 }
