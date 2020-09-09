@@ -9,6 +9,17 @@
 MAIN="kestrel"
 SE="github.com/tebeka/selenium"
 
+downloadDatabases () {
+	GBIF="https://hosted-datasets.gbif.org/datasets/backbone/backbone-current-simple.txt.gz"
+	ITIS="https://www.itis.gov/downloads/itisMySQLBulk.zip"
+	NCBI="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+	mkdir databases
+	cd databases/
+	for I in $GBIF $ITIS $NCBI; do
+		wget $I
+	done
+}
+
 installSelenium () {
 	# Installs selenium package
 	echo "Installing Selenium driver..."
@@ -21,15 +32,16 @@ installSelenium () {
 
 installPackages () {
 	echo "Installing dependencies..."
-	GOQUERY="github.com/PuerkitoBio/goquery"
+	ASPELL="github.com/trustmaster/go-aspell"
 	DATAFRAME="github.com/icwells/go-tools/dataframe"
+	DBIO="github.com/icwells/dbIO"
+	FUZZY="github.com/lithammer/fuzzysearch/fuzzy"
+	GOQUERY="github.com/PuerkitoBio/goquery"
 	IOTOOLS="github.com/icwells/go-tools/iotools"
-	STRARRAY="github.com/icwells/go-tools/strarray"
 	KINGPIN="gopkg.in/alecthomas/kingpin.v2"
 	SIMPLESET="github.com/icwells/simpleset"
-	FUZZY="github.com/lithammer/fuzzysearch/fuzzy"
-	ASPELL="github.com/trustmaster/go-aspell"
-	for I in $GOQUERY $DATAFRAME $IOTOOLS $STRARRAY $KINGPIN $SIMPLESET $FUZZY $ASPELL $SE; do
+	STRARRAY="github.com/icwells/go-tools/strarray"
+	for I in  $ASPELL $DATAFRAME $DBIO $FUZZY $GOQUERY $IOTOOLS $KINGPIN $SE $SIMPLESET $STRARRAY; do
 		go get $I
 	done
 }
@@ -37,6 +49,15 @@ installPackages () {
 installMain () {
 	echo "Building main..."
 	go build -i -o $GOBIN/$MAIN src/*.go
+}
+
+helpText () {
+	echo "Installs Go scripts for Kestrel"
+	echo ""
+	echo "all	Installs all depenencies, including selenium package and drivers."
+	echo "download Downloads taxonomy databases (takes several hours)"
+	echo "help	Prints help text and exits."
+	echo ""
 }
 
 echo ""
@@ -50,12 +71,10 @@ elif [ $1 = "all" ]; then
 	installPackages
 	installSelenium
 	installMain
+elif [ $i = "download" ]; then
+	downloadDatabases
 elif [ $1 = "help" ]; then
-	echo "Installs Go scripts for Kestrel"
-	echo ""
-	echo "all	Installs all depenencies, including selenium package and drivers."
-	echo "help	Prints help text and exits."
-	echo ""
+	helpText
 fi
 
 echo ""

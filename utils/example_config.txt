@@ -1,0 +1,4 @@
+host = 
+database = comparativeOncology
+test_database = testDataBase
+table_columns = tableColumns.txt
