@@ -4,6 +4,7 @@ package kestrelutils
 
 import (
 	"fmt"
+	"github.com/icwells/dbIO"
 	"github.com/icwells/go-tools/iotools"
 	"os"
 	"path"
@@ -16,9 +17,14 @@ var (
 	SPACE = "%20"
 )
 
+func GetLocation() string {
+	// Returns path to git repo
+	return path.Join(iotools.GetGOPATH(), "src/github.com/icwells/kestrel")
+}
+
 func Getutils() string {
 	// Returns path to utils directory
-	return path.Join(iotools.GetGOPATH(), "src/github.com/icwells/kestrel/utils")
+	return path.Join(GetLocation(), "utils")
 }
 
 func GetAbsPath(f string) string {
@@ -31,6 +37,58 @@ func GetAbsPath(f string) string {
 		os.Exit(1)
 	}
 	return f
+}
+
+type Configuration struct {
+	Host     string
+	Database string
+	User     string
+	Testdb   string
+	Tables   string
+	Test     bool
+}
+
+func SetConfiguration(user string, test bool) Configuration {
+	// Gets setting from config.txt
+	var c Configuration
+	c.Test = test
+	c.User = user
+	f := iotools.OpenFile(GetAbsPath("config.txt"))
+	defer f.Close()
+	scanner := iotools.GetScanner(f)
+	for scanner.Scan() {
+		s := strings.Split(string(scanner.Text()), "=")
+		for idx, i := range s {
+			s[idx] = strings.TrimSpace(i)
+		}
+		switch s[0] {
+		case "host":
+			c.Host = s[1]
+		case "database":
+			c.Database = s[1]
+		case "test_database":
+			c.Testdb = s[1]
+		case "table_columns":
+			c.Tables = GetAbsPath(s[1])
+		}
+	}
+	return c
+}
+
+func ConnectToDatabase(user string, test bool) *dbIO.DBIO {
+	// Manages call to Connect and GetTableColumns
+	c := SetConfiguration(user, test)
+	d := c.Database
+	if c.Test == true {
+		d = c.Testdb
+	}
+	db, err := dbIO.Connect(c.Host, d, c.User, "")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1000)
+	}
+	db.GetTableColumns()
+	return db
 }
 
 func CheckFile(infile string) {

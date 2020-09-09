@@ -3,7 +3,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"github.com/icwells/dbIO"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/searchtaxa"
 	"github.com/icwells/kestrel/src/taxonomy"
@@ -17,14 +19,15 @@ var (
 	app     = kingpin.New("Kestrel", "Kestrel will search online databases for taxonomy information.")
 	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Default("").Short('o').String()
+	user    = kingpin.Flag("user", "MySQL username (default is root).").Short('u').Default("root").String()
 
 	ver = kingpin.Command("version", "Prints version info and exits.")
 
-	format = kingpin.Command("format", "Formats new corpus for searching. New corpus is specified with the '-i' option. Output is written to the utils folder.")
+	upload = kingpin.Command("upload", "Formats and uploads taxonomy databases to MySQL database for searching. Databases must first be downloaded into the databases directory using './install.sh dowload'.")
 
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0; use -1 for a single column file).").Default("-1").Short('c').Int()
-	nocorpus = search.Flag("nocorpus", "Perform web search without searching stored corpus.").Default("false").Bool()
+	nocorpus = search.Flag("nocorpus", "Perform web search without searching SQL corpus.").Default("false").Bool()
 	proc     = search.Flag("proc", "The maximum number of concurrent processes (more will use more RAM, but will finish more quickly).").Default("200").Short('p').Int()
 
 	/*check    = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
@@ -42,21 +45,41 @@ func version() {
 	os.Exit(0)
 }
 
+func newDatabase() *dbIO.DBIO {
+	// Creates new database and tables
+	c := kestrelutils.SetConfiguration(*user, false)
+	db := dbIO.CreateDatabase(c.Host, c.Database, *user)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("\n\tAre you sure you want to initialize a new database? This will erase existing data.")
+	text, _ := reader.ReadString('\n')
+	text = strings.ToLower(text)
+	if text == "y" || text == "yes" {
+		fmt.Println("\tInitializing new tables...")
+		db.NewTables(c.Tables)
+	}
+	return db
+}
+
 func main() {
-	start := time.Now()
+	var db *dbIO.DBIO
 	switch kingpin.Parse() {
 	case ver.FullCommand():
 		version()
-	case format.FullCommand():
-		fmt.Println("\n\tFormatting new corpus...")
-		taxonomy.FormatCorpus(*infile)
+	case upload.FullCommand():
+		db = newDatabase()
+		start = db.Starttime
+		fmt.Println("\n\tUploading taxonomies to MySQL database...")
+		taxonomy.UploadDatabases(db)
 	case search.FullCommand():
+		db = kestrelutils.ConnectToDatabase(*user, false)
 		fmt.Println("\n\tExtracting search terms...")
+		start = db.Starttime
 		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col)
 		fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
 		fmt.Println("\n\tSearching for taxonomy matches...")
-		searchtaxa.SearchTaxonomies(*outfile, searchterms, *proc, *nocorpus)
+		searchtaxa.SearchTaxonomies(db, *outfile, searchterms, *proc, *nocorpus)
 	case merge.FullCommand():
+		start = time.Now()
 		fmt.Println("\n\tMerging search results with source file...")
 		kestrelutils.MergeResults(*infile, *resfile, *outfile, *col, *prepend)
 	}

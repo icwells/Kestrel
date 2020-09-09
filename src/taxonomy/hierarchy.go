@@ -19,8 +19,8 @@ type Hierarchy struct {
 	species  map[string]string
 }
 
-func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
-	// Initializes new taxonomy hierarchy
+func emptyHierarchy() *Hierarchy {
+	// Initializes empty taxonomy hierarchy
 	h := new(Hierarchy)
 	h.levels = []string{"Species", "Genus", "Family", "Order", "Class", "Phylum", "Kingdom"}
 	h.parents = map[string]string{"Phylum": "Kingdom",
@@ -41,6 +41,12 @@ func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
 	h.family = make(map[string]string)
 	h.genus = make(map[string]string)
 	h.species = make(map[string]string)
+	return h
+}
+
+func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
+	// Initializes new taxonomy hierarchy
+	h := emptyHierarchy()
 	h.setHierarchy(taxa)
 	return h
 }

@@ -2,7 +2,10 @@
 utils/API.txt
 seleniumLog.txt
 
-# tTest files
+# Test files
 test/KestrelMissed.csv
 test/searchResults.csv
+
+# Database data
+databases/*
 

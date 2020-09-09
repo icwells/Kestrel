@@ -7,17 +7,36 @@
 ##############################################################################
 
 MAIN="kestrel"
+PW=""
 SE="github.com/tebeka/selenium"
+USER=""
+
+getUser () {
+	# Reads mysql user name and password from command line
+	read -p "Enter MySQL username: " USER
+	echo -n "Enter MySQL password: "
+	read -s PW
+	echo ""
+	ARGS="--args --user=$USER --password=$PW"
+}
 
 downloadDatabases () {
 	GBIF="https://hosted-datasets.gbif.org/datasets/backbone/backbone-current-simple.txt.gz"
 	ITIS="https://www.itis.gov/downloads/itisMySQLBulk.zip"
 	NCBI="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+	getUser
 	mkdir databases
 	cd databases/
+	echo "Downloading databases..."
 	for I in $GBIF $ITIS $NCBI; do
 		wget $I
 	done
+	echo "Extracting files..."
+	unzip itisMySQL*
+	tar -xzf taxdump.tar.gz
+	rm taxdump.tar.gz
+	echo "Uploading ITIS tables to MySQL..."
+	mysql -u $USER -p $PW < itisMySQL*/CreateDB.sql
 }
 
 installSelenium () {
