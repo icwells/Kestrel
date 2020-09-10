@@ -7,6 +7,7 @@ import (
 	"github.com/icwells/go-tools/dataframe"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/go-tools/strarray"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/searchtaxa"
 	"github.com/icwells/kestrel/src/terms"
 	"github.com/icwells/simpleset"
@@ -22,6 +23,7 @@ var (
 	col      = 0
 	nocorpus = true
 	proc     = 50
+	user     = ""
 )
 
 func formatPercent(a, b int) string {
@@ -136,11 +138,12 @@ func setExpected() *dataframe.Dataframe {
 
 func main() {
 	start := time.Now()
+	db := kestrelutils.ConnectToDatabase(user, false)
 	fmt.Println("\n\tExtracting search terms...")
 	searchterms := terms.ExtractSearchTerms(infile, outfile, col)
 	fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
 	fmt.Println("\n\tSearching for taxonomy matches...")
-	searchtaxa.SearchTaxonomies(outfile, subsetTerms(searchterms), proc, nocorpus)
+	searchtaxa.SearchTaxonomies(db, outfile, subsetTerms(searchterms), proc, nocorpus)
 	fmt.Printf("\tFinished. Run time: %v\n\n", time.Since(start))
 	fmt.Println("\tComparing output...")
 	exp := setExpected()

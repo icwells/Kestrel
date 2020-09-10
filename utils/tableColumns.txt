@@ -1,15 +1,9 @@
 # Common
-taxa_id INT
+ID INT
 Name TEXT
-source_id INT
-
-# Source
-source_id INT PRIMARY KEY
-Database TEXT
-Citation TEXT
 
 # Taxonomy
-taxa_id INT PRIMARY KEY
+ID INT PRIMARY KEY
 Kingdom TEXT
 Phylum TEXT
 Class TEXT
@@ -17,4 +11,5 @@ Orders TEXT
 Family TEXT
 Genus TEXT
 Species TEXT
-source_id INT
+Citation TEXT
+Database TEXT

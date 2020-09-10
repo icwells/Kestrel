@@ -12,6 +12,7 @@ import (
 	"github.com/icwells/kestrel/src/terms"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -61,6 +62,7 @@ func newDatabase() *dbIO.DBIO {
 }
 
 func main() {
+	var start time.Time
 	var db *dbIO.DBIO
 	switch kingpin.Parse() {
 	case ver.FullCommand():

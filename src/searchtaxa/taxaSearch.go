@@ -4,6 +4,7 @@ package searchtaxa
 
 import (
 	"fmt"
+	"github.com/icwells/dbIO"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
@@ -200,12 +201,12 @@ func (s *searcher) searchDone() {
 	}
 }
 
-func SearchTaxonomies(outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool) {
+func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	count := 1
-	s := newSearcher(outfile, searchterms, nocorpus, false)
+	s := newSearcher(db, outfile, searchterms, nocorpus, false)
 	if s.service.err == nil {
 		defer s.service.stop()
 	}

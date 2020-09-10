@@ -39,13 +39,24 @@ func NewTaxonomy() *Taxonomy {
 	return t
 }
 
-func (t *Taxonomy) String() string {
-	// Returns formatted string
+func (t *Taxonomy) Slice(id, db string) []string {
+	// Returns slice of taxonomy
 	var ret []string
+	if id != "" {
+		ret = append(ret, id)
+	}
 	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species, t.Source} {
 		ret = append(ret, strings.Replace(i, `"`, "", -1))
 	}
-	return strings.Join(ret, ",")
+	if db != "" {
+		ret = append(ret, db)
+	}
+	return ret
+}
+
+func (t *Taxonomy) String() string {
+	// Returns formatted string
+	return strings.Join(t.Slice("", ""), ",")
 }
 
 func (t *Taxonomy) Copy(x *Taxonomy) {

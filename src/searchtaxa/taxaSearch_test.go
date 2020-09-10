@@ -3,6 +3,7 @@
 package searchtaxa
 
 import (
+	"github.com/icwells/dbIO"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"strconv"
@@ -34,6 +35,7 @@ func taxaSlice() []*taxonomy.Taxonomy {
 
 func getTestSearcher() searcher {
 	// Returns initialized searcher
+	var db *dbIO.DBIO
 	exp := make(map[string]*terms.Term)
 	queries := [][]string{[]string{"abronia Graminea", "Abronia graminea"},
 		[]string{"GILA MONSTER", "Gila monster"},
@@ -45,7 +47,7 @@ func getTestSearcher() searcher {
 		t.Term = i[1]
 		exp[i[1]] = t
 	}
-	s := newSearcher("", exp, true, true)
+	s := newSearcher(db, "", exp, true, true)
 	return s
 }
 

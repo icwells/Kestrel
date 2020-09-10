@@ -4,6 +4,7 @@ package searchtaxa
 
 import (
 	"fmt"
+	"github.com/icwells/dbIO"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
@@ -47,6 +48,7 @@ func newAPIs() *apis {
 type searcher struct {
 	common  map[string]string
 	corpus  bool
+	db      *dbIO.DBIO
 	done    *simpleset.Set
 	fails   int
 	hier    *taxonomy.Hierarchy
@@ -61,10 +63,11 @@ type searcher struct {
 	urls    *apis
 }
 
-func newSearcher(outfile string, searchterms map[string]*terms.Term, nocorpus, test bool) searcher {
+func newSearcher(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Term, nocorpus, test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
 	s.corpus = !nocorpus
+	s.db = db
 	s.outfile = outfile
 	dir, _ := path.Split(s.outfile)
 	s.missed = path.Join(dir, "KestrelMissed.csv")
