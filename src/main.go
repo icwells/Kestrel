@@ -18,7 +18,7 @@ import (
 
 var (
 	app     = kingpin.New("Kestrel", "Kestrel will search online databases for taxonomy information.")
-	infile  = kingpin.Flag("infile", "Path to input file.").Required().Short('i').String()
+	infile  = kingpin.Flag("infile", "Path to input file.").Default("").Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Default("").Short('o').String()
 	user    = kingpin.Flag("user", "MySQL username (default is root).").Short('u').Default("root").String()
 

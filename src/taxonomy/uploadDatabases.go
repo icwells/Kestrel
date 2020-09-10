@@ -17,6 +17,7 @@ type uploader struct {
 	common map[string][]string
 	db     *dbIO.DBIO
 	gbif   string
+	hier   *Hierarchy
 	ids    map[string]string
 	itis   string
 	names  map[string]string
@@ -32,12 +33,20 @@ func newUploader(db *dbIO.DBIO) *uploader {
 	u.common = make(map[string][]string)
 	u.db = db
 	u.gbif = path.Join(dir, "backbone-current-simple.txt.gz")
+	u.hier = emptyHierarchy()
 	u.ids = make(map[string]string)
 	u.itis = "ITIS"
 	u.names = make(map[string]string)
 	//u.ncbi = path.Join(dir,
 	u.tid = 1
 	return u
+}
+
+func (u *uploader) clear() {
+	// Empties taxa slice and common map between datasets
+	u.common = make(map[string][]string)
+	u.ids = make(map[string]string)
+	u.taxa = nil
 }
 
 func (u *uploader) getDenominator(list [][]string) int {
@@ -104,6 +113,17 @@ func (u *uploader) setTaxonomy(t *Taxonomy) {
 	}
 }
 
+func (u *uploader) splitName(n string) (string, string) {
+	// Splits citation from name if needed
+	c := "NA"
+	if strings.Count(n, " ") > 1 {
+		s := strings.Split(n, " ")
+		n = strings.Join(s[:2], " ")
+		c = strings.Join(s[2:], " ")
+	}
+	return n, strings.Replace(c, ",", "", -1)
+}
+
 func (u *uploader) loadGBIF() {
 	// Uploads GBIF table and formats data into sql database
 	var res [][]string
@@ -113,45 +133,52 @@ func (u *uploader) loadGBIF() {
 		rank := strings.ToLower(i[5])
 		if rank == "species" {
 			// Store species with ids for ranks
+			var sp string
 			t := NewTaxonomy()
-			t.SetLevel("species", i[18])
+			sp, t.Source = u.splitName(i[18])
+			t.SetLevel("species", sp)
 			for idx, id := range i[10:16] {
-				t.SetLevel(t.levels[idx], id)
+				if id != `\N` {
+					t.SetLevel(t.levels[idx], id)
+				}
 			}
 			u.taxa = append(u.taxa, t)
 		} else {
 			u.ids[i[0]] = i[18]
 		}
 	}
-	for idx, i := range u.taxa {
+	for _, i := range u.taxa {
 		// Fill in taxonomy, remove incomplete taxa
 		u.setTaxonomy(i)
-		if !i.Found {
-			if idx == 0 {
-				u.taxa = u.taxa[1:]
-			} else if idx == len(u.taxa)-1 {
-				u.taxa = u.taxa[:idx]
-			} else {
-				u.taxa = append(u.taxa[:idx], u.taxa[idx+1:]...)
-			}
-		} else {
-			// Record species to avoid multipe entries
-			id := strconv.Itoa(u.tid)
-			u.names[i.Species] = id
-			res = append(res, i.Slice(id, "GBIF"))
+		if i.Found {
+			u.hier.AddTaxonomy(i)
 		}
 	}
-	u.uploadTable("Taxonomy", res)
+	for _, i := range u.taxa {
+		if i.Found {
+			u.hier.FillTaxonomy(i)
+			if i.Nas == 0 {
+				id := strconv.Itoa(u.tid)
+				u.names[i.Species] = id
+				row := i.Slice(id, "GBIF")
+				fmt.Println(row)
+				res = append(res, row)
+				u.tid++
+			}
+		}
+	}
+	fmt.Println("\tUploading GBIF data...")
+	//u.uploadTable("Taxonomy", res)
 }
 
 /*func (u *uploader) loadITIS() {
 	// Uploads ITIS table and formats data into sql database
-
+	fmt.Println("\tReading ITIS taxonomies...")
 }
 
 func (u *uploader) loadNCBI() {
 	// Uploads NCBI table and formats data into sql database
-
+	fmt.Println("\tReading NCBI taxonomies...")
 }*/
 
 func UploadDatabases(db *dbIO.DBIO) {
