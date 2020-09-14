@@ -51,7 +51,7 @@ func newDatabase() *dbIO.DBIO {
 	c := kestrelutils.SetConfiguration(*user, false)
 	db := dbIO.CreateDatabase(c.Host, c.Database, *user)
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("\n\tAre you sure you want to initialize a new database? This will erase existing data.")
+	fmt.Print("\n\tAre you sure you want to initialize a new database? This will erase existing data. (Y|N) ")
 	text, _ := reader.ReadString('\n')
 	text = strings.ToLower(text)
 	if text == "y" || text == "yes" {

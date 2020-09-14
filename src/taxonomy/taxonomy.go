@@ -165,7 +165,7 @@ func (t *Taxonomy) CheckTaxa() {
 func (t *Taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
-	if len(value) > 1 && !strings.Contains(value, "[") && strings.ToUpper(value) != "NA" {
+	if value != "" && !strings.Contains(value, "[") && strings.ToUpper(value) != "NA" {
 		key = strings.ToLower(key)
 		switch key {
 		case "kingdom":
