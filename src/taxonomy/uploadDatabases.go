@@ -80,6 +80,7 @@ func (u *uploader) uploadTable(table string) {
 				end = ind + idx
 			}
 			vals, ln := dbIO.FormatSlice(u.res[ind:end])
+			fmt.Println(vals[:500])
 			u.db.UpdateDB(table, vals, ln)
 			ind = ind + idx
 		}
@@ -135,8 +136,8 @@ func (u *uploader) fillTaxonomies() {
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
-	proc := 1000
-	fmt.Println("\tFormatting taxonomies...")
+	proc := 500
+	fmt.Println("\tFilling taxonomies...")
 	for _, i := range u.taxa {
 		// Fill in taxonomy
 		wg.Add(1)
@@ -150,6 +151,7 @@ func (u *uploader) fillTaxonomies() {
 	fmt.Println()
 	wg.Wait()
 	count = 0
+	fmt.Println("\tFormatting taxonomies...")
 	for _, i := range u.taxa {
 		if i.Found {
 			wg.Add(1)

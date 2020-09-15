@@ -48,15 +48,18 @@ func version() {
 
 func newDatabase() *dbIO.DBIO {
 	// Creates new database and tables
+	var db *dbIO.DBIO
 	c := kestrelutils.SetConfiguration(*user, false)
-	db := dbIO.CreateDatabase(c.Host, c.Database, *user)
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("\n\tAre you sure you want to initialize a new database? This will erase existing data. (Y|N) ")
+	fmt.Print("\n\tAre you sure you want to initialize a new database? This will erase existing data. (y|n) ")
 	text, _ := reader.ReadString('\n')
-	text = strings.ToLower(text)
+	text = strings.TrimSpace(strings.ToLower(text))
 	if text == "y" || text == "yes" {
-		fmt.Println("\tInitializing new tables...")
+		db = dbIO.CreateDatabase(c.Host, c.Database, *user)
 		db.NewTables(c.Tables)
+	} else {
+		fmt.Println("\tExiting.")
+		os.Exit(0)
 	}
 	return db
 }
