@@ -20,6 +20,7 @@ var (
 	app     = kingpin.New("Kestrel", "Kestrel will search online databases for taxonomy information.")
 	infile  = kingpin.Flag("infile", "Path to input file.").Default("").Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Default("").Short('o').String()
+	proc    = kingpin.Flag("proc", "The maximum number of concurrent processes for search or database upload (more will use more RAM, but will finish more quickly).").Default("200").Short('p').Int()
 	user    = kingpin.Flag("user", "MySQL username (default is root).").Short('u').Default("root").String()
 
 	ver = kingpin.Command("version", "Prints version info and exits.")
@@ -29,7 +30,6 @@ var (
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0; use -1 for a single column file).").Default("-1").Short('c').Int()
 	nocorpus = search.Flag("nocorpus", "Perform web search without searching SQL corpus.").Default("false").Bool()
-	proc     = search.Flag("proc", "The maximum number of concurrent processes (more will use more RAM, but will finish more quickly).").Default("200").Short('p').Int()
 
 	/*check    = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
 	taxafile = check.Flag("taxa", "Path to currated taxonomy file.").Default("nil").Short('t').String()*/
@@ -74,7 +74,7 @@ func main() {
 		db = newDatabase()
 		start = db.Starttime
 		fmt.Println("\n\tUploading taxonomies to MySQL database...")
-		taxonomy.UploadDatabases(db)
+		taxonomy.UploadDatabases(db, *proc)
 	case search.FullCommand():
 		db = kestrelutils.ConnectToDatabase(*user, false)
 		fmt.Println("\n\tExtracting search terms...")

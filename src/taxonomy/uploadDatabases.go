@@ -8,8 +8,8 @@ import (
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"math"
 	"path"
-	"sync"
 	"strconv"
+	"sync"
 )
 
 type uploader struct {
@@ -22,12 +22,13 @@ type uploader struct {
 	itis   string
 	names  map[string]string
 	ncbi   string
+	proc   int
 	res    [][]string
 	taxa   []*Taxonomy
 	tid    int
 }
 
-func newUploader(db *dbIO.DBIO) *uploader {
+func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	// Returns initialized struct
 	dir := path.Join(kestrelutils.GetLocation(), "databases")
 	u := new(uploader)
@@ -38,6 +39,7 @@ func newUploader(db *dbIO.DBIO) *uploader {
 	u.ids = make(map[string]string)
 	u.itis = "ITIS"
 	u.names = make(map[string]string)
+	u.proc = proc
 	//u.ncbi = path.Join(dir,
 	u.tid = 1
 	return u
@@ -136,7 +138,6 @@ func (u *uploader) fillTaxonomies() {
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
-	proc := 500
 	fmt.Println("\tFilling taxonomies...")
 	for _, i := range u.taxa {
 		// Fill in taxonomy
@@ -144,7 +145,7 @@ func (u *uploader) fillTaxonomies() {
 		count++
 		go u.setTaxonomy(&wg, &mut, i)
 		fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, len(u.taxa))
-		if count%proc == 0 {
+		if count%u.proc == 0 {
 			wg.Wait()
 		}
 	}
@@ -158,7 +159,7 @@ func (u *uploader) fillTaxonomies() {
 			count++
 			go u.storeTaxonomy(&wg, &mut, i, "GBIF")
 			fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, u.count)
-			if count%proc == 0 {
+			if count%u.proc == 0 {
 				wg.Wait()
 			}
 		}
@@ -167,11 +168,12 @@ func (u *uploader) fillTaxonomies() {
 	wg.Wait()
 }
 
-func UploadDatabases(db *dbIO.DBIO) {
+func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
-	u := newUploader(db)
+	u := newUploader(db, proc)
 	u.loadGBIF()
 	u.clear()
 	//u.loadITIS()
+	u.clear()
 	//u.loadNCBI()
 }
