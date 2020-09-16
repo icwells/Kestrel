@@ -32,6 +32,7 @@ func (u *uploader) loadGBIF() {
 				t := NewTaxonomy()
 				sp, t.Source = u.splitName(i[18])
 				t.SetLevel("species", sp)
+				t.ID = i[0]
 				for idx, id := range i[10:16] {
 					if id != `\N` {
 						t.SetLevel(t.levels[idx], id)
@@ -47,9 +48,9 @@ func (u *uploader) loadGBIF() {
 			}
 		}
 	}
-	u.fillTaxonomies()
+	u.fillTaxonomies("GBIF")
 	fmt.Println("\tUploading GBIF data...")
-	u.uploadTable("Taxonomy")
+	u.uploadTable("Taxonomy", u.res)
 }
 
 /*func (u *uploader) loadITIS() {
@@ -57,14 +58,33 @@ func (u *uploader) loadGBIF() {
 	fmt.Println("\tReading ITIS taxonomies...")
 }*/
 
+func (u *uploader) YieldNCBI(infile string) <-chan []string {
+	ch := make(chan []string)
+	d := "|"
+	go func() {
+		f := iotools.OpenFile(infile)
+		defer f.Close()
+		input := iotools.GetScanner(f)
+		for input.Scan() {
+			var s []string
+			line := strings.TrimSpace(string(input.Text()))
+			for _, i := range strings.Split(line, d) {
+				s = append(s, strings.TrimSpace(i))
+			}
+			ch <- s
+		}
+		close(ch)
+	}()
+	return ch
+}
+
 func (u *uploader) setNCBIcitations() {
 	// Stores ncbi nodes in ids map
-	reader, _ := iotools.YieldFile(u.ncbi["citations"], false)
-	for i := range reader {
+	for i := range u.YieldNCBI(u.ncbi["citations"]) {
 		if len(i) >= 6 && len(i[6]) > 0 && len(i[1]) > 0 {
 			for _, k := range strings.Split(i[6], " ") {
 				// Taxa_id: citation
-				u.citations[k] = i[6]
+				u.citations[k] = i[1]
 			}
 		}
 	}
@@ -72,12 +92,15 @@ func (u *uploader) setNCBIcitations() {
 
 func (u *uploader) setNCBInames() {
 	// Stores ncbi nodes in ids map
-	reader, _ := iotools.YieldFile(u.ncbi["names"], false)
-	for i := range reader {
+	for i := range u.YieldNCBI(u.ncbi["names"]) {
 		if len(i) >= 4 {
 			id := i[0]
 			if i[3] == "scientific name" {
-				u.names[id] = i[1]
+				if name, _ := u.splitName(i[1]); !strings.Contains(name, ".") {
+					if strings.Count(name, " ") == 0 || len(strings.Split(name, " ")[1]) > 3 {
+						u.ids[id] = name
+					}
+				}
 			} else if i[3] == "common name" {
 				if _, ex := u.common[id]; !ex {
 					u.common[id] = []string{}
@@ -115,11 +138,10 @@ func (u *uploader) loadNCBI() {
 	fmt.Println("\tReading NCBI taxonomies...")
 	u.setNCBIcitations()
 	u.setNCBInames()
-	reader, _ := iotools.YieldFile(u.ncbi["nodes"], false)
-	for i := range reader {
+	for i := range u.YieldNCBI(u.ncbi["nodes"]) {
 		id := i[0]
 		if i[2] == "species" {
-			if name, ex := u.names[id]; ex {
+			if name, ex := u.ids[id]; ex {
 				// Store species, genus, and citation
 				t := NewTaxonomy()
 				t.SetLevel("species", name)
@@ -134,7 +156,8 @@ func (u *uploader) loadNCBI() {
 		}
 	}
 	u.setNCBIlevels(parents)
-	u.fillTaxonomies()
+	u.fillTaxonomies("NCBI")
 	fmt.Println("\tUploading NCBI data...")
-	u.uploadTable("Taxonomy")
+	u.uploadTable("Taxonomy", u.res)
+	u.uploadTable("Common", u.commontable)
 }

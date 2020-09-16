@@ -9,6 +9,7 @@ import (
 )
 
 type Taxonomy struct {
+	ID      string
 	Kingdom string
 	Phylum  string
 	Class   string

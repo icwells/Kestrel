@@ -5,29 +5,32 @@ package taxonomy
 import (
 	"fmt"
 	"github.com/icwells/dbIO"
+	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"math"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 )
 
 type uploader struct {
-	citations map[string]string
-	common    map[string][]string
-	count     int
-	db        *dbIO.DBIO
-	dir       string
-	gbif      string
-	hier      *Hierarchy
-	ids       map[string]string
-	itis      string
-	names     map[string]string
-	ncbi      map[string]string
-	proc      int
-	res       [][]string
-	taxa      []*Taxonomy
-	tid       int
+	citations   map[string]string
+	common      map[string][]string
+	commontable [][]string
+	count       int
+	db          *dbIO.DBIO
+	dir         string
+	gbif        string
+	hier        *Hierarchy
+	ids         map[string]string
+	itis        string
+	names       map[string]string
+	ncbi        map[string]string
+	proc        int
+	res         [][]string
+	taxa        []*Taxonomy
+	tid         int
 }
 
 func newUploader(db *dbIO.DBIO, proc int) *uploader {
@@ -58,17 +61,19 @@ func (u *uploader) setNCBIfiles() {
 
 func (u *uploader) clear() {
 	// Empties taxa slice and common map between datasets
+	u.citations = make(map[string]string)
 	u.common = make(map[string][]string)
+	u.commontable = nil
 	u.ids = make(map[string]string)
 	u.res = nil
 	u.taxa = nil
 }
 
-func (u *uploader) getDenominator() int {
+func (u *uploader) getDenominator(list [][]string) int {
 	// Returns denominator for subsetting upload slice (size in bytes / 16Mb)
 	max := 10000000.0
 	size := 0
-	for _, i := range u.res {
+	for _, i := range list {
 		for _, j := range i {
 			size += len([]byte(j))
 		}
@@ -76,11 +81,11 @@ func (u *uploader) getDenominator() int {
 	return int(math.Ceil(float64(size*8) / max))
 }
 
-func (u *uploader) uploadTable(table string) {
+func (u *uploader) uploadTable(table string, list [][]string) {
 	// Uploads patient entries to db
-	l := len(u.res)
+	l := len(list)
 	if l > 0 {
-		den := u.getDenominator()
+		den := u.getDenominator(list)
 		// Upload in chunks
 		var end int
 		idx := l / den
@@ -92,7 +97,7 @@ func (u *uploader) uploadTable(table string) {
 			} else {
 				end = ind + idx
 			}
-			vals, ln := dbIO.FormatSlice(u.res[ind:end])
+			vals, ln := dbIO.FormatSlice(list[ind:end])
 			fmt.Println(vals[:500])
 			u.db.UpdateDB(table, vals, ln)
 			ind = ind + idx
@@ -111,6 +116,13 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 		u.tid++
 		// Store found names
 		mut.Lock()
+		if v, ex := u.common[t.ID]; ex {
+			for _, i := range v {
+				// Append common names with id and store to avoid duplicates
+				u.commontable = append(u.commontable, []string{id, i})
+				u.names[i] = id
+			}
+		}
 		u.names[t.Species] = id
 		mut.Unlock()
 	}
@@ -120,6 +132,9 @@ func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonom
 	// Replaces rank ids with names
 	defer wg.Done()
 	if v, ex := u.ids[t.Kingdom]; ex {
+		if strings.ToLower(v) == "metazoa" {
+			v = "Animalia"
+		}
 		t.Kingdom = v
 		if v, ex = u.ids[t.Phylum]; ex {
 			t.Phylum = v
@@ -144,7 +159,7 @@ func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonom
 	}
 }
 
-func (u *uploader) fillTaxonomies() {
+func (u *uploader) fillTaxonomies(db string) {
 	// Merges taxonomy and ids and fills missing fields
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
@@ -168,7 +183,7 @@ func (u *uploader) fillTaxonomies() {
 		if i.Found {
 			wg.Add(1)
 			count++
-			go u.storeTaxonomy(&wg, &mut, i, "GBIF")
+			go u.storeTaxonomy(&wg, &mut, i, db)
 			fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, u.count)
 			if count%u.proc == 0 {
 				wg.Wait()
@@ -182,10 +197,14 @@ func (u *uploader) fillTaxonomies() {
 func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
 	u := newUploader(db, proc)
-	/*u.loadGBIF()
-	u.clear()
-	u.loadITIS()
-	u.clear()*/
-	u.loadNCBI()
+	/*if iotools.Exists(u.gbif) {
+		u.loadGBIF()
+		u.clear()
+	}*/
+	if iotools.Exists(u.ncbi["nodes"]) {
+		u.loadNCBI()
+		u.clear()
+	}
+	//u.loadITIS()
 	//os.Remove(u.dir)
 }
