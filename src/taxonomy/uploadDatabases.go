@@ -1,130 +1,106 @@
-// Formats and uploads taxonomy databases to MySQL
+// Contains functions for each taxonomy source
 
 package taxonomy
 
 import (
 	"fmt"
-	"github.com/icwells/dbIO"
-	"github.com/icwells/kestrel/src/kestrelutils"
-	"math"
-	"path"
-	"strconv"
-	"sync"
+	"github.com/icwells/go-tools/iotools"
+	"strings"
 )
 
-type uploader struct {
-	common map[string][]string
-	count  int
-	db     *dbIO.DBIO
-	gbif   string
-	hier   *Hierarchy
-	ids    map[string]string
-	itis   string
-	names  map[string]string
-	ncbi   string
-	proc   int
-	res    [][]string
-	taxa   []*Taxonomy
-	tid    int
-}
-
-func newUploader(db *dbIO.DBIO, proc int) *uploader {
-	// Returns initialized struct
-	dir := path.Join(kestrelutils.GetLocation(), "databases")
-	u := new(uploader)
-	u.common = make(map[string][]string)
-	u.db = db
-	u.gbif = path.Join(dir, "backbone-current-simple.txt.gz")
-	u.hier = emptyHierarchy()
-	u.ids = make(map[string]string)
-	u.itis = "ITIS"
-	u.names = make(map[string]string)
-	u.proc = proc
-	//u.ncbi = path.Join(dir,
-	u.tid = 1
-	return u
-}
-
-func (u *uploader) clear() {
-	// Empties taxa slice and common map between datasets
-	u.common = make(map[string][]string)
-	u.ids = make(map[string]string)
-	u.res = nil
-	u.taxa = nil
-}
-
-func (u *uploader) getDenominator() int {
-	// Returns denominator for subsetting upload slice (size in bytes / 16Mb)
-	max := 10000000.0
-	size := 0
-	for _, i := range u.res {
-		for _, j := range i {
-			size += len([]byte(j))
-		}
+func (u *uploader) splitName(n string) (string, string) {
+	// Splits citation from name if needed
+	c := "NA"
+	if strings.Count(n, " ") > 1 {
+		s := strings.Split(n, " ")
+		n = strings.Join(s[:2], " ")
+		c = strings.Join(s[2:], " ")
 	}
-	return int(math.Ceil(float64(size*8) / max))
+	return n, strings.Replace(c, ",", "", -1)
 }
 
-func (u *uploader) uploadTable(table string) {
-	// Uploads patient entries to db
-	l := len(u.res)
-	if l > 0 {
-		den := u.getDenominator()
-		// Upload in chunks
-		var end int
-		idx := l / den
-		ind := 0
-		for i := 0; i < den; i++ {
-			if ind+idx > l {
-				// Get last less than idx rows
-				end = l
+func (u *uploader) loadGBIF() {
+	// Uploads GBIF table and formats data into sql database
+	fmt.Println("\tReading GBIF taxonomies...")
+	reader, _ := iotools.YieldFile(u.gbif, false)
+	for i := range reader {
+		if strings.ToUpper(i[4]) == "ACCEPTED" {
+			rank := strings.ToLower(i[5])
+			if rank == "species" {
+				// Store species with ids for ranks
+				var sp string
+				t := NewTaxonomy()
+				sp, t.Source = u.splitName(i[18])
+				t.SetLevel("species", sp)
+				for idx, id := range i[10:16] {
+					if id != `\N` {
+						t.SetLevel(t.levels[idx], id)
+					}
+				}
+				u.taxa = append(u.taxa, t)
 			} else {
-				end = ind + idx
+				name := i[18]
+				if strings.Contains(name, " ") {
+					name = strings.Split(name, " ")[0]
+				}
+				u.ids[i[0]] = name
 			}
-			vals, ln := dbIO.FormatSlice(u.res[ind:end])
-			fmt.Println(vals[:500])
-			u.db.UpdateDB(table, vals, ln)
-			ind = ind + idx
+		}
+	}
+	u.fillTaxonomies()
+	fmt.Println("\tUploading GBIF data...")
+	u.uploadTable("Taxonomy")
+}
+
+/*func (u *uploader) loadITIS() {
+	// Uploads ITIS table and formats data into sql database
+	fmt.Println("\tReading ITIS taxonomies...")
+}*/
+
+func (u *uploader) setNCBIcitations() {
+	// Stores ncbi nodes in ids map
+	reader, _ := iotools.YieldFile(u.ncbi["citations"], false)
+	for i := range reader {
+		if len(i) >= 6 && len(i[6]) > 0 && len(i[1]) > 0 {
+			for _, k := range strings.Split(i[6], " ") {
+				// Taxa_id: citation
+				u.citations[k] = i[6]
+			}
 		}
 	}
 }
 
-func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy, db string) {
-	// Fills in missing fields and stores passing taxonomy
-	defer wg.Done()
-	u.hier.FillTaxonomy(t)
-	if t.Nas == 0 {
-		id := strconv.Itoa(u.tid)
-		row := t.Slice(id, db)
-		u.res = append(u.res, row)
-		u.tid++
-		// Store found names
-		mut.Lock()
-		u.names[t.Species] = id
-		mut.Unlock()
+func (u *uploader) setNCBInames() {
+	// Stores ncbi nodes in ids map
+	reader, _ := iotools.YieldFile(u.ncbi["names"], false)
+	for i := range reader {
+		if len(i) >= 4 {
+			id := i[0]
+			if i[3] == "scientific name" {
+				u.names[id] = i[1]
+			} else if i[3] == "common name" {
+				if _, ex := u.common[id]; !ex {
+					u.common[id] = []string{}
+				}
+				u.common[id] = append(u.common[id], i[1])
+			}
+		}
 	}
 }
 
-func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy) {
-	// Replaces rank ids with names
-	defer wg.Done()
-	if v, ex := u.ids[t.Kingdom]; ex {
-		t.Kingdom = v
-		if v, ex = u.ids[t.Phylum]; ex {
-			t.Phylum = v
-			if v, ex := u.ids[t.Class]; ex {
-				t.Class = v
-				if v, ex := u.ids[t.Order]; ex {
-					t.Order = v
-					if v, ex := u.ids[t.Family]; ex {
-						t.Family = v
-						if v, ex := u.ids[t.Genus]; ex {
-							t.Genus = v
-							mut.Lock()
-							u.hier.AddTaxonomy(t)
-							mut.Unlock()
-							u.count++
-							t.Found = true
+func (u *uploader) setNCBIlevels(parents map[string]string) {
+	// Stores ids for taxonomic levels
+	for _, i := range u.taxa {
+		if v, ex := parents[i.Genus]; ex {
+			i.Family = v
+			if v, ex := parents[i.Family]; ex {
+				i.Order = v
+				if v, ex := parents[i.Order]; ex {
+					i.Class = v
+					if v, ex := parents[i.Class]; ex {
+						i.Phylum = v
+						if v, ex := parents[i.Phylum]; ex {
+							i.Kingdom = v
 						}
 					}
 				}
@@ -133,47 +109,32 @@ func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonom
 	}
 }
 
-func (u *uploader) fillTaxonomies() {
-	// Merges taxonomy and ids and fills missing fields
-	var wg sync.WaitGroup
-	var mut sync.RWMutex
-	var count int
-	fmt.Println("\tFilling taxonomies...")
-	for _, i := range u.taxa {
-		// Fill in taxonomy
-		wg.Add(1)
-		count++
-		go u.setTaxonomy(&wg, &mut, i)
-		fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, len(u.taxa))
-		if count%u.proc == 0 {
-			wg.Wait()
-		}
-	}
-	fmt.Println()
-	wg.Wait()
-	count = 0
-	fmt.Println("\tFormatting taxonomies...")
-	for _, i := range u.taxa {
-		if i.Found {
-			wg.Add(1)
-			count++
-			go u.storeTaxonomy(&wg, &mut, i, "GBIF")
-			fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, u.count)
-			if count%u.proc == 0 {
-				wg.Wait()
+func (u *uploader) loadNCBI() {
+	// Uploads NCBI table and formats data into sql database
+	parents := make(map[string]string)
+	fmt.Println("\tReading NCBI taxonomies...")
+	u.setNCBIcitations()
+	u.setNCBInames()
+	reader, _ := iotools.YieldFile(u.ncbi["nodes"], false)
+	for i := range reader {
+		id := i[0]
+		if i[2] == "species" {
+			if name, ex := u.names[id]; ex {
+				// Store species, genus, and citation
+				t := NewTaxonomy()
+				t.SetLevel("species", name)
+				t.Genus = i[1]
+				if cit, e := u.citations[id]; e {
+					t.Source = cit
+				}
+				u.taxa = append(u.taxa, t)
 			}
+		} else {
+			parents[id] = i[1]
 		}
 	}
-	fmt.Println()
-	wg.Wait()
-}
-
-func UploadDatabases(db *dbIO.DBIO, proc int) {
-	// Formats and uploads taxonomy databases to MySQL
-	u := newUploader(db, proc)
-	u.loadGBIF()
-	u.clear()
-	//u.loadITIS()
-	u.clear()
-	//u.loadNCBI()
+	u.setNCBIlevels(parents)
+	u.fillTaxonomies()
+	fmt.Println("\tUploading NCBI data...")
+	u.uploadTable("Taxonomy")
 }
