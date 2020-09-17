@@ -7,7 +7,6 @@ import (
 	"github.com/icwells/dbIO"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
-	"math"
 	"path"
 	"strconv"
 	"strings"
@@ -64,44 +63,10 @@ func (u *uploader) clear() {
 	u.citations = make(map[string]string)
 	u.common = make(map[string][]string)
 	u.commontable = nil
+	u.count = 0
 	u.ids = make(map[string]string)
 	u.res = nil
 	u.taxa = nil
-}
-
-func (u *uploader) getDenominator(list [][]string) int {
-	// Returns denominator for subsetting upload slice (size in bytes / 16Mb)
-	max := 10000000.0
-	size := 0
-	for _, i := range list {
-		for _, j := range i {
-			size += len([]byte(j))
-		}
-	}
-	return int(math.Ceil(float64(size*8) / max))
-}
-
-func (u *uploader) uploadTable(table string, list [][]string) {
-	// Uploads patient entries to db
-	l := len(list)
-	if l > 0 {
-		den := u.getDenominator(list)
-		// Upload in chunks
-		idx := l / den
-		ind := 0
-		for i := 0; i < den; i++ {
-			var end int
-			if ind+idx > l {
-				// Get last less than idx rows
-				end = l
-			} else {
-				end = ind + idx
-			}
-			vals, ln := dbIO.FormatSlice(list[ind:end])
-			u.db.UpdateDB(table, vals, ln)
-			ind = ind + idx
-		}
-	}
 }
 
 func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy, db string) {
@@ -110,16 +75,21 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 	u.hier.FillTaxonomy(t)
 	if t.Nas == 0 {
 		mut.Lock()
-		id := strconv.Itoa(u.tid)
-		row := t.Slice(id, db)
-		u.res = append(u.res, row)
-		u.tid++
-		// Store found names
+		id, ex := u.names[t.Species]
+		if !ex {
+			// Upload unique taxonomies
+			id = strconv.Itoa(u.tid)
+			row := t.Slice(id, db)
+			u.res = append(u.res, row)
+			u.tid++
+		}
 		if v, ex := u.common[t.ID]; ex {
 			for _, i := range v {
-				// Append common names with id and store to avoid duplicates
-				u.commontable = append(u.commontable, []string{id, i})
-				u.names[i] = id
+				if _, ex := u.names[i]; !ex {
+					// Append common names with new/existing id and store to avoid duplicates
+					u.commontable = append(u.commontable, []string{id, i})
+					u.names[i] = id
+				}
 			}
 		}
 		u.names[t.Species] = id
@@ -137,18 +107,18 @@ func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonom
 		t.Kingdom = v
 		if v, ex = u.ids[t.Phylum]; ex {
 			t.Phylum = v
-			if v, ex := u.ids[t.Class]; ex {
+			if v, ex = u.ids[t.Class]; ex {
 				t.Class = v
-				if v, ex := u.ids[t.Order]; ex {
+				if v, ex = u.ids[t.Order]; ex {
 					t.Order = v
-					if v, ex := u.ids[t.Family]; ex {
+					if v, ex = u.ids[t.Family]; ex {
 						t.Family = v
-						if v, ex := u.ids[t.Genus]; ex {
+						if v, ex = u.ids[t.Genus]; ex {
 							t.Genus = v
 							mut.Lock()
 							u.hier.AddTaxonomy(t)
-							mut.Unlock()
 							u.count++
+							mut.Unlock()
 							t.Found = true
 						}
 					}
@@ -200,10 +170,10 @@ func UploadDatabases(db *dbIO.DBIO, proc int) {
 		u.loadNCBI()
 		u.clear()
 	}
-	/*if iotools.Exists(u.gbif) {
+	if iotools.Exists(u.gbif) {
 		u.loadGBIF()
 		u.clear()
-	}*/
+	}
 	//u.loadITIS()
 	//os.Remove(u.dir)
 }

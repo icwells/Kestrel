@@ -21,17 +21,17 @@ func (u *uploader) splitName(n string) (string, string) {
 
 func (u *uploader) loadGBIF() {
 	// Uploads GBIF table and formats data into sql database
-	fmt.Println("\tReading GBIF taxonomies...")
+	fmt.Println("\n\tReading GBIF taxonomies...")
 	reader, _ := iotools.YieldFile(u.gbif, false)
 	for i := range reader {
 		if strings.ToUpper(i[4]) == "ACCEPTED" {
 			rank := strings.ToLower(i[5])
 			if rank == "species" {
-				// Store species with ids for ranks
-				var sp string
-				t := NewTaxonomy()
-				sp, t.Source = u.splitName(i[18])
+				sp, source := u.splitName(i[18])
 				if _, ex := u.names[sp]; !ex {
+					// Store species with ids for ranks
+					t := NewTaxonomy()
+					t.Source = source
 					t.SetLevel("species", sp)
 					t.ID = i[0]
 					for idx, id := range i[10:16] {
@@ -52,12 +52,12 @@ func (u *uploader) loadGBIF() {
 	}
 	u.fillTaxonomies("GBIF")
 	fmt.Println("\tUploading GBIF data...")
-	u.uploadTable("Taxonomy", u.res)
+	u.db.UploadSlice("Taxonomy", u.res)
 }
 
 /*func (u *uploader) loadITIS() {
 	// Uploads ITIS table and formats data into sql database
-	fmt.Println("\tReading ITIS taxonomies...")
+	fmt.Println("\n\tReading ITIS taxonomies...")
 }*/
 
 func (u *uploader) YieldNCBI(infile string) <-chan []string {
@@ -137,7 +137,7 @@ func (u *uploader) setNCBIlevels(parents map[string]string) {
 func (u *uploader) loadNCBI() {
 	// Uploads NCBI table and formats data into sql database
 	parents := make(map[string]string)
-	fmt.Println("\tReading NCBI taxonomies...")
+	fmt.Println("\n\tReading NCBI taxonomies...")
 	u.setNCBIcitations()
 	u.setNCBInames()
 	for i := range u.YieldNCBI(u.ncbi["nodes"]) {
@@ -148,6 +148,7 @@ func (u *uploader) loadNCBI() {
 				t := NewTaxonomy()
 				t.SetLevel("species", name)
 				t.Genus = i[1]
+				t.ID = id
 				if cit, e := u.citations[id]; e {
 					t.Source = cit
 				}
@@ -160,6 +161,6 @@ func (u *uploader) loadNCBI() {
 	u.setNCBIlevels(parents)
 	u.fillTaxonomies("NCBI")
 	fmt.Println("\tUploading NCBI data...")
-	u.uploadTable("Taxonomy", u.res)
-	u.uploadTable("Common", u.commontable)
+	u.db.UploadSlice("Taxonomy", u.res)
+	u.db.UploadSlice("Common", u.commontable)
 }
