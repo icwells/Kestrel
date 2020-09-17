@@ -57,6 +57,8 @@ func newDatabase() *dbIO.DBIO {
 	if text == "y" || text == "yes" {
 		db = dbIO.CreateDatabase(c.Host, c.Database, *user)
 		db.NewTables(c.Tables)
+		// Remove types from columns map
+		db.GetTableColumns()
 	} else {
 		fmt.Println("\tExiting.")
 		os.Exit(0)

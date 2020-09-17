@@ -87,10 +87,10 @@ func (u *uploader) uploadTable(table string, list [][]string) {
 	if l > 0 {
 		den := u.getDenominator(list)
 		// Upload in chunks
-		var end int
 		idx := l / den
 		ind := 0
 		for i := 0; i < den; i++ {
+			var end int
 			if ind+idx > l {
 				// Get last less than idx rows
 				end = l
@@ -98,7 +98,6 @@ func (u *uploader) uploadTable(table string, list [][]string) {
 				end = ind + idx
 			}
 			vals, ln := dbIO.FormatSlice(list[ind:end])
-			fmt.Println(vals[:500])
 			u.db.UpdateDB(table, vals, ln)
 			ind = ind + idx
 		}
@@ -110,12 +109,12 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 	defer wg.Done()
 	u.hier.FillTaxonomy(t)
 	if t.Nas == 0 {
+		mut.Lock()
 		id := strconv.Itoa(u.tid)
 		row := t.Slice(id, db)
 		u.res = append(u.res, row)
 		u.tid++
 		// Store found names
-		mut.Lock()
 		if v, ex := u.common[t.ID]; ex {
 			for _, i := range v {
 				// Append common names with id and store to avoid duplicates
@@ -197,14 +196,14 @@ func (u *uploader) fillTaxonomies(db string) {
 func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
 	u := newUploader(db, proc)
-	/*if iotools.Exists(u.gbif) {
-		u.loadGBIF()
-		u.clear()
-	}*/
 	if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
 		u.clear()
 	}
+	/*if iotools.Exists(u.gbif) {
+		u.loadGBIF()
+		u.clear()
+	}*/
 	//u.loadITIS()
 	//os.Remove(u.dir)
 }

@@ -31,14 +31,16 @@ func (u *uploader) loadGBIF() {
 				var sp string
 				t := NewTaxonomy()
 				sp, t.Source = u.splitName(i[18])
-				t.SetLevel("species", sp)
-				t.ID = i[0]
-				for idx, id := range i[10:16] {
-					if id != `\N` {
-						t.SetLevel(t.levels[idx], id)
+				if _, ex := u.names[sp]; !ex {
+					t.SetLevel("species", sp)
+					t.ID = i[0]
+					for idx, id := range i[10:16] {
+						if id != `\N` {
+							t.SetLevel(t.levels[idx], id)
+						}
 					}
+					u.taxa = append(u.taxa, t)
 				}
-				u.taxa = append(u.taxa, t)
 			} else {
 				name := i[18]
 				if strings.Contains(name, " ") {
