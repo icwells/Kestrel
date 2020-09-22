@@ -23,7 +23,6 @@ type uploader struct {
 	gbif        string
 	hier        *Hierarchy
 	ids         map[string]string
-	itis        string
 	names       map[string]string
 	ncbi        map[string]string
 	proc        int
@@ -42,7 +41,6 @@ func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	u.gbif = path.Join(u.dir, "backbone-current-simple.txt.gz")
 	u.hier = emptyHierarchy()
 	u.ids = make(map[string]string)
-	u.itis = "ITIS"
 	u.names = make(map[string]string)
 	u.proc = proc
 	u.tid = 1
@@ -165,7 +163,7 @@ func (u *uploader) fillTaxonomies(db string) {
 
 func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
-	u := newUploader(db, proc)
+	/*u := newUploader(db, proc)
 	if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
 		u.clear()
@@ -173,7 +171,7 @@ func UploadDatabases(db *dbIO.DBIO, proc int) {
 	if iotools.Exists(u.gbif) {
 		u.loadGBIF()
 		u.clear()
-	}
-	//u.loadITIS()
+	}*/
+	u.loadITIS()
 	//os.Remove(u.dir)
 }

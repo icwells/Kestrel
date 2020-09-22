@@ -55,11 +55,6 @@ func (u *uploader) loadGBIF() {
 	u.db.UploadSlice("Taxonomy", u.res)
 }
 
-/*func (u *uploader) loadITIS() {
-	// Uploads ITIS table and formats data into sql database
-	fmt.Println("\n\tReading ITIS taxonomies...")
-}*/
-
 func (u *uploader) YieldNCBI(infile string) <-chan []string {
 	ch := make(chan []string)
 	d := "|"
