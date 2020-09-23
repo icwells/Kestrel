@@ -79,6 +79,7 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 			id = strconv.Itoa(u.tid)
 			row := t.Slice(id, db)
 			u.res = append(u.res, row)
+			u.names[t.Species] = id
 			u.tid++
 		}
 		if v, ex := u.common[t.ID]; ex {
@@ -90,7 +91,6 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 				}
 			}
 		}
-		u.names[t.Species] = id
 		mut.Unlock()
 	}
 }
@@ -98,27 +98,30 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy) {
 	// Replaces rank ids with names
 	defer wg.Done()
-	if v, ex := u.ids[t.Kingdom]; ex {
-		if strings.ToLower(v) == "metazoa" {
-			v = "Animalia"
+	if _, err := strconv.Atoi(t.Kingdom); err == nil {
+		// Skip itis kingdoms
+		if v, ex := u.ids[t.Kingdom]; ex {
+			if strings.ToLower(v) == "metazoa" {
+				v = "Animalia"
+			}
+			t.Kingdom = v
 		}
-		t.Kingdom = v
-		if v, ex = u.ids[t.Phylum]; ex {
-			t.Phylum = v
-			if v, ex = u.ids[t.Class]; ex {
-				t.Class = v
-				if v, ex = u.ids[t.Order]; ex {
-					t.Order = v
-					if v, ex = u.ids[t.Family]; ex {
-						t.Family = v
-						if v, ex = u.ids[t.Genus]; ex {
-							t.Genus = v
-							mut.Lock()
-							u.hier.AddTaxonomy(t)
-							u.count++
-							mut.Unlock()
-							t.Found = true
-						}
+	}
+	if v, ex := u.ids[t.Phylum]; ex {
+		t.Phylum = v
+		if v, ex = u.ids[t.Class]; ex {
+			t.Class = v
+			if v, ex = u.ids[t.Order]; ex {
+				t.Order = v
+				if v, ex = u.ids[t.Family]; ex {
+					t.Family = v
+					if v, ex = u.ids[t.Genus]; ex {
+						t.Genus = v
+						mut.Lock()
+						u.hier.AddTaxonomy(t)
+						u.count++
+						mut.Unlock()
+						t.Found = true
 					}
 				}
 			}
@@ -163,15 +166,15 @@ func (u *uploader) fillTaxonomies(db string) {
 
 func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
-	/*u := newUploader(db, proc)
+	u := newUploader(db, proc)
 	if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
 		u.clear()
 	}
-	if iotools.Exists(u.gbif) {
+	u.loadITIS()
+	/*if iotools.Exists(u.gbif) {
 		u.loadGBIF()
 		u.clear()
 	}*/
-	u.loadITIS()
 	//os.Remove(u.dir)
 }
