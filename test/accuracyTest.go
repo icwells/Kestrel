@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/icwells/go-tools/dataframe"
 	"github.com/icwells/go-tools/iotools"
@@ -21,9 +22,10 @@ var (
 	infile   = "../utils/corpus.csv.gz"
 	outfile  = "searchResults.csv"
 	col      = 0
-	nocorpus = true
+	nocorpus = false
+	password = flag.String("password", "", "MySQL password.")
 	proc     = 50
-	user     = ""
+	user     = flag.String("user", "", "MySQL username.")
 )
 
 func formatPercent(a, b int) string {
@@ -138,6 +140,7 @@ func setExpected() *dataframe.Dataframe {
 
 func main() {
 	start := time.Now()
+	flag.Parse()
 	db := kestrelutils.ConnectToDatabase(user, false)
 	fmt.Println("\n\tExtracting search terms...")
 	searchterms := terms.ExtractSearchTerms(infile, outfile, col)

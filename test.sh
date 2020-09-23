@@ -4,6 +4,7 @@
 # Performs black box tests on kestrel output
 #	Requires:	Pytest
 ##############################################################################
+ARGS=""
 WD=$(pwd)
 SRC="$WD/src"
 TEST="$WD/test"
@@ -18,6 +19,15 @@ SEARCHTAXA="$SRC/searchtaxa/*.go"
 TAXONOMY="$SRC/taxonomy/*.go"
 TERMS="$SRC/terms/*.go"
 
+getUser () {
+	# Reads mysql user name and password from command line
+	read -p "Enter MySQL username: " USER
+	echo -n "Enter MySQL password: "
+	read -s PW
+	echo ""
+	ARGS="--args --user=$USER --password=$PW"
+}
+
 whiteBoxTests () {
 	echo ""
 	echo "Running white box tests..."
@@ -31,7 +41,7 @@ testSearch () {
 	cleanup
 	go run src/main.go search -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	cd $TEST
-	go test blackBox_test.go --run TestSearch
+	go test blackBox_test.go --run TestSearch $ARGS
 	cleanup
 }
 
@@ -39,7 +49,7 @@ fullSearch () {
 	# Runs large scale black box tests
 	cd $TEST
 	cleanup
-	go run accuracyTest.go
+	go run accuracyTest.go $ARGS
 }
 
 cleanup () {
