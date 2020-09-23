@@ -73,10 +73,10 @@ func newSearcher(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Te
 	s.missed = path.Join(dir, "KestrelMissed.csv")
 	s.keys = make(map[string]string)
 	s.done = simpleset.NewStringSet()
-	s.taxa, s.common = taxonomy.GetCorpus()
 	s.hier = taxonomy.NewHierarchy(s.taxa)
 	s.terms = searchterms
 	s.urls = newAPIs()
+	s.getCorpus()
 	if test == false {
 		s.service = newService()
 		s.apiKeys()
@@ -86,14 +86,37 @@ func newSearcher(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Te
 	return s
 }
 
-func (s *searcher) setCorpusNames() {
-	// Stores corpus names for fuzzy matching
+func (s *searcher) getCorpus() {
+	// Stores common name and taxonomy corpus
+	common := make(map[string][]string)
+	s.common = make(map[string]string)
 	set := simpleset.NewStringSet()
-	for k := range s.common {
-		set.Add(k)
+	s.taxa = make(map[string]*taxonomy.Taxonomy)
+	for _, i := range s.db.GetTable("Common") {
+		if _, ex := common[i[0]]; !ex {
+			common[i[0]] = []string{}
+		}
+		common[i[0]] = append(common[i[0]], i[1])
 	}
-	for k := range s.taxa {
-		set.Add(k)
+	for _, i := range s.db.GetTable("Taxonomy") {
+		id := i[0]
+		t := taxonomy.NewTaxonomy()
+		t.Kingdom = i[1]
+		t.Phylum = i[2]
+		t.Class = i[3]
+		t.Order = i[4]
+		t.Family = i[5]
+		t.Genus = i[6]
+		t.Species = i[7]
+		t.Source = fmt.Sprintf("%s: %s", i[9], i[8])
+		s.taxa[t.Species] = t
+		set.Add(t.Species)
+		if v, ex := common[id]; ex {
+			for _, name := range v {
+				s.common[name] = t.Species
+				set.Add(name)
+			}
+		}
 	}
 	s.names = set.ToStringSlice()
 }
