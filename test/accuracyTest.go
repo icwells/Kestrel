@@ -141,7 +141,7 @@ func setExpected() *dataframe.Dataframe {
 func main() {
 	start := time.Now()
 	flag.Parse()
-	db := kestrelutils.ConnectToDatabase(user, false)
+	db := kestrelutils.ConnectToDatabase(*user, *password, false)
 	fmt.Println("\n\tExtracting search terms...")
 	searchterms := terms.ExtractSearchTerms(infile, outfile, col)
 	fmt.Printf("\tCurrent run time: %v\n", time.Since(start))

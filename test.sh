@@ -4,6 +4,8 @@
 # Performs black box tests on kestrel output
 #	Requires:	Pytest
 ##############################################################################
+USER=""
+PW=""
 ARGS=""
 WD=$(pwd)
 SRC="$WD/src"
@@ -38,8 +40,9 @@ whiteBoxTests () {
 
 testSearch () {
 	# Run search and comapre output
+	getUser
 	cleanup
-	go run src/main.go search -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	go run src/main.go search -u $USER --password $PW -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	cd $TEST
 	go test blackBox_test.go --run TestSearch $ARGS
 	cleanup
@@ -47,6 +50,7 @@ testSearch () {
 
 fullSearch () {
 	# Runs large scale black box tests
+	getUser
 	cd $TEST
 	cleanup
 	go run accuracyTest.go $ARGS

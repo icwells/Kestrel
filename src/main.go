@@ -30,6 +30,7 @@ var (
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0; use -1 for a single column file).").Default("-1").Short('c').Int()
 	nocorpus = search.Flag("nocorpus", "Perform web search without searching SQL corpus.").Default("false").Bool()
+	password = search.Flag("password", "MySQL password (for testing; will prompt for password by default).").String()
 
 	/*check    = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
 	taxafile = check.Flag("taxa", "Path to currated taxonomy file.").Default("nil").Short('t').String()*/
@@ -78,7 +79,7 @@ func main() {
 		fmt.Println("\n\tUploading taxonomies to MySQL database...")
 		taxonomy.UploadDatabases(db, *proc)
 	case search.FullCommand():
-		db = kestrelutils.ConnectToDatabase(*user, false)
+		db = kestrelutils.ConnectToDatabase(*user, *password, false)
 		fmt.Println("\n\tExtracting search terms...")
 		start = db.Starttime
 		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col)
