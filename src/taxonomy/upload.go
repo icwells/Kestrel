@@ -20,7 +20,6 @@ type uploader struct {
 	count       int
 	db          *dbIO.DBIO
 	dir         string
-	gbif        string
 	hier        *Hierarchy
 	ids         map[string]string
 	names       map[string]string
@@ -38,7 +37,6 @@ func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	u.common = make(map[string][]string)
 	u.db = db
 	u.dir = path.Join(kestrelutils.GetLocation(), "databases")
-	u.gbif = path.Join(u.dir, "backbone-current-simple.txt.gz")
 	u.hier = emptyHierarchy()
 	u.ids = make(map[string]string)
 	u.names = make(map[string]string)
@@ -172,9 +170,5 @@ func UploadDatabases(db *dbIO.DBIO, proc int) {
 		u.clear()
 	}
 	u.loadITIS()
-	/*if iotools.Exists(u.gbif) {
-		u.loadGBIF()
-		u.clear()
-	}*/
 	//os.Remove(u.dir)
 }

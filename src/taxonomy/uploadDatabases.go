@@ -19,42 +19,6 @@ func (u *uploader) splitName(n string) (string, string) {
 	return n, strings.Replace(c, ",", "", -1)
 }
 
-func (u *uploader) loadGBIF() {
-	// Uploads GBIF table and formats data into sql database
-	fmt.Println("\n\tReading GBIF taxonomies...")
-	reader, _ := iotools.YieldFile(u.gbif, false)
-	for i := range reader {
-		if strings.ToUpper(i[4]) == "ACCEPTED" {
-			rank := strings.ToLower(i[5])
-			if rank == "species" {
-				sp, source := u.splitName(i[18])
-				if _, ex := u.names[sp]; !ex {
-					// Store species with ids for ranks
-					t := NewTaxonomy()
-					t.Source = source
-					t.SetLevel("species", sp)
-					t.ID = i[0]
-					for idx, id := range i[10:16] {
-						if id != `\N` {
-							t.SetLevel(t.levels[idx], id)
-						}
-					}
-					u.taxa = append(u.taxa, t)
-				}
-			} else {
-				name := i[18]
-				if strings.Contains(name, " ") {
-					name = strings.Split(name, " ")[0]
-				}
-				u.ids[i[0]] = name
-			}
-		}
-	}
-	u.fillTaxonomies("GBIF")
-	fmt.Println("\tUploading GBIF data...")
-	u.db.UploadSlice("Taxonomy", u.res)
-}
-
 func (u *uploader) YieldNCBI(infile string) <-chan []string {
 	ch := make(chan []string)
 	d := "|"

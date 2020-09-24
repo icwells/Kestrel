@@ -108,7 +108,11 @@ func (s *searcher) getCorpus() {
 		t.Family = i[5]
 		t.Genus = i[6]
 		t.Species = i[7]
-		t.Source = fmt.Sprintf("%s: %s", i[9], i[8])
+		t.Source = i[9]
+		if i[8] != "" {
+			// Add citation if available
+			t.Source += ": " + i[8]
+		}
 		s.taxa[t.Species] = t
 		set.Add(t.Species)
 		if v, ex := common[id]; ex {

@@ -17,18 +17,16 @@ getUser () {
 	echo -n "Enter MySQL password: "
 	read -s PW
 	echo ""
-	ARGS="--args --user=$USER --password=$PW"
 }
 
 downloadDatabases () {
-	GBIF="https://hosted-datasets.gbif.org/datasets/backbone/backbone-current-simple.txt.gz"
 	ITIS="https://www.itis.gov/downloads/itisMySQLBulk.zip"
 	NCBI="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
 	getUser
 	mkdir databases
 	cd databases/
 	echo "Downloading databases..."
-	for I in $GBIF $ITIS $NCBI; do
+	for I in $ITIS $NCBI; do
 		wget $I
 	done
 	echo "Extracting files..."

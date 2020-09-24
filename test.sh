@@ -6,7 +6,6 @@
 ##############################################################################
 USER=""
 PW=""
-ARGS=""
 WD=$(pwd)
 SRC="$WD/src"
 TEST="$WD/test"
@@ -27,7 +26,6 @@ getUser () {
 	echo -n "Enter MySQL password: "
 	read -s PW
 	echo ""
-	ARGS="--args --user=$USER --password=$PW"
 }
 
 whiteBoxTests () {
@@ -42,10 +40,10 @@ testSearch () {
 	# Run search and comapre output
 	getUser
 	cleanup
-	go run src/main.go search -u $USER --password $PW -i $EXTRACTINPUT -o $SEARCHOUTPUT
+	go run src/main.go search -u $USER --password $PW -c 1 -i $EXTRACTINPUT -o $SEARCHOUTPUT
 	cd $TEST
-	go test blackBox_test.go --run TestSearch $ARGS
-	cleanup
+	go test blackBox_test.go --run TestSearch
+	#cleanup
 }
 
 fullSearch () {
@@ -53,7 +51,7 @@ fullSearch () {
 	getUser
 	cd $TEST
 	cleanup
-	go run accuracyTest.go $ARGS
+	go run accuracyTest.go --user $USER --password $PW
 }
 
 cleanup () {
