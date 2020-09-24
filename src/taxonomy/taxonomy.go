@@ -4,6 +4,7 @@ package taxonomy
 
 import (
 	"github.com/icwells/go-tools/strarray"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -90,6 +91,29 @@ func (t *Taxonomy) SpeciesCaps(name string) string {
 	} else {
 		return strarray.TitleCase(name)
 	}
+}
+
+func (t *Taxonomy) clearids() {
+	// Replaces id numbers with NA
+	if _, err := strconv.Atoi(t.Genus); err == nil {
+		t.Genus = "NA"
+	}
+	if _, err := strconv.Atoi(t.Family); err == nil {
+		t.Family = "NA"
+	}
+	if _, err := strconv.Atoi(t.Order); err == nil {
+		t.Order = "NA"
+	}
+	if _, err := strconv.Atoi(t.Class); err == nil {
+		t.Class = "NA"
+	}
+	if _, err := strconv.Atoi(t.Phylum); err == nil {
+		t.Phylum = "NA"
+	}
+	if _, err := strconv.Atoi(t.Kingdom); err == nil {
+		t.Kingdom = "NA"
+	}
+	t.CountNAs()
 }
 
 func (t *Taxonomy) CountNAs() {

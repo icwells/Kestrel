@@ -68,6 +68,7 @@ func (u *uploader) clear() {
 func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy, db string) {
 	// Fills in missing fields and stores passing taxonomy
 	defer wg.Done()
+	t.clearids()
 	u.hier.FillTaxonomy(t)
 	if t.Nas == 0 {
 		mut.Lock()
@@ -146,6 +147,11 @@ func (u *uploader) fillTaxonomies(db string) {
 	}
 	fmt.Println()
 	wg.Wait()
+	count = 0
+	for _, i := range u.common {
+		count += len(i)
+	}
+	fmt.Println(count)
 	count = 0
 	fmt.Println("\tFormatting taxonomies...")
 	for _, i := range u.taxa {

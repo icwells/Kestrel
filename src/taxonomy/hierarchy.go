@@ -51,32 +51,6 @@ func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
 	return h
 }
 
-/*func (h *Hierarchy) Slice(species string) ([]slice, bool) {
-	// Returns string slice of taxonomy for given species
-	var pass bool
-	ret := []string{species}
-	if genus, ex := h.species[species]; ex {
-		ret = append([]string{genus}, ret...)
-		if family, ex := h.genus[genus]; ex {
-			ret = append([]string{family}, ret...)
-			if order, ex := h.family[family]; ex {
-				ret = append([]string{order}, ret...)
-				if class, ex := h.order[order]; ex {
-					ret = append([]string{class}, ret...)
-					if phylum, ex := h.class[class]; ex {
-						ret = append([]string{pyhlum}, ret...)
-						if kingdom, ex := h.phylum[phylum]; ex {
-							ret = append([]string{kingdom}, ret...)
-							ret = true
-						}
-					}
-				}
-			}
-		}
-	}
-	return ret, pass
-}*/
-
 func (h *Hierarchy) FillTaxonomy(t *Taxonomy) {
 	// Replaces NAs with value from hierarchy
 	if strings.ToUpper(t.Genus) == "NA" {
