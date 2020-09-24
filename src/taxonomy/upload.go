@@ -71,6 +71,7 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 	u.hier.FillTaxonomy(t)
 	if t.Nas == 0 {
 		mut.Lock()
+		// Attempt to get existing id
 		id, ex := u.names[t.Species]
 		if !ex {
 			// Upload unique taxonomies
