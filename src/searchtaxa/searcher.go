@@ -57,7 +57,7 @@ type searcher struct {
 	missed  string
 	names   []string
 	outfile string
-	service service
+	service *service
 	taxa    map[string]*taxonomy.Taxonomy
 	terms   map[string]*terms.Term
 	urls    *apis

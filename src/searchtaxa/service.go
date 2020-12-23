@@ -6,19 +6,31 @@ import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 	"os"
 	"path"
-	"path/filepath"
-	"strconv"
-	"strings"
+	//"path/filepath"
+	//"strconv"
+	//"strings"
 )
 
 type service struct {
-	service *selenium.Service
+	browser string
 	err     error
+	ip      string
 	log     *os.File
 	port    int
-	browser string
+	service *selenium.Service
+}
+
+func newService() *service {
+	// Initializes new struct
+	s := new(service)
+	s.browser = "chrome"
+	s.ip = "http://127.0.0.1"
+	s.port = 8090
+	s.startService()
+	return s
 }
 
 func (s *service) getBrowser() (selenium.WebDriver, error) {
@@ -26,82 +38,31 @@ func (s *service) getBrowser() (selenium.WebDriver, error) {
 	caps := selenium.Capabilities{"browserName": s.browser,
 		"pageLoadStrategy": "normal",
 	}
-	return selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", s.port))
+	opt := new(chrome.Capabilities)
+	opt.W3C = false
+	caps.AddChrome(*opt)
+	return selenium.NewRemote(caps, fmt.Sprintf("%s:%d/wd/hub", s.ip, s.port))
 }
 
 func (s *service) startService() {
 	// Initialzes new selenium service
-	s.log = iotools.CreateFile("seleniumLog.txt")
-	gopath := iotools.GetGOPATH()
-	dir := path.Join(gopath, "src/github.com/tebeka/selenium/vendor")
-	seleniumpath := getSeleniumPath(dir)
+	var err error
+	dir := path.Join(iotools.GetGOPATH(), "src/github.com/tebeka/selenium/vendor")
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),
 		selenium.Output(s.log),
-		selenium.ChromeDriver(getDriverPath(path.Join(dir, "chromedriver-*"))),
+		selenium.ChromeDriver(path.Join(dir, "chromedriver")),
 	}
-	s.service, s.err = selenium.NewSeleniumService(seleniumpath, s.port, opts...)
+	s.service, err = selenium.NewSeleniumService(path.Join(dir, "selenium-server.jar"), s.port, opts...)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (s *service) stop() {
 	// Closes service
 	s.service.Stop()
+	// Flush log before closing
+	s.log.Sync()
 	s.log.Close()
-}
-
-func newService() service {
-	// Initializes new struct
-	var s service
-	s.port = 8090
-	s.browser = "chrome"
-	s.startService()
-	return s
-}
-
-//----------------------------------------------------------------------------
-
-func getDriverPath(dir string) string {
-	// Returns path to driver
-	var ret string
-	p, err := filepath.Glob(dir)
-	if err == nil {
-		for _, i := range p {
-			if strings.Contains(i, ".zip") == false && strings.Contains(i, ".tar") == false {
-				if iotools.Exists(i) == true {
-					ret = i
-					break
-				}
-			}
-		}
-	}
-	return ret
-}
-
-func getSeleniumPath(dir string) string {
-	// Returns path to selenium jar
-	var ret string
-	p, err := filepath.Glob(path.Join(dir, "selenium-server-standalone-*"))
-	if err == nil {
-		if len(p) > 1 {
-			// Get highest version number
-			ver := 0.0
-			for _, i := range p {
-				n := i[strings.LastIndex(i, "-")+1 : strings.LastIndex(i, ".")]
-				if strings.Count(n, ".") > 1 {
-					n = n[:strings.LastIndex(n, ".")]
-				}
-				v, er := strconv.ParseFloat(n, 64)
-				if er == nil && v > ver {
-					ver = v
-					ret = i
-				}
-			}
-		} else if len(p) == 1 {
-			ret = p[0]
-		}
-		if iotools.Exists(ret) == false {
-			ret = ""
-		}
-	}
-	return ret
 }
