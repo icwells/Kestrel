@@ -26,6 +26,7 @@ type uploader struct {
 	ncbi        map[string]string
 	proc        int
 	res         [][]string
+	ranks       []string
 	taxa        []*Taxonomy
 	tid         int
 }
@@ -41,6 +42,7 @@ func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	u.ids = make(map[string]string)
 	u.names = make(map[string]string)
 	u.proc = proc
+	u.ranks = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
 	u.tid = 1
 	u.setNCBIfiles()
 	return u

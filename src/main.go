@@ -32,9 +32,6 @@ var (
 	nocorpus = search.Flag("nocorpus", "Perform web search without searching SQL corpus.").Default("false").Bool()
 	password = search.Flag("password", "MySQL password (for testing; will prompt for password by default).").String()
 
-	/*check    = kingpin.Command("check", "Identifies search results with matching search terms and scientific names to streamline manual curration. Give output file stem with -o.")
-	taxafile = check.Flag("taxa", "Path to currated taxonomy file.").Default("nil").Short('t').String()*/
-
 	merge   = kingpin.Command("merge", "Merges search results with source file.")
 	prepend = merge.Flag("prepend", "Prepend taxonomies to existing rows (appends by default).").Default("false").Bool()
 	resfile = merge.Flag("result", "Path to Kestrel search result file.").Required().Short('r').String()
