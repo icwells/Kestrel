@@ -30,6 +30,29 @@ func (u *uploader) itisRanks() map[string]map[string]string {
 	return ranks
 }
 
+func (u *uploader) setLevelIDs(parents map[string]string) {
+	// Stores ids for taxonomic levels
+	for _, i := range u.taxa {
+		if v, ex := parents[i.Genus]; ex {
+			i.Family = v
+			if v, ex := parents[i.Family]; ex {
+				i.Order = v
+				if v, ex := parents[i.Order]; ex {
+					i.Class = v
+					if v, ex := parents[i.Class]; ex {
+						i.Phylum = v
+						if i.Kingdom == "NA" {
+							if v, ex := parents[i.Phylum]; ex {
+								i.Kingdom = v
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func (u *uploader) setids() {
 	// Loads itis ids
 	parents := make(map[string]string)

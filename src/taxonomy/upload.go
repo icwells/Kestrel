@@ -5,7 +5,7 @@ package taxonomy
 import (
 	"fmt"
 	"github.com/icwells/dbIO"
-	"github.com/icwells/go-tools/iotools"
+	//"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"path"
 	"strconv"
@@ -26,7 +26,6 @@ type uploader struct {
 	ncbi        map[string]string
 	proc        int
 	res         [][]string
-	ranks       []string
 	taxa        []*Taxonomy
 	tid         int
 }
@@ -42,7 +41,6 @@ func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	u.ids = make(map[string]string)
 	u.names = make(map[string]string)
 	u.proc = proc
-	u.ranks = []string{"kingdom", "phylum", "class", "order", "family", "genus", "species"}
 	u.tid = 1
 	u.setNCBIfiles()
 	return u
@@ -153,7 +151,6 @@ func (u *uploader) fillTaxonomies(db string) {
 	for _, i := range u.common {
 		count += len(i)
 	}
-	fmt.Println(count)
 	count = 0
 	fmt.Println("\tFormatting taxonomies...")
 	for _, i := range u.taxa {
@@ -174,10 +171,10 @@ func (u *uploader) fillTaxonomies(db string) {
 func UploadDatabases(db *dbIO.DBIO, proc int) {
 	// Formats and uploads taxonomy databases to MySQL
 	u := newUploader(db, proc)
-	if iotools.Exists(u.ncbi["nodes"]) {
+	/*if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
 		u.clear()
-	}
+	}*/
 	u.loadITIS()
 	//os.Remove(u.dir)
 }

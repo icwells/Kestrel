@@ -72,32 +72,52 @@ func (u *uploader) setNCBInames() {
 	}
 }
 
-func (u *uploader) setLevelIDs(parents map[string]string) {
+func (u *uploader) setNCBIIDs(parents map[string][]string) {
 	// Stores ids for taxonomic levels
+	fmt.Println("\tSorting NCBI IDs...")
 	for _, i := range u.taxa {
-		if v, ex := parents[i.Genus]; ex {
-			i.Family = v
-			if v, ex := parents[i.Family]; ex {
-				i.Order = v
-				if v, ex := parents[i.Order]; ex {
-					i.Class = v
-					if v, ex := parents[i.Class]; ex {
-						i.Phylum = v
-						if i.Kingdom == "NA" {
-							if v, ex := parents[i.Phylum]; ex {
-								i.Kingdom = v
-							}
-						}
-					}
+		id := i.Genus
+		v, ex := parents[i.Genus]
+		for ex {
+			id = v[0]
+			if ex {
+				i.SetLevel(v[1], id)
+				if v[1] == "kingdom" {
+					break
 				}
+			}
+			v, ex = parents[id]
+			if v[0] == id {
+				break
 			}
 		}
 	}
 }
 
+func (u *uploader) printNCBI(parents map[string][]string) {
+	// Prints complete ncbi taxonomies to file
+	fmt.Println("\tSorting NCBI records...")
+	var res [][]string
+	for _, i := range u.taxa {
+		row  := []string{u.ids[i.Species]}
+		id := i.Genus
+		v, ex := parents[i.Genus]
+		for ex {
+			id = v[0]
+			row = append(row, u.ids[id])
+			v, ex = parents[id]
+			if v[0] == id {
+				break
+			}
+		}
+		res = append(res, row)
+	}
+	iotools.WriteToCSV("/home/shawn/Documents/tmp/test.csv", "Species...", res)
+}
+
 func (u *uploader) loadNCBI() {
 	// Uploads NCBI table and formats data into sql database
-	parents := make(map[string]string)
+	parents := make(map[string][]string)
 	fmt.Println("\n\tReading NCBI taxonomies...")
 	u.setNCBIcitations()
 	u.setNCBInames()
@@ -116,12 +136,13 @@ func (u *uploader) loadNCBI() {
 				u.taxa = append(u.taxa, t)
 			}
 		} else {
-			parents[id] = i[1]
+			parents[id] = []string{i[1], i[2]}
 		}
 	}
-	u.setLevelIDs(parents)
+	u.printNCBI(parents)
+	/*u.setNCBIIDs(parents)
 	u.fillTaxonomies("NCBI")
 	fmt.Println("\tUploading NCBI data...")
 	u.db.UploadSlice("Taxonomy", u.res)
-	u.db.UploadSlice("Common", u.commontable)
+	u.db.UploadSlice("Common", u.commontable)*/
 }

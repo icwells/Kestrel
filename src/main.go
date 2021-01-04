@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/icwells/dbIO"
+	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/searchtaxa"
 	"github.com/icwells/kestrel/src/taxonomy"
@@ -26,6 +27,8 @@ var (
 	ver = kingpin.Command("version", "Prints version info and exits.")
 
 	upload = kingpin.Command("upload", "Formats and uploads taxonomy databases to MySQL database for searching. Databases must first be downloaded into the databases directory using './install.sh dowload'.")
+
+	dump = kingpin.Command("dump", "Saves MySQL tables (if present) to current directory as csv files.")
 
 	search   = kingpin.Command("search", "Searches for taxonomy matches to input names.")
 	col      = search.Flag("column", "Column containing species names (integer starting from 0; use -1 for a single column file).").Default("-1").Short('c').Int()
@@ -64,6 +67,14 @@ func newDatabase() *dbIO.DBIO {
 	return db
 }
 
+func dumpTables(db *dbIO.DBIO) {
+	// Saves taxonomy and common name tables to current directory
+	for k, v := range db.Columns {
+		fmt.Printf("\tSaving %s...\n", k)
+		iotools.WriteToCSV(fmt.Sprintf("%s.csv", k), v, db.GetTable(k))
+	}
+}
+
 func main() {
 	var start time.Time
 	var db *dbIO.DBIO
@@ -75,6 +86,11 @@ func main() {
 		start = db.Starttime
 		fmt.Println("\n\tUploading taxonomies to MySQL database...")
 		taxonomy.UploadDatabases(db, *proc)
+	case dump.FullCommand():
+		db = kestrelutils.ConnectToDatabase(*user, *password, false)
+		start = db.Starttime
+		fmt.Println("\n\tSaving taxonomy tables to current directory...")
+		dumpTables(db)
 	case search.FullCommand():
 		db = kestrelutils.ConnectToDatabase(*user, *password, false)
 		fmt.Println("\n\tExtracting search terms...")
