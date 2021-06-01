@@ -4,6 +4,7 @@ package taxonomy
 
 import (
 	"github.com/icwells/go-tools/strarray"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"strconv"
 	"strings"
 	"unicode"
@@ -183,14 +184,15 @@ func (t *Taxonomy) CheckTaxa() {
 		t.Order = t.checkLevel(t.Order, false)
 		t.Family = t.checkLevel(t.Family, false)
 		t.Genus = t.checkLevel(t.Genus, false)
-		t.Species = t.checkLevel(t.Species, true)
+		t.Species = kestrelutils.CorrectSpaces(t.checkLevel(t.Species, true))
 	}
 }
 
 func (t *Taxonomy) SetLevel(key, value string) {
 	// Sets level denoted by key with value
 	value = strings.TrimSpace(value)
-	if value != "" && !strings.Contains(value, "[") && strings.ToUpper(value) != "NA" {
+	// Ensure value is at least 3 characters (longer than "NA")
+	if len(value) > 2 && !strings.Contains(value, "[") {
 		key = strings.ToLower(key)
 		switch key {
 		case "kingdom":
@@ -206,7 +208,7 @@ func (t *Taxonomy) SetLevel(key, value string) {
 		case "genus":
 			t.Genus = value
 		case "species":
-			t.Species = value
+			t.Species = kestrelutils.CorrectSpaces(value)
 		}
 	}
 }

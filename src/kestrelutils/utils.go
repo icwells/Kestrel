@@ -8,6 +8,7 @@ import (
 	"github.com/icwells/go-tools/iotools"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -15,7 +16,13 @@ import (
 var (
 	APOSTROPHE = "%27"
 	SPACE = "%20"
+	SPACES = regexp.MustCompile(` +`)
 )
+
+func CorrectSpaces(s string) string {
+	// Removes redundant spaces between words
+	return SPACES.ReplaceAllString(s, " ")
+}
 
 func GetLocation() string {
 	// Returns path to git repo
