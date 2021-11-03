@@ -68,8 +68,9 @@ func (s *searcher) seleniumSearch(k string) string {
 	log.SetOutput(s.service.log)
 	browser, e := s.service.getBrowser()
 	if e == nil {
+		defer browser.Close()
 		defer browser.Quit()
-		er := browser.Get("https://duckduckgo.com/")
+		er := browser.Get("https://google.com/")
 		if er == nil {
 			elem, err := browser.FindElement(selenium.ByName, "q")
 			if err == nil {
