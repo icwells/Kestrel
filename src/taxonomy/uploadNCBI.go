@@ -72,28 +72,6 @@ func (u *uploader) setNCBInames() {
 	}
 }
 
-func (u *uploader) setNCBIIDs(parents map[string][]string) {
-	// Stores ids for taxonomic levels
-	fmt.Println("\tSorting NCBI IDs...")
-	for _, i := range u.taxa {
-		id := i.Genus
-		v, ex := parents[i.Genus]
-		for ex {
-			id = v[0]
-			if ex {
-				i.SetLevel(v[1], id)
-				if v[1] == "kingdom" {
-					break
-				}
-			}
-			v, ex = parents[id]
-			if v[0] == id {
-				break
-			}
-		}
-	}
-}
-
 func (u *uploader) printNCBI(parents map[string][]string) {
 	// Prints complete ncbi taxonomies to file
 	fmt.Println("\tSorting NCBI records...")
@@ -140,7 +118,7 @@ func (u *uploader) loadNCBI() {
 		}
 	}
 	u.printNCBI(parents)
-	/*u.setNCBIIDs(parents)
+	/*u.setLevelIDs(parents)
 	u.fillTaxonomies("NCBI")
 	fmt.Println("\tUploading NCBI data...")
 	u.db.UploadSlice("Taxonomy", u.res)

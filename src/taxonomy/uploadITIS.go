@@ -30,24 +30,23 @@ func (u *uploader) itisRanks() map[string]map[string]string {
 	return ranks
 }
 
-func (u *uploader) setLevelIDs(parents map[string]string) {
+func (u *uploader) setLevelIDs(parents map[string][]string) {
 	// Stores ids for taxonomic levels
+	fmt.Println("\tSorting IDs...")
 	for _, i := range u.taxa {
-		if v, ex := parents[i.Genus]; ex {
-			i.Family = v
-			if v, ex := parents[i.Family]; ex {
-				i.Order = v
-				if v, ex := parents[i.Order]; ex {
-					i.Class = v
-					if v, ex := parents[i.Class]; ex {
-						i.Phylum = v
-						if i.Kingdom == "NA" {
-							if v, ex := parents[i.Phylum]; ex {
-								i.Kingdom = v
-							}
-						}
-					}
+		id := i.Genus
+		v, ex := parents[i.Genus]
+		for ex {
+			id = v[0]
+			if ex {
+				i.SetLevel(v[1], id)
+				if v[1] == "kingdom" {
+					break
 				}
+			}
+			v, ex = parents[id]
+			if v[0] == id {
+				break
 			}
 		}
 	}
@@ -55,22 +54,24 @@ func (u *uploader) setLevelIDs(parents map[string]string) {
 
 func (u *uploader) setids() {
 	// Loads itis ids
-	parents := make(map[string]string)
+	species := "species"
+	parents := make(map[string][]string)
 	kingdoms := u.itisKingdoms()
 	ranks := u.itisRanks()
 	for _, i := range u.db.GetRows("taxonomic_units", "name_usage", "valid", "tsn,parent_tsn,kingdom_id,rank_id,complete_name") {
 		id := i[0]
 		kid := i[2]
 		rid := i[3]
+		name := i[4]
 		if k, ex := ranks[kid]; ex {
 			if rank, e := k[rid]; e {
 				// Only store if rank can be identified
 				rank = strings.ToLower(rank)
-				if rank == "species" {
-					if _, ex := u.names[i[4]]; !ex {
+				if rank == species {
+					if _, ex := u.names[name]; !ex {
 						// Store species, and genus
 						t := NewTaxonomy()
-						t.SetLevel("species", i[4])
+						t.SetLevel(species, name)
 						t.Genus = i[1]
 						t.Kingdom = kingdoms[kid]
 						t.ID = id
@@ -80,8 +81,10 @@ func (u *uploader) setids() {
 						u.taxa = append(u.taxa, t)
 					}
 				} else {
-					parents[id] = i[1]
-					u.ids[id] = i[4]
+					if _, exists := parents[id]; !exists {
+						parents[id] = []string{i[1], rank}
+					}
+					u.ids[id] = name
 				}
 			}
 		}
@@ -98,12 +101,13 @@ func (u *uploader) setITIScitations() {
 
 func (u *uploader) setcommon(i []string) {
 	// Stores common names
-	if _, ex := u.names[i[0]]; !ex {
-		if _, ex := u.common[i[0]]; !ex {
-			u.common[i[0]] = []string{}
+	tsn := i[0]
+	if _, ex := u.names[tsn]; !ex {
+		if _, ex := u.common[tsn]; !ex {
+			u.common[tsn] = []string{}
 		}
-		u.common[i[0]] = append(u.common[i[0]], i[1])
 	}
+	u.common[tsn] = append(u.common[tsn], i[1])
 }
 
 func (u *uploader) getcommon() {
@@ -111,11 +115,10 @@ func (u *uploader) getcommon() {
 	table := "vernaculars"
 	column := "language"
 	columns := "tsn,vernacular_name"
-	for _, i := range u.db.GetRows(table, column, "English", columns) {
-		u.setcommon(i)
-	}
-	for _, i := range u.db.GetRows(table, column, "unspecified", columns) {
-		u.setcommon(i)
+	for _, language := range []string{"English", "unspecified"} {
+		for _, i := range u.db.GetRows(table, column, language, columns) {
+			u.setcommon(i)
+		}
 	}
 }
 
