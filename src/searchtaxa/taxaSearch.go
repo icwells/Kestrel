@@ -9,6 +9,7 @@ import (
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -197,28 +198,29 @@ func (s *searcher) searchDone() {
 		}
 	}
 	if completed > 0 {
-		fmt.Printf("\tFound %d terms in previous output.\n", completed)
+		s.logger.Printf("Found %d terms in previous output.\n", completed)
 	}
 }
 
-func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool) {
+func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Term, proc int, nocorpus bool, logger *log.Logger) {
 	// Manages API and selenium searches
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	count := 1
-	s := newSearcher(db, outfile, searchterms, nocorpus, false)
+	s := newSearcher(db, logger, outfile, searchterms, nocorpus, false)
 	if s.service.err == nil {
 		defer s.service.stop()
 	}
 	// Concurrently perform api search
-	fmt.Println("\n\tPerforming taxonomy search...")
+	fmt.Println()
+	s.logger.Println("Performing taxonomy search...")
 	s.searchDone()
 	if len(s.terms) > 0 {
-		fmt.Println("\tPerforming API search...")
+		s.logger.Println("Performing API search...")
 		for k := range s.terms {
 			wg.Add(1)
 			go s.searchTerm(&wg, &mut, k)
-			fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
+			s.logger.Printf("Dispatched %d of %d terms.\r", count, len(s.terms))
 			if count%10 == 0 {
 				// Pause after 10 to avoid swamping apis
 				time.Sleep(time.Second)
@@ -230,11 +232,12 @@ func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*ter
 			count++
 		}
 		// Wait for remainging processes
-		fmt.Println("\n\tWaiting for search results...")
+		s.logger.Println("Waiting for search results...")
 		wg.Wait()
 	}
-	fmt.Printf("\n\tFound matches for a total of %d queries.\n", s.matches)
-	fmt.Printf("\tCould not find matches for %d queries.\n", s.fails)
+	fmt.Println()
+	s.logger.Printf("Found matches for a total of %d queries.\n", s.matches)
+	s.logger.Printf("Could not find matches for %d queries.\n", s.fails)
 	if s.fails == 0 {
 		// Remove unused missed file
 		os.Remove(s.missed)

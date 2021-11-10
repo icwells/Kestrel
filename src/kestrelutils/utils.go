@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/icwells/dbIO"
 	"github.com/icwells/go-tools/iotools"
+	"log"
 	"os"
 	"path"
 	"regexp"
@@ -44,6 +45,11 @@ func GetAbsPath(f string) string {
 		os.Exit(1)
 	}
 	return f
+}
+
+func GetLogger() *log.Logger {
+	// Returns logger
+	return log.New(os.Stdout, "kestrel: ", log.Ldate|log.Ltime)
 }
 
 type Configuration struct {

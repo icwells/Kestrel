@@ -4,6 +4,7 @@ package searchtaxa
 
 import (
 	"github.com/icwells/dbIO"
+	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"strconv"
@@ -47,7 +48,7 @@ func getTestSearcher() searcher {
 		t.Term = i[1]
 		exp[i[1]] = t
 	}
-	s := newSearcher(db, "", exp, true, true)
+	s := newSearcher(db, kestrelutils.GetLogger(), "", exp, true, true)
 	return s
 }
 

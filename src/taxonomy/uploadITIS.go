@@ -32,7 +32,7 @@ func (u *uploader) itisRanks() map[string]map[string]string {
 
 func (u *uploader) setLevelIDs(parents map[string][]string) {
 	// Stores ids for taxonomic levels
-	fmt.Println("\tSorting IDs...")
+	u.logger.Println("Sorting IDs...")
 	for _, i := range u.taxa {
 		id := i.Genus
 		v, ex := parents[i.Genus]
@@ -124,20 +124,22 @@ func (u *uploader) getcommon() {
 
 func (u *uploader) loadITIS() {
 	// Uploads ITIS table and formats data into sql database
-	fmt.Println("\n\tReading ITIS taxonomies...")
+	fmt.Println()
+	u.logger.Println("Reading ITIS taxonomies...")
 	// Close upload connection
 	//itis, err := dbIO.Connect(u.db.Host, "ITIS", u.db.User, u.db.Password)
 	_, err := u.db.DB.Exec("USE ITIS;")
 	if err != nil {
-		fmt.Printf("\n\t[Error] Cannot connect to ITIS database: %v\n", err)
+		u.logger.Printf("[Error] Cannot connect to ITIS database: %v\n", err)
 		os.Exit(100)
 	}
 	u.getcommon()
+	u.setITIScitations()
 	u.setids()
 	u.fillTaxonomies("ITIS")
 	// Revert to taxonomy database
 	u.db.DB.Exec(fmt.Sprintf("USE %s;", u.db.Database))
-	fmt.Println("\tUploading NCBI data...")
+	u.logger.Println("Uploading NCBI data...")
 	u.db.UploadSlice("Taxonomy", u.res)
 	u.db.UploadSlice("Common", u.commontable)
 }

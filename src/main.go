@@ -12,6 +12,7 @@ import (
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -67,10 +68,10 @@ func newDatabase() *dbIO.DBIO {
 	return db
 }
 
-func dumpTables(db *dbIO.DBIO) {
+func dumpTables(db *dbIO.DBIO, logger *log.Logger) {
 	// Saves taxonomy and common name tables to current directory
 	for k, v := range db.Columns {
-		fmt.Printf("\tSaving %s...\n", k)
+		logger.Printf("Saving %s...\n", k)
 		iotools.WriteToCSV(fmt.Sprintf("%s.csv", k), v, db.GetTable(k))
 	}
 }
@@ -78,31 +79,32 @@ func dumpTables(db *dbIO.DBIO) {
 func main() {
 	var start time.Time
 	var db *dbIO.DBIO
+	logger := kestrelutils.GetLogger()
 	switch kingpin.Parse() {
 	case ver.FullCommand():
 		version()
 	case upload.FullCommand():
 		db = newDatabase()
 		start = db.Starttime
-		fmt.Println("\n\tUploading taxonomies to MySQL database...")
-		taxonomy.UploadDatabases(db, *proc)
+		logger.Println("Uploading taxonomies to MySQL database...")
+		taxonomy.UploadDatabases(db, *proc, logger)
 	case dump.FullCommand():
 		db = kestrelutils.ConnectToDatabase(*user, *password, false)
 		start = db.Starttime
-		fmt.Println("\n\tSaving taxonomy tables to current directory...")
-		dumpTables(db)
+		logger.Println("Saving taxonomy tables to current directory...")
+		dumpTables(db, logger)
 	case search.FullCommand():
 		db = kestrelutils.ConnectToDatabase(*user, *password, false)
-		fmt.Println("\n\tExtracting search terms...")
+		logger.Println("Extracting search terms...")
 		start = db.Starttime
-		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col)
-		fmt.Printf("\tCurrent run time: %v\n", time.Since(start))
-		fmt.Println("\n\tSearching for taxonomy matches...")
-		searchtaxa.SearchTaxonomies(db, *outfile, searchterms, *proc, *nocorpus)
+		searchterms := terms.ExtractSearchTerms(*infile, *outfile, *col, logger)
+		logger.Printf("Current run time: %v\n", time.Since(start))
+		logger.Println("Searching for taxonomy matches...")
+		searchtaxa.SearchTaxonomies(db, *outfile, searchterms, *proc, *nocorpus, logger)
 	case merge.FullCommand():
 		start = time.Now()
-		fmt.Println("\n\tMerging search results with source file...")
-		kestrelutils.MergeResults(*infile, *resfile, *outfile, *col, *prepend)
+		logger.Println("Merging search results with source file...")
+		kestrelutils.MergeResults(*infile, *resfile, *outfile, *col, *prepend, logger)
 	}
-	fmt.Printf("\tFinished. Run time: %v\n\n", time.Since(start))
+	logger.Printf("Finished. Run time: %v\n\n", time.Since(start))
 }

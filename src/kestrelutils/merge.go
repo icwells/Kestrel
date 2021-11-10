@@ -5,6 +5,7 @@ package kestrelutils
 import (
 	"fmt"
 	"github.com/icwells/go-tools/iotools"
+	"log"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ type taxamerger struct {
 	nas  []string
 }
 
-func newTaxa(infile string) taxamerger {
+func newTaxa(infile string, logger *log.Logger) taxamerger {
 	// Reads in results as a map of string slices
 	var t taxamerger
 	t.taxa = make(map[string][]string)
@@ -30,7 +31,7 @@ func newTaxa(infile string) taxamerger {
 	var d string
 	var h map[string]int
 	first := true
-	fmt.Println("\tReading search result file...")
+	logger.Println("Reading search result file...")
 	f := iotools.OpenFile(infile)
 	defer f.Close()
 	scanner := iotools.GetScanner(f)
@@ -62,12 +63,12 @@ func (t *taxamerger) getTaxa(n string) []string {
 	return ret
 }
 
-func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, [][]string) {
+func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool, logger *log.Logger) (string, [][]string) {
 	// Returns header and merged results
 	first := true
 	var ret [][]string
 	var d, header string
-	fmt.Println("\tMerging input file with taxonomies...")
+	fmt.Println("Merging input file with taxonomies...")
 	f := iotools.OpenFile(infile)
 	defer f.Close()
 	scanner := iotools.GetScanner(f)
@@ -99,12 +100,12 @@ func (t *taxamerger) mergeTaxonomy(infile string, c int, prepend bool) (string, 
 	return header, ret
 }
 
-func MergeResults(infile, resfile, outfile string, col int, prepend bool) {
+func MergeResults(infile, resfile, outfile string, col int, prepend bool, logger *log.Logger) {
 	// Merges search results with source file
 	CheckFile(infile)
 	CheckFile(resfile)
-	taxa := newTaxa(resfile)
-	header, results := taxa.mergeTaxonomy(infile, col, prepend)
-	fmt.Println("\tWriting output...")
+	taxa := newTaxa(resfile, logger)
+	header, results := taxa.mergeTaxonomy(infile, col, prepend, logger)
+	logger.Println("Writing output...")
 	iotools.WriteToCSV(outfile, header, results)
 }

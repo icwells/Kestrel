@@ -10,6 +10,7 @@ import (
 	"github.com/icwells/kestrel/src/taxonomy"
 	"github.com/icwells/kestrel/src/terms"
 	"github.com/icwells/simpleset"
+	"log"
 	"path"
 	"strings"
 )
@@ -53,6 +54,7 @@ type searcher struct {
 	fails   int
 	hier    *taxonomy.Hierarchy
 	keys    map[string]string
+	logger  *log.Logger
 	matches int
 	missed  string
 	names   []string
@@ -63,7 +65,7 @@ type searcher struct {
 	urls    *apis
 }
 
-func newSearcher(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Term, nocorpus, test bool) searcher {
+func newSearcher(db *dbIO.DBIO, logger *log.Logger, outfile string, searchterms map[string]*terms.Term, nocorpus, test bool) searcher {
 	// Reads api keys and existing output and initializes maps
 	var s searcher
 	s.corpus = !nocorpus
@@ -74,6 +76,7 @@ func newSearcher(db *dbIO.DBIO, outfile string, searchterms map[string]*terms.Te
 	s.keys = make(map[string]string)
 	s.done = simpleset.NewStringSet()
 	s.hier = taxonomy.NewHierarchy(s.taxa)
+	s.logger = logger
 	s.terms = searchterms
 	s.urls = newAPIs()
 	s.getCorpus()
@@ -137,7 +140,7 @@ func (s *searcher) apiKeys() {
 	// Reads api keys from file
 	infile := kestrelutils.GetAbsPath("API.txt")
 	kestrelutils.CheckFile(infile)
-	fmt.Println("\tReading API keys from file...")
+	s.logger.Println("Reading API keys from file...")
 	f := iotools.OpenFile(infile)
 	defer f.Close()
 	scanner := iotools.GetScanner(f)
@@ -155,7 +158,7 @@ func (s *searcher) checkOutput(outfile, header string) {
 	if iotools.Exists(outfile) == true {
 		var d string
 		first := true
-		fmt.Printf("\tReading previous output from %s\n", outfile)
+		s.logger.Printf("Reading previous output from %s\n", outfile)
 		out := iotools.OpenFile(outfile)
 		defer out.Close()
 		scanner := iotools.GetScanner(out)
@@ -170,9 +173,9 @@ func (s *searcher) checkOutput(outfile, header string) {
 				first = false
 			}
 		}
-		fmt.Printf("\tFound %d completed entries.\n", s.done.Length()-l)
+		s.logger.Printf("Found %d completed entries.\n", s.done.Length()-l)
 	} else {
-		fmt.Println("\tGenerating new output file...")
+		s.logger.Println("Generating new output file...")
 		out := iotools.CreateFile(outfile)
 		defer out.Close()
 		out.WriteString(header + "\n")

@@ -7,6 +7,7 @@ import (
 	"github.com/icwells/dbIO"
 	//"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ type uploader struct {
 	dir         string
 	hier        *Hierarchy
 	ids         map[string]string
+	logger      *log.Logger
 	names       map[string]string
 	ncbi        map[string]string
 	proc        int
@@ -30,7 +32,7 @@ type uploader struct {
 	tid         int
 }
 
-func newUploader(db *dbIO.DBIO, proc int) *uploader {
+func newUploader(db *dbIO.DBIO, proc int, logger *log.Logger) *uploader {
 	// Returns initialized struct
 	u := new(uploader)
 	u.citations = make(map[string]string)
@@ -39,6 +41,7 @@ func newUploader(db *dbIO.DBIO, proc int) *uploader {
 	u.dir = path.Join(kestrelutils.GetLocation(), "databases")
 	u.hier = emptyHierarchy()
 	u.ids = make(map[string]string)
+	u.logger = logger
 	u.names = make(map[string]string)
 	u.proc = proc
 	u.tid = 1
@@ -134,13 +137,13 @@ func (u *uploader) fillTaxonomies(db string) {
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
-	fmt.Println("\tFilling taxonomies...")
+	u.logger.Println("Filling taxonomies...")
 	for _, i := range u.taxa {
 		// Fill in taxonomy
 		wg.Add(1)
 		count++
 		go u.setTaxonomy(&wg, &mut, i)
-		fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, len(u.taxa))
+		u.logger.Printf("Filled %d of %d taxonomies...\r", count, len(u.taxa))
 		if count%u.proc == 0 {
 			wg.Wait()
 		}
@@ -152,13 +155,13 @@ func (u *uploader) fillTaxonomies(db string) {
 		count += len(i)
 	}
 	count = 0
-	fmt.Println("\tFormatting taxonomies...")
+	u.logger.Println("Formatting taxonomies...")
 	for _, i := range u.taxa {
 		if i.Found {
 			wg.Add(1)
 			count++
 			go u.storeTaxonomy(&wg, &mut, i, db)
-			fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, u.count)
+			u.logger.Printf("Dispatched %d of %d taxonomies...\r", count, u.count)
 			if count%u.proc == 0 {
 				wg.Wait()
 			}
@@ -168,9 +171,9 @@ func (u *uploader) fillTaxonomies(db string) {
 	wg.Wait()
 }
 
-func UploadDatabases(db *dbIO.DBIO, proc int) {
+func UploadDatabases(db *dbIO.DBIO, proc int, logger *log.Logger) {
 	// Formats and uploads taxonomy databases to MySQL
-	u := newUploader(db, proc)
+	u := newUploader(db, proc, logger)
 	/*if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
 		u.clear()

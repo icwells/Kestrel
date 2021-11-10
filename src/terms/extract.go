@@ -3,10 +3,10 @@
 package terms
 
 import (
-	"fmt"
 	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/trustmaster/go-aspell"
+	"log"
 	"path"
 	"strings"
 	"unicode"
@@ -35,7 +35,7 @@ func containsWithSpace(l, target string) bool {
 	return ret
 }
 
-func mergeTerms(s []*Term) map[string]*Term {
+func mergeTerms(s []*Term, logger *log.Logger) map[string]*Term {
 	// Merges terms which format to same spelling and tries to resolve abbreviations
 	ret := make(map[string]*Term)
 	for _, i := range s {
@@ -45,7 +45,7 @@ func mergeTerms(s []*Term) map[string]*Term {
 			ret[i.Term] = i
 		}
 	}
-	fmt.Printf("\tFound %d unique entries from %d total new entries.\n", len(ret), len(s))
+	logger.Printf("\tFound %d unique entries from %d total new entries.\n", len(ret), len(s))
 	return ret
 }
 
@@ -91,16 +91,16 @@ func filterTerms(infile string, c int) ([]*Term, [][]string) {
 	return pass, fail
 }
 
-func ExtractSearchTerms(infile, outfile string, col int) map[string]*Term {
+func ExtractSearchTerms(infile, outfile string, col int, logger *log.Logger) map[string]*Term {
 	// Extracts and formats input terms
 	kestrelutils.CheckFile(infile)
 	dir, _ := path.Split(outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")
 	pass, fail := filterTerms(infile, col)
-	fmt.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.\n", len(pass), len(fail))
+	logger.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.\n", len(pass), len(fail))
 	if len(fail) > 0 {
 		iotools.WriteToCSV(misses, "Query,SearchTerm,Reason", fail)
 	}
-	ret := mergeTerms(pass)
+	ret := mergeTerms(pass, logger)
 	return ret
 }
