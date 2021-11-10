@@ -37,7 +37,7 @@ whiteBoxTests () {
 }
 
 testSearch () {
-	# Run search and comapre output
+	# Run search and compare output
 	getUser
 	cleanup
 	go run src/main.go search -u $USER --password $PW -c 1 -i $EXTRACTINPUT -o $SEARCHOUTPUT

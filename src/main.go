@@ -22,7 +22,7 @@ var (
 	infile  = kingpin.Flag("infile", "Path to input file.").Default("").Short('i').String()
 	outfile = kingpin.Flag("outfile", "Path to output csv file.").Default("").Short('o').String()
 	proc    = kingpin.Flag("proc", "The maximum number of concurrent processes for search or database upload (more will use more RAM, but will finish more quickly).").Default("200").Short('p').Int()
-	user    = kingpin.Flag("user", "MySQL username (default is root).").Short('u').Default("root").String()
+	user    = kingpin.Flag("user", "MySQL username.").Short('u').Required().String()
 
 	ver = kingpin.Command("version", "Prints version info and exits.")
 

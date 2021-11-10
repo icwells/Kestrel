@@ -1,4 +1,4 @@
 host = localhost
 database = kestrelTaxonomy
 test_database = testKestrel
-table_columns = tableColumns.txt
+table_columns = tableColumns.sql
