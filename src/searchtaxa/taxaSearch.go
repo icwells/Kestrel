@@ -220,7 +220,7 @@ func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*ter
 		for k := range s.terms {
 			wg.Add(1)
 			go s.searchTerm(&wg, &mut, k)
-			s.logger.Printf("Dispatched %d of %d terms.\r", count, len(s.terms))
+			fmt.Printf("\tDispatched %d of %d terms.\r", count, len(s.terms))
 			if count%10 == 0 {
 				// Pause after 10 to avoid swamping apis
 				time.Sleep(time.Second)

@@ -10,9 +10,26 @@ import (
 	"log"
 	"path"
 	"strconv"
-	"strings"
+	//"strings"
 	"sync"
 )
+
+type rank struct {
+	id     string
+	level  string
+	name   string
+	parent string
+}
+
+func newRank(id, level, name, parent string) *rank {
+	// Returns initialized struct
+	r := new(rank)
+	r.id = id
+	r.level = level
+	r.name = name
+	r.parent = parent
+	return r
+}
 
 type uploader struct {
 	citations   map[string]string
@@ -22,7 +39,7 @@ type uploader struct {
 	db          *dbIO.DBIO
 	dir         string
 	hier        *Hierarchy
-	ids         map[string]string
+	ids         map[string]*rank
 	logger      *log.Logger
 	names       map[string]string
 	ncbi        map[string]string
@@ -40,7 +57,7 @@ func newUploader(db *dbIO.DBIO, proc int, logger *log.Logger) *uploader {
 	u.db = db
 	u.dir = path.Join(kestrelutils.GetLocation(), "databases")
 	u.hier = emptyHierarchy()
-	u.ids = make(map[string]string)
+	u.ids = make(map[string]*rank)
 	u.logger = logger
 	u.names = make(map[string]string)
 	u.proc = proc
@@ -63,7 +80,7 @@ func (u *uploader) clear() {
 	u.common = make(map[string][]string)
 	u.commontable = nil
 	u.count = 0
-	u.ids = make(map[string]string)
+	u.ids = make(map[string]*rank)
 	u.res = nil
 	u.taxa = nil
 }
@@ -98,7 +115,7 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 	}
 }
 
-func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy) {
+/*func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy) {
 	// Replaces rank ids with names
 	defer wg.Done()
 	if _, err := strconv.Atoi(t.Kingdom); err == nil {
@@ -130,20 +147,20 @@ func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonom
 			}
 		}
 	}
-}
+}*/
 
 func (u *uploader) fillTaxonomies(db string) {
 	// Merges taxonomy and ids and fills missing fields
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
-	u.logger.Println("Filling taxonomies...")
+	/*u.logger.Println("Filling taxonomies...")
 	for _, i := range u.taxa {
 		// Fill in taxonomy
 		wg.Add(1)
 		count++
 		go u.setTaxonomy(&wg, &mut, i)
-		u.logger.Printf("Filled %d of %d taxonomies...\r", count, len(u.taxa))
+		fmt.Printf("\tFilled %d of %d taxonomies...\r", count, len(u.taxa))
 		if count%u.proc == 0 {
 			wg.Wait()
 		}
@@ -154,14 +171,14 @@ func (u *uploader) fillTaxonomies(db string) {
 	for _, i := range u.common {
 		count += len(i)
 	}
-	count = 0
+	count = 0*/
 	u.logger.Println("Formatting taxonomies...")
 	for _, i := range u.taxa {
 		if i.Found {
 			wg.Add(1)
 			count++
 			go u.storeTaxonomy(&wg, &mut, i, db)
-			u.logger.Printf("Dispatched %d of %d taxonomies...\r", count, u.count)
+			fmt.Printf("\tDispatched %d of %d taxonomies...\r", count, len(u.taxa))
 			if count%u.proc == 0 {
 				wg.Wait()
 			}

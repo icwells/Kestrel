@@ -45,7 +45,7 @@ func mergeTerms(s []*Term, logger *log.Logger) map[string]*Term {
 			ret[i.Term] = i
 		}
 	}
-	logger.Printf("\tFound %d unique entries from %d total new entries.\n", len(ret), len(s))
+	logger.Printf("Found %d unique entries from %d total new entries.\n", len(ret), len(s))
 	return ret
 }
 
@@ -97,7 +97,8 @@ func ExtractSearchTerms(infile, outfile string, col int, logger *log.Logger) map
 	dir, _ := path.Split(outfile)
 	misses := path.Join(dir, "KestrelRejected.csv")
 	pass, fail := filterTerms(infile, col)
-	logger.Printf("\tSuccessfully formatted %d entries.\n\t%d entries failed formatting.\n", len(pass), len(fail))
+	logger.Printf("Successfully formatted %d entries.", len(pass))
+	logger.Printf("%d entries failed formatting.", len(fail))
 	if len(fail) > 0 {
 		iotools.WriteToCSV(misses, "Query,SearchTerm,Reason", fail)
 	}

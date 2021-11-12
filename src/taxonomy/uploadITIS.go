@@ -8,13 +8,11 @@ import (
 	"strings"
 )
 
-func (u *uploader) itisKingdoms() map[string]string {
+func (u *uploader) itisKingdoms() {
 	// Returns itis kingdom map
-	ret := make(map[string]string)
 	for _, i := range u.db.GetTable("kingdoms") {
-		ret[i[0]] = i[1]
+		u.ids[i[0]] = newRank(i[0], "kingdom", i[1], "")
 	}
-	return ret
 }
 
 func (u *uploader) itisRanks() map[string]map[string]string {
@@ -25,27 +23,31 @@ func (u *uploader) itisRanks() map[string]map[string]string {
 		if _, ex := ranks[i[0]]; !ex {
 			ranks[i[0]] = make(map[string]string)
 		}
-		ranks[i[0]][i[1]] = i[2]
+		ranks[i[0]][i[1]] = strings.ToLower(i[2])
 	}
 	return ranks
 }
 
-func (u *uploader) setLevelIDs(parents map[string][]string) {
+func (u *uploader) setLevelIDs() {
 	// Stores ids for taxonomic levels
 	u.logger.Println("Sorting IDs...")
 	for _, i := range u.taxa {
 		id := i.Genus
-		v, ex := parents[i.Genus]
+		v, ex := u.ids[i.Genus]
 		for ex {
-			id = v[0]
+			id = v.id
 			if ex {
-				i.SetLevel(v[1], id)
-				if v[1] == "kingdom" {
+				i.SetLevel(v.level, v.name)
+				if v.level == "kingdom" {
+					i.Found = true
 					break
 				}
 			}
-			v, ex = parents[id]
-			if v[0] == id {
+			/*if v.level == "genus" {
+				fmt.Println(i.Genus)
+			}*/
+			v, ex = u.ids[v.parent]
+			if v.id == id {
 				break
 			}
 		}
@@ -55,8 +57,6 @@ func (u *uploader) setLevelIDs(parents map[string][]string) {
 func (u *uploader) setids() {
 	// Loads itis ids
 	species := "species"
-	parents := make(map[string][]string)
-	kingdoms := u.itisKingdoms()
 	ranks := u.itisRanks()
 	for _, i := range u.db.GetRows("taxonomic_units", "name_usage", "valid", "tsn,parent_tsn,kingdom_id,rank_id,complete_name") {
 		id := i[0]
@@ -64,16 +64,15 @@ func (u *uploader) setids() {
 		rid := i[3]
 		name := i[4]
 		if k, ex := ranks[kid]; ex {
-			if rank, e := k[rid]; e {
+			if level, e := k[rid]; e {
 				// Only store if rank can be identified
-				rank = strings.ToLower(rank)
-				if rank == species {
+				if level == species {
 					if _, ex := u.names[name]; !ex {
 						// Store species, and genus
 						t := NewTaxonomy()
 						t.SetLevel(species, name)
 						t.Genus = i[1]
-						t.Kingdom = kingdoms[kid]
+						//t.Kingdom = kingdoms[kid]
 						t.ID = id
 						if cit, e := u.citations[id]; e {
 							t.Source = cit
@@ -81,15 +80,11 @@ func (u *uploader) setids() {
 						u.taxa = append(u.taxa, t)
 					}
 				} else {
-					if _, exists := parents[id]; !exists {
-						parents[id] = []string{i[1], rank}
-					}
-					u.ids[id] = name
+					u.ids[id] = newRank(id, level, name, i[1])
 				}
 			}
 		}
 	}
-	u.setLevelIDs(parents)
 }
 
 func (u *uploader) setITIScitations() {
@@ -135,11 +130,13 @@ func (u *uploader) loadITIS() {
 	}
 	u.getcommon()
 	u.setITIScitations()
+	u.itisKingdoms()
 	u.setids()
+	u.setLevelIDs()
 	u.fillTaxonomies("ITIS")
 	// Revert to taxonomy database
 	u.db.DB.Exec(fmt.Sprintf("USE %s;", u.db.Database))
-	u.logger.Println("Uploading NCBI data...")
+	u.logger.Println("Uploading ITIS data...")
 	u.db.UploadSlice("Taxonomy", u.res)
 	u.db.UploadSlice("Common", u.commontable)
 }
