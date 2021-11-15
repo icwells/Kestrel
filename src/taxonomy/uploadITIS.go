@@ -43,11 +43,8 @@ func (u *uploader) setLevelIDs() {
 					break
 				}
 			}
-			/*if v.level == "genus" {
-				fmt.Println(i.Genus)
-			}*/
 			v, ex = u.ids[v.parent]
-			if v.id == id {
+			if ex && v.id == id {
 				break
 			}
 		}
@@ -72,7 +69,6 @@ func (u *uploader) setids() {
 						t := NewTaxonomy()
 						t.SetLevel(species, name)
 						t.Genus = i[1]
-						//t.Kingdom = kingdoms[kid]
 						t.ID = id
 						if cit, e := u.citations[id]; e {
 							t.Source = cit

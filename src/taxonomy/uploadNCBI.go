@@ -59,7 +59,7 @@ func (u *uploader) setNCBInames() {
 			if i[3] == "scientific name" {
 				if name, _ := u.splitName(i[1]); !strings.Contains(name, ".") {
 					if strings.Count(name, " ") == 0 || len(strings.Split(name, " ")[1]) > 3 {
-						u.ids[id] = name
+						u.ids[id] = newRank(id, "", name, "")
 					}
 				}
 			} else if i[3] == "common name" {
@@ -72,55 +72,45 @@ func (u *uploader) setNCBInames() {
 	}
 }
 
-func (u *uploader) printNCBI(parents map[string][]string) {
+func (u *uploader) printNCBI() {
 	// Prints complete ncbi taxonomies to file
-	fmt.Println("\tSorting NCBI records...")
+	fmt.Println("\tPrinting NCBI records...")
 	var res [][]string
 	for _, i := range u.taxa {
-		row  := []string{u.ids[i.Species]}
-		id := i.Genus
-		v, ex := parents[i.Genus]
-		for ex {
-			id = v[0]
-			row = append(row, u.ids[id])
-			v, ex = parents[id]
-			if v[0] == id {
-				break
-			}
-		}
-		res = append(res, row)
+		res = append(res, i.Slice(i.ID, ""))
 	}
-	iotools.WriteToCSV("/home/shawn/Documents/tmp/test.csv", "Species...", res)
+	iotools.WriteToCSV("test.csv", "Species...", res)
 }
 
 func (u *uploader) loadNCBI() {
 	// Uploads NCBI table and formats data into sql database
-	parents := make(map[string][]string)
-	fmt.Println("\n\tReading NCBI taxonomies...")
+	u.logger.Println("Reading NCBI taxonomies...")
 	u.setNCBIcitations()
 	u.setNCBInames()
 	for i := range u.YieldNCBI(u.ncbi["nodes"]) {
 		id := i[0]
-		if i[2] == "species" {
-			if name, ex := u.ids[id]; ex {
+		if level, ex := u.ids[id]; ex {
+			level.level = strings.ToLower(i[2])
+			level.parent = i[1]
+			if level.level == "species" {
 				// Store species, genus, and citation
 				t := NewTaxonomy()
-				t.SetLevel("species", name)
-				t.Genus = i[1]
-				t.ID = id
+				t.SetLevel(level.level, level.name)
+				t.Genus = level.parent
+				t.ID = level.id
 				if cit, e := u.citations[id]; e {
 					t.Source = cit
 				}
 				u.taxa = append(u.taxa, t)
+				/*} else {
+				parents[id] = []string{i[1], i[2]}*/
 			}
-		} else {
-			parents[id] = []string{i[1], i[2]}
 		}
 	}
-	u.printNCBI(parents)
-	/*u.setLevelIDs(parents)
+	u.setLevelIDs()
 	u.fillTaxonomies("NCBI")
-	fmt.Println("\tUploading NCBI data...")
+	u.printNCBI()
+	/*fmt.Println("\tUploading NCBI data...")
 	u.db.UploadSlice("Taxonomy", u.res)
 	u.db.UploadSlice("Common", u.commontable)*/
 }

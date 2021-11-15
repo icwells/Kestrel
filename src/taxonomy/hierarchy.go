@@ -44,7 +44,7 @@ func emptyHierarchy() *Hierarchy {
 	return h
 }
 
-func NewHierarchy(taxa map[string]*Taxonomy) *Hierarchy {
+func NewHierarchy(taxa []*Taxonomy) *Hierarchy {
 	// Initializes new taxonomy hierarchy
 	h := emptyHierarchy()
 	h.setHierarchy(taxa)
@@ -128,7 +128,7 @@ func (h *Hierarchy) AddTaxonomy(t *Taxonomy) {
 	}
 }
 
-func (h *Hierarchy) setHierarchy(taxa map[string]*Taxonomy) {
+func (h *Hierarchy) setHierarchy(taxa []*Taxonomy) {
 	// Stores corpus in hierarchy
 	for _, v := range taxa {
 		if v.Nas == 0 {

@@ -75,7 +75,6 @@ func newSearcher(db *dbIO.DBIO, logger *log.Logger, outfile string, searchterms 
 	s.missed = path.Join(dir, "KestrelMissed.csv")
 	s.keys = make(map[string]string)
 	s.done = simpleset.NewStringSet()
-	s.hier = taxonomy.NewHierarchy(s.taxa)
 	s.logger = logger
 	s.terms = searchterms
 	s.urls = newAPIs()
@@ -91,6 +90,7 @@ func newSearcher(db *dbIO.DBIO, logger *log.Logger, outfile string, searchterms 
 
 func (s *searcher) getCorpus() {
 	// Stores common name and taxonomy corpus
+	var taxa []*taxonomy.Taxonomy
 	common := make(map[string][]string)
 	s.common = make(map[string]string)
 	set := simpleset.NewStringSet()
@@ -116,6 +116,7 @@ func (s *searcher) getCorpus() {
 			// Add citation if available
 			t.Source += ": " + i[8]
 		}
+		taxa = append(taxa, t)
 		s.taxa[t.Species] = t
 		set.Add(t.Species)
 		if v, ex := common[id]; ex {
@@ -126,6 +127,7 @@ func (s *searcher) getCorpus() {
 		}
 	}
 	s.names = set.ToStringSlice()
+	s.hier = taxonomy.NewHierarchy(taxa)
 }
 
 func (s *searcher) assignKey(line string) {

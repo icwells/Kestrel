@@ -5,7 +5,7 @@ package taxonomy
 import (
 	"fmt"
 	"github.com/icwells/dbIO"
-	//"github.com/icwells/go-tools/iotools"
+	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"log"
 	"path"
@@ -150,7 +150,7 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 }*/
 
 func (u *uploader) fillTaxonomies(db string) {
-	// Merges taxonomy and ids and fills missing fields
+	// Fills missing taxonomy fields
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
@@ -172,6 +172,7 @@ func (u *uploader) fillTaxonomies(db string) {
 		count += len(i)
 	}
 	count = 0*/
+	u.hier.setHierarchy(u.taxa)
 	u.logger.Println("Formatting taxonomies...")
 	for _, i := range u.taxa {
 		if i.Found {
@@ -191,10 +192,10 @@ func (u *uploader) fillTaxonomies(db string) {
 func UploadDatabases(db *dbIO.DBIO, proc int, logger *log.Logger) {
 	// Formats and uploads taxonomy databases to MySQL
 	u := newUploader(db, proc, logger)
-	/*if iotools.Exists(u.ncbi["nodes"]) {
+	//u.loadITIS()
+	if iotools.Exists(u.ncbi["nodes"]) {
 		u.loadNCBI()
-		u.clear()
-	}*/
-	u.loadITIS()
+		//u.clear()
+	}
 	//os.Remove(u.dir)
 }

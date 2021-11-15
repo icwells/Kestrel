@@ -6,18 +6,18 @@ import (
 	"testing"
 )
 
-func taxaMap() map[string]*Taxonomy {
+func hierSlice() []*Taxonomy {
 	// Initializes slice of test taxonomies
-	ret := make(map[string]*Taxonomy)
-	ret["Abronia graminea"] = testtaxa([]string{"Animalia", "Chordata", "Reptilia", "Squamata", "Anguidae", "Abronia", "Abronia graminea"}, true, 0)
-	ret["Heloderma suspectum"] = testtaxa([]string{"Animalia", "Chordata", "Reptilia", "Squamata", "Helodermatidae", "Heloderma", "Heloderma suspectum"}, true, 0)
-	ret["Acheta domesticus"] = testtaxa([]string{"Animalia", "Chordata", "Insecta", "Orthoptera", "Gryllidae", "Acheta", "Acheta domesticus"}, true, 0)
-	ret["Acridotheres tristis"] = testtaxa([]string{"Animalia", "Chordata", "Aves", "Passeriformes", "Sturnidae", "Acridotheres", "Acridotheres tristis"}, true, 0)
+	var ret []*Taxonomy
+	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Reptilia", "Squamata", "Anguidae", "Abronia", "Abronia graminea"}, true, 0))
+	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Reptilia", "Squamata", "Helodermatidae", "Heloderma", "Heloderma suspectum"}, true, 0))
+	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Insecta", "Orthoptera", "Gryllidae", "Acheta", "Acheta domesticus"}, true, 0))
+	ret = append(ret, testtaxa([]string{"Animalia", "Chordata", "Aves", "Passeriformes", "Sturnidae", "Acridotheres", "Acridotheres tristis"}, true, 0))
 	return ret
 }
 
 func TestHierarchy(t *testing.T) {
-	taxa := taxaMap()
+	taxa := hierSlice()
 	h := NewHierarchy(taxa)
 	for _, i := range taxa {
 		if _, ex := h.species[i.Species]; !ex {
@@ -49,14 +49,12 @@ func TestHierarchy(t *testing.T) {
 }
 
 func TestFillTaxonomy(t *testing.T) {
-	taxa := taxaMap()
+	taxa := hierSlice()
 	h := NewHierarchy(taxa)
 	for _, i := range taxaSlice() {
 		h.FillTaxonomy(i)
 		if i.Nas != 0 {
 			t.Errorf("%s contains %d NAs.", i.Species, i.Nas)
-			//} else if i.Genus != h.species[i.Species] {
-
 		}
 	}
 }
