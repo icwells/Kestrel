@@ -6,6 +6,7 @@
 #		Requires:	Go 1.11+
 ##############################################################################
 
+DIR="databases"
 MAIN="kestrel"
 PW=""
 SE="github.com/tebeka/selenium"
@@ -22,14 +23,17 @@ getUser () {
 downloadDatabases () {
 	ITIS="https://www.itis.gov/downloads/itisMySQLBulk.zip"
 	getUser
-	mkdir databases
-	cd databases/
+	mkdir $DIR
+	cd $DIR
 	echo "Downloading databases..."
 	wget $ITIS
 	echo "Extracting files..."
 	unzip itisMySQL*
 	echo "Uploading ITIS tables to MySQL..."
-	mysql -u$USER -p$PW < itisMySQL*/CreateDB.sql
+	mv itisMySQL*/* .
+	mysql -u$USER -p$PW < CreateDB.sql
+	cd ../
+	rm -r $DIR
 }
 
 installSelenium () {
