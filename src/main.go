@@ -43,7 +43,7 @@ var (
 
 func version() {
 	fmt.Print("\n\tKestrel is a program for resolving common names and synonyms with scientific names and extracting taxonomies.\n")
-	fmt.Print("\n\tCopyright 2020 by Shawn Rupp.\n")
+	fmt.Print("\n\tCopyright 2021 by Shawn Rupp.\n")
 	fmt.Print("\tThis program comes with ABSOLUTELY NO WARRANTY.\n\tThis is free software, and you are welcome to redistribute it under certain conditions.\n")
 	os.Exit(0)
 }

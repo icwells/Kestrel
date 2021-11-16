@@ -26,13 +26,10 @@ downloadDatabases () {
 	cd databases/
 	echo "Downloading databases..."
 	wget $ITIS
-	done
 	echo "Extracting files..."
 	unzip itisMySQL*
-	tar -xzf taxdump.tar.gz
-	rm taxdump.tar.gz
 	echo "Uploading ITIS tables to MySQL..."
-	mysql -u $USER -p $PW < itisMySQL*/CreateDB.sql
+	mysql -u$USER -p$PW < itisMySQL*/CreateDB.sql
 }
 
 installSelenium () {
@@ -86,7 +83,7 @@ elif [ $1 = "all" ]; then
 	installPackages
 	installSelenium
 	installMain
-elif [ $i = "download" ]; then
+elif [ $1 = "download" ]; then
 	downloadDatabases
 elif [ $1 = "help" ]; then
 	helpText

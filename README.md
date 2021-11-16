@@ -2,13 +2,14 @@
 
 # Kestrel Taxonomy Finder
 
-## Copyright 2019 by Shawn Rupp  
+## Copyright 2021 by Shawn Rupp  
 
 ### Kestrel is a program for downloading taxonomies from internet databases given species’ common or scientific names.  
 ### Kestrel is meant to reduce the amount of manual searching required for a project, but its results may still require some manual curation.  
 
 ## Dependencies  
 [Go 1.11+](https://golang.org/dl/)  
+MySQL 8.0+
 Xvfb  
 Chrome browser    
 
@@ -22,9 +23,10 @@ Selenium requires Xvfb to run. To install on Linux:
 ### Kestrel  
 Download the git repository, change into the directory, and install (required Go packages will be installed).  
 
-	git clone https://github.com/icwells/Kestrel.git  
-	cd Kestrel/  
+	git clone https://github.com/icwells/kestrel.git  
+	cd kestrel/  
 	./install.sh all  
+	./install.sh download  
 
 #### Testing  
 Once you have installed the program and its dependencies, you may wish to run the test script:  
