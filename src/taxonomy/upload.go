@@ -5,12 +5,10 @@ package taxonomy
 import (
 	"fmt"
 	"github.com/icwells/dbIO"
-	"github.com/icwells/go-tools/iotools"
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"log"
 	"path"
 	"strconv"
-	//"strings"
 	"sync"
 )
 
@@ -115,63 +113,11 @@ func (u *uploader) storeTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxon
 	}
 }
 
-/*func (u *uploader) setTaxonomy(wg *sync.WaitGroup, mut *sync.RWMutex, t *Taxonomy) {
-	// Replaces rank ids with names
-	defer wg.Done()
-	if _, err := strconv.Atoi(t.Kingdom); err == nil {
-		// Skip itis kingdoms
-		if v, ex := u.ids[t.Kingdom]; ex {
-			if strings.ToLower(v) == "metazoa" {
-				v = "Animalia"
-			}
-			t.Kingdom = v
-		}
-	}
-	if v, ex := u.ids[t.Phylum]; ex {
-		t.Phylum = v
-		if v, ex = u.ids[t.Class]; ex {
-			t.Class = v
-			if v, ex = u.ids[t.Order]; ex {
-				t.Order = v
-				if v, ex = u.ids[t.Family]; ex {
-					t.Family = v
-					if v, ex = u.ids[t.Genus]; ex {
-						t.Genus = v
-						mut.Lock()
-						u.hier.AddTaxonomy(t)
-						u.count++
-						mut.Unlock()
-						t.Found = true
-					}
-				}
-			}
-		}
-	}
-}*/
-
 func (u *uploader) fillTaxonomies(db string) {
 	// Fills missing taxonomy fields
 	var wg sync.WaitGroup
 	var mut sync.RWMutex
 	var count int
-	/*u.logger.Println("Filling taxonomies...")
-	for _, i := range u.taxa {
-		// Fill in taxonomy
-		wg.Add(1)
-		count++
-		go u.setTaxonomy(&wg, &mut, i)
-		fmt.Printf("\tFilled %d of %d taxonomies...\r", count, len(u.taxa))
-		if count%u.proc == 0 {
-			wg.Wait()
-		}
-	}
-	fmt.Println()
-	wg.Wait()
-	count = 0
-	for _, i := range u.common {
-		count += len(i)
-	}
-	count = 0*/
 	u.hier.setHierarchy(u.taxa)
 	u.logger.Println("Formatting taxonomies...")
 	for _, i := range u.taxa {
@@ -192,10 +138,5 @@ func (u *uploader) fillTaxonomies(db string) {
 func UploadDatabases(db *dbIO.DBIO, proc int, logger *log.Logger) {
 	// Formats and uploads taxonomy databases to MySQL
 	u := newUploader(db, proc, logger)
-	//u.loadITIS()
-	if iotools.Exists(u.ncbi["nodes"]) {
-		u.loadNCBI()
-		//u.clear()
-	}
-	//os.Remove(u.dir)
+	u.loadITIS()
 }

@@ -21,13 +21,11 @@ getUser () {
 
 downloadDatabases () {
 	ITIS="https://www.itis.gov/downloads/itisMySQLBulk.zip"
-	NCBI="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
 	getUser
 	mkdir databases
 	cd databases/
 	echo "Downloading databases..."
-	for I in $ITIS $NCBI; do
-		wget $I
+	wget $ITIS
 	done
 	echo "Extracting files..."
 	unzip itisMySQL*
