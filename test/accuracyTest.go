@@ -84,7 +84,6 @@ func compareResults(act, exp *dataframe.Dataframe) {
 			a, _ := act.GetCell(k, col)
 			e, _ := exp.GetCell(k, col)
 			if a != e {
-				//fmt.Println(k, col, a, e)
 				pass = false
 				break
 			}

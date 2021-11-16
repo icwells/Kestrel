@@ -121,7 +121,7 @@ func (t *Taxonomy) CountNAs() {
 	// Rechecks nas
 	nas := 0
 	for _, i := range []string{t.Kingdom, t.Phylum, t.Class, t.Order, t.Family, t.Genus, t.Species} {
-		if strings.ToUpper(i) == "NA" {
+		if i == "" || strings.ToUpper(i) == "NA" {
 			nas++
 		}
 	}
