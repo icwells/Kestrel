@@ -70,13 +70,10 @@ func (s *searcher) seleniumSearch(k string) string {
 	if e == nil {
 		defer browser.Close()
 		defer browser.Quit()
-		er := browser.Get("https://google.com/")
-		if er == nil {
-			elem, err := browser.FindElement(selenium.ByName, "q")
-			if err == nil {
+		if er := browser.Get("https://google.com/"); er == nil {
+			if elem, err := browser.FindElement(selenium.ByName, "q"); err == nil {
 				elem.SendKeys(kestrelutils.PercentDecode(k) + " taxonomy" + selenium.ReturnKey)
-				ret, err = browser.PageSource()
-				if err != nil {
+				if ret, err = browser.PageSource(); err != nil {
 					// Ensure empty return
 					ret = ""
 				}

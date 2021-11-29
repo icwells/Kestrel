@@ -236,6 +236,7 @@ func SearchTaxonomies(db *dbIO.DBIO, outfile string, searchterms map[string]*ter
 		wg.Wait()
 	}
 	fmt.Println()
+	s.service.KillChromeDrivers()
 	s.logger.Printf("Found matches for a total of %d queries.\n", s.matches)
 	s.logger.Printf("Could not find matches for %d queries.\n", s.fails)
 	if s.fails == 0 {

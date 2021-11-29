@@ -8,14 +8,13 @@ import (
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
 	"os"
+	"os/exec"
 	"path"
-	//"path/filepath"
-	//"strconv"
-	//"strings"
 )
 
 type service struct {
 	browser string
+	driver  string
 	err     error
 	ip      string
 	log     *os.File
@@ -27,6 +26,7 @@ func newService() *service {
 	// Initializes new struct
 	s := new(service)
 	s.browser = "chrome"
+	s.driver = "chromedriver"
 	s.ip = "http://127.0.0.1"
 	s.port = 8090
 	s.startService()
@@ -65,4 +65,13 @@ func (s *service) stop() {
 	// Flush log before closing
 	s.log.Sync()
 	s.log.Close()
+}
+
+func (s *service) KillChromeDrivers() {
+	// Kills all remaining chromedriver processes
+	cmd := exec.Command("killall", "-q", s.driver)
+	cmd.Run()
+	/*if err := cmd.Run(); err != nil {
+		panic(err)
+	}*/
 }
