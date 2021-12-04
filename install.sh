@@ -46,6 +46,15 @@ installSelenium () {
 	cd $WD
 }
 
+installTensorFlow () {
+	TF="libtensorflow-cpu-linux-x86_64-2.6.0.tar.gz"
+	LINK="https://storage.googleapis.com/tensorflow/libtensorflow/$TF"
+	wget $LINK
+	sudo tar -C /usr/local -xzf $TF
+	sudo ldconfig
+	rm $TF
+}
+
 installPackages () {
 	echo "Installing dependencies..."
 	ASPELL="github.com/trustmaster/go-aspell"
@@ -57,9 +66,12 @@ installPackages () {
 	KINGPIN="gopkg.in/alecthomas/kingpin.v2"
 	SIMPLESET="github.com/icwells/simpleset"
 	STRARRAY="github.com/icwells/go-tools/strarray"
-	for I in  $ASPELL $DATAFRAME $DBIO $FUZZY $GOQUERY $IOTOOLS $KINGPIN $SE $SIMPLESET $STRARRAY; do
+	TFGO="github.com/galeone/tfgo"
+	for I in  $ASPELL $DATAFRAME $DBIO $FUZZY $GOQUERY $IOTOOLS $KINGPIN $SE $SIMPLESET $STRARRAY $TFGO; do
 		go get $I
 	done
+	# Install TensorFlow Go bindings
+	go env -w GONOSUMDB="github.com/galeone/tensorflow"
 }
 
 installMain () {
@@ -70,7 +82,7 @@ installMain () {
 helpText () {
 	echo "Installs Go scripts for Kestrel"
 	echo ""
-	echo "all	Installs all depenencies, including selenium package and drivers."
+	echo "all	Installs all depenencies, including TensorFlow, Selenium package, and drivers."
 	echo "download Downloads taxonomy databases (takes several hours)"
 	echo "help	Prints help text and exits."
 	echo ""
@@ -84,8 +96,9 @@ echo ""
 if [ $# -eq 0 ]; then
 	installMain
 elif [ $1 = "all" ]; then
-	installPackages
+	installTensorFlow
 	installSelenium
+	installPackages
 	installMain
 elif [ $1 = "download" ]; then
 	downloadDatabases
