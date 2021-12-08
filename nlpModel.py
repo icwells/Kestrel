@@ -10,7 +10,7 @@ import numpy as np
 import os
 from random import shuffle
 import tensorflow as tf
-#import tensorflow_hub as hub
+import tensorflow_hub as hub
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import unixpath
@@ -41,6 +41,13 @@ class Classifier():
 		self.username = args.u
 		self.__connect__()
 		self.__getDataSets__()
+
+	def __write__(self):
+		# Writes test data
+		with open("test.csv", "w") as out:
+			for idx, i in enumerate(self.padded_train):
+				out.write("{},{}\n".format(self.labels_train[idx], i))
+		quit()
 
 	def __connect__(self):
 		# Connects to taxonomy database
@@ -85,7 +92,7 @@ class Classifier():
 		sql = ("SELECT DISTINCT({}) FROM {};").format(column, table)
 		cursor.execute(sql)
 		for i in cursor.fetchall():
-			ret.append([name, i[0]])
+			ret.append([name, i[0].strip()])
 		return ret
 
 	def __getDataSets__(self):
@@ -108,8 +115,15 @@ class Classifier():
   
 	def train(self):
 		# Trains species name classifier
+		print("\tTraining model...")
+		model = "https://tfhub.dev/google/nnlm-en-dim50/2"
+		hub_layer = hub.KerasLayer(model, input_shape=np.shape(self.padded_train[:3]), dtype=tf.int32, trainable=True)
+		print(hub_layer(self.padded_train[:3]))
+		quit()
+
 		self.model = tf.keras.Sequential([
-			#tf.keras.layers.Embedding(vocab_size, max_len, input_length = max_len),
+			hub_layer,
+			#tf.keras.layers.Embedding(training_size + 1, embedding_dim, input_length = max_len),
 			#tf.keras.layers.SimpleRNN(max_len),
 			#tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
 			#tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
@@ -123,14 +137,14 @@ class Classifier():
 				epochs=epochs, 
 				batch_size=512, 
 				validation_data=(self.padded_test, self.labels_test), 
-				verbose=2
+				verbose=1
 		)
 		#results = model.evaluate(self.padded_test, self.labels_test)
 		#print(history)
 		#self.__plot__(history, "accuracy")
 		#self.__plot__(history, "loss")
 
-	def write(self):
+	def save(self):
 		# Stores model in outfile
 		tf.saved_model.save(self.model, self.outfile)
 
@@ -140,7 +154,7 @@ def main():
 	parser.add_argument("-u", help = "MySQL username.")
 	c = Classifier(parser.parse_args())
 	c.train()
-	#c.write()
+	#c.save()
 	print(("\tTotal runtime: {}\n").format(datetime.now() - start))
 
 if __name__ == "__main__":
