@@ -53,8 +53,9 @@ installTensorFlow () {
 	sudo tar -C /usr/local -xzf $TF
 	sudo ldconfig
 	rm $TF
-	#pip install tensorflow_hub
-	pip install langdetect
+	for I in tensorflow tensorflow_hub; do
+		pip install $I
+	done
 }
 
 installPackages () {
