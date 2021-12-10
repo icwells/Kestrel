@@ -69,12 +69,9 @@ installPackages () {
 	KINGPIN="gopkg.in/alecthomas/kingpin.v2"
 	SIMPLESET="github.com/icwells/simpleset"
 	STRARRAY="github.com/icwells/go-tools/strarray"
-	TFGO="github.com/galeone/tfgo"
-	for I in  $ASPELL $DATAFRAME $DBIO $FUZZY $GOQUERY $IOTOOLS $KINGPIN $SE $SIMPLESET $STRARRAY $TFGO; do
+	for I in $ASPELL $DATAFRAME $DBIO $FUZZY $GOQUERY $IOTOOLS $KINGPIN $SE $SIMPLESET $STRARRAY; do
 		go get $I
 	done
-	# Install TensorFlow Go bindings
-	go env -w GONOSUMDB="github.com/galeone/tensorflow"
 }
 
 installMain () {

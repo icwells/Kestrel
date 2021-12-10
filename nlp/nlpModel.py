@@ -110,7 +110,7 @@ class Classifier():
 
 	def save(self):
 		# Stores model in outfile
-		tf.saved_model.save(self.model, self.outfile)
+		self.model.save(self.outfile)
 
 def main():
 	start = datetime.now()
