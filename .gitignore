@@ -1,6 +1,9 @@
 # Renamed API file and log
 utils/API.txt
 seleniumLog.txt
+# NLP Model
+nlp/nlpModel/*
+nlp/*.svg
 
 # Test files
 test/KestrelMissed.csv
