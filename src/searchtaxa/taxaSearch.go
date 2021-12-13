@@ -172,12 +172,12 @@ func (s *searcher) searchTerm(wg *sync.WaitGroup, mut *sync.RWMutex, k string) {
 	var found bool
 	for idx, i := range []string{s.terms[k].Term, s.terms[k].Corrected} {
 		if !found && len(i) > 0 {
-			if idx == 1 {
+			if !s.terms[k].Scientific && idx == 1 {
 				// Set corrected term as term
 				s.terms[k].Term, s.terms[k].Corrected = s.terms[k].Corrected, s.terms[k].Term
 			}
 			found = s.dispatchTerm(k)
-			if idx == 1 && !found {
+			if !s.terms[k].Scientific && idx == 1 && !found {
 				// Reset original search term
 				s.terms[k].Term, s.terms[k].Corrected = s.terms[k].Corrected, s.terms[k].Term
 			}

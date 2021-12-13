@@ -86,6 +86,8 @@ class Classifier():
 		plt.ylabel(metric)
 		plt.legend([metric, 'val_'+metric])
 		plt.savefig("{}.svg".format(metric), format="svg")
+		# Clear plot
+		plt.clf()
   
 	def trainModel(self):
 		# Trains species name classifier

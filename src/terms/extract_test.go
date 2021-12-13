@@ -46,7 +46,8 @@ func TestFilter(t *testing.T) {
 	exp := newExtractInput()
 	for _, e := range exp {
 		a := NewTerm(e.query)
-		a.filter(speller)
+		a.filter()
+		a.checkSpelling(speller)
 		if len(e.status) > 0 {
 			if a.Status != e.status {
 				t.Errorf("%s actual status %s does not equal expected: %s", e.query, a.Status, e.status)

@@ -15,12 +15,13 @@ import (
 )
 
 type Term struct {
-	Confirmed bool
-	Corrected string
-	Queries   []string
-	Status    string
-	Taxonomy  *taxonomy.Taxonomy
-	Term      string
+	Confirmed  bool
+	Corrected  string
+	Queries    []string
+	Scientific bool
+	Status     string
+	Taxonomy   *taxonomy.Taxonomy
+	Term       string
 }
 
 func NewTerm(query string) *Term {
@@ -72,7 +73,7 @@ func (t *Term) checkSpelling(speller aspell.Speller) {
 				}
 			}
 		}
-		t.Corrected = builder.String()
+		t.Corrected = t.Taxonomy.SpeciesCaps(builder.String())
 	}
 }
 
@@ -210,7 +211,7 @@ func (t *Term) speciesCaps() {
 	t.Term = t.Taxonomy.SpeciesCaps(t.Term)
 }
 
-func (t *Term) filter(speller aspell.Speller) {
+func (t *Term) filter() {
 	// Filters input query
 	short := "tooShort"
 	query := t.Queries[0]
@@ -227,8 +228,6 @@ func (t *Term) filter(speller aspell.Speller) {
 			t.checkRunes()
 			if len(t.Status) == 0 && len(t.Term) < 3 {
 				t.Status = short
-			} else {
-				t.checkSpelling(speller)
 			}
 		}
 	} else {

@@ -7,7 +7,10 @@ import (
 	"github.com/icwells/kestrel/src/kestrelutils"
 	"github.com/trustmaster/go-aspell"
 	"log"
+	"os"
+	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -37,12 +40,16 @@ func containsWithSpace(l, target string) bool {
 
 type extractor struct {
 	col     int
+	dir     string
 	fail    [][]string
 	infile  string
 	logger  *log.Logger
+	merged  map[string]*Term
+	min     float64
 	misses  string
 	names   []*Term
 	outfile string
+	script  string
 	speller aspell.Speller
 }
 
@@ -51,27 +58,74 @@ func newExtractor(infile, outfile string, col int, logger *log.Logger) *extracto
 	kestrelutils.CheckFile(infile)
 	e := new(extractor)
 	e.col = col
+	e.dir = path.Join(iotools.GetGOPATH(), "src/github.com/icwells/kestrel/nlp/")
 	e.infile = infile
 	e.logger = logger
+	e.merged = make(map[string]*Term)
+	e.min = 0.98
 	e.outfile = outfile
+	e.script = "namePredictor.py"
 	e.speller, _ = aspell.NewSpeller(map[string]string{"lang": "en_US"})
 	dir, _ := path.Split(e.outfile)
 	e.misses = path.Join(dir, "KestrelRejected.csv")
 	return e
 }
 
-func (e *extractor) mergeTerms() map[string]*Term {
-	// Merges terms which format to same spelling and tries to resolve abbreviations
-	ret := make(map[string]*Term)
-	for _, i := range e.names {
-		if _, ex := ret[i.Term]; ex {
-			i.AddQuery(i.Queries[0])
-		} else {
-			ret[i.Term] = i
+func (e *extractor) writeTerms(outfile string) {
+	// Writes input file for name classifier
+	out := iotools.CreateFile(outfile)
+	defer out.Close()
+	for k := range e.merged {
+		out.WriteString(k + "\n")
+	}
+}
+
+func (e *extractor) getClassifications(infile string) {
+	// Reads name classifications from file
+	reader, _ := iotools.YieldFile(infile, false)
+	for i := range reader {
+		if v, ex := e.merged[i[0]]; ex {
+			if val, err := strconv.ParseFloat(i[1], 64); err == nil {
+				if val >= e.min {
+					v.Scientific = true
+					if s := strings.Split(i[0], " "); len(s) > 2 {
+						v.Term = strings.Join(s[:2], " ")
+					}
+				} else {
+					// Check spelling for common names
+					v.checkSpelling(e.speller)
+				}
+			}
 		}
 	}
-	e.logger.Printf("Found %d unique entries from %d total new entries.\n", len(ret), len(e.names))
-	return ret
+}
+
+func (e *extractor) classifyTerms() {
+	// Calls name classifier and assigns values
+	infile, outfile := "names.txt", "results.csv"
+	e.logger.Println("Calling scientific name classifier...")
+	os.Chdir(e.dir)
+	e.writeTerms(infile)
+	defer os.Remove(infile)
+	cmd := exec.Command("python", e.script, infile, outfile)
+	if err := cmd.Run(); err != nil {
+		e.logger.Printf("Name classifier failed. %v\n", err)
+	} else {
+		defer os.Remove(outfile)
+		e.getClassifications(outfile)
+	}
+}
+
+func (e *extractor) mergeTerms() {
+	// Merges terms which format to same spelling and tries to resolve abbreviations
+	for _, i := range e.names {
+		if _, ex := e.merged[i.Term]; ex {
+			i.AddQuery(i.Queries[0])
+		} else {
+			e.merged[i.Term] = i
+		}
+	}
+	e.logger.Printf("Found %d unique entries from %d total new entries.\n", len(e.merged), len(e.names))
 }
 
 func (e *extractor) filterTerms() {
@@ -96,7 +150,7 @@ func (e *extractor) filterTerms() {
 			if query != "" {
 				t := NewTerm(query)
 				if len(t.Queries) >= 1 {
-					t.filter(e.speller)
+					t.filter()
 					// Append terms with no fail reason to pass; else append to fail
 					if len(t.Status) == 0 {
 						e.names = append(e.names, t)
@@ -121,5 +175,7 @@ func ExtractSearchTerms(infile, outfile string, col int, logger *log.Logger) map
 	if len(e.fail) > 0 {
 		iotools.WriteToCSV(e.misses, "Query,SearchTerm,Reason", e.fail)
 	}
-	return e.mergeTerms()
+	e.mergeTerms()
+	e.classifyTerms()
+	return e.merged
 }

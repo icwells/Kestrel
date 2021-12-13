@@ -41,8 +41,8 @@ class Predictor():
 def main():
 	start = datetime.now()
 	parser = ArgumentParser("Predicts whether input names are common or scientific.")
-	parser.add_argument("-i", help = "Path to input file.")
-	parser.add_argument("-o", help = "Path to output file.")
+	parser.add_argument("i", help = "Path to input file. Must be a text file with a sinlge column of species names.")
+	parser.add_argument("o", help = "Path to output file.")
 	Predictor(parser.parse_args())
 	print(("\tTotal runtime: {}\n").format(datetime.now() - start))
 
