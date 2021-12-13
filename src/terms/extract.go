@@ -91,9 +91,6 @@ func (e *extractor) getClassifications(infile string) {
 					if s := strings.Split(i[0], " "); len(s) > 2 {
 						v.Term = strings.Join(s[:2], " ")
 					}
-				} else {
-					// Check spelling for common names
-					v.checkSpelling(e.speller)
 				}
 			}
 		}
@@ -113,6 +110,12 @@ func (e *extractor) classifyTerms() {
 	} else {
 		defer os.Remove(outfile)
 		e.getClassifications(outfile)
+	}
+	for _, v := range e.merged {
+		if !v.Scientific {
+			// Check spelling for common names
+			v.checkSpelling(e.speller)
+		}
 	}
 }
 
