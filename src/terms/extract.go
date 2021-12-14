@@ -99,9 +99,11 @@ func (e *extractor) getClassifications(infile string) {
 
 func (e *extractor) classifyTerms() {
 	// Calls name classifier and assigns values
+	orig, _ := os.Getwd()
 	infile, outfile := "names.txt", "results.csv"
 	e.logger.Println("Calling scientific name classifier...")
 	os.Chdir(e.dir)
+	defer os.Chdir(orig)
 	e.writeTerms(infile)
 	defer os.Remove(infile)
 	cmd := exec.Command("python", e.script, infile, outfile)

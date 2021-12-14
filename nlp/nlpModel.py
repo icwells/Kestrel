@@ -95,6 +95,7 @@ class Classifier():
 		hub_layer = hub.KerasLayer(self.hub, input_shape=[], dtype=tf.string, trainable=True)
 		self.model = tf.keras.Sequential([
 			hub_layer,
+			tf.keras.layers.Dense(32),
 			tf.keras.layers.Dense(16, activation='relu'),
 			tf.keras.layers.Dense(1, activation="sigmoid")
 		])
