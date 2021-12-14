@@ -14,6 +14,8 @@ import (
 	"unicode"
 )
 
+var MAXDIST = 2
+
 type Term struct {
 	Confirmed  bool
 	Corrected  string
@@ -59,20 +61,28 @@ func (t *Term) Confirm() {
 
 func (t *Term) checkSpelling(speller aspell.Speller) {
 	// Stores potential corrected spelling in t.Corrected if word is incorrectly spelled
-	if !speller.Check(t.Term) {
-		var builder strings.Builder
-		for idx, i := range strings.Split(t.Term, " ") {
+	var builder strings.Builder
+	var pass bool
+	for idx, i := range strings.Split(t.Term, " ") {
+		match := i
+		if !speller.Check(match) {
 			matches := fuzzy.RankFindFold(i, speller.Suggest(i))
 			if matches.Len() > 0 {
 				sort.Sort(matches)
-				if idx > 0 {
-					builder.WriteByte(' ')
-					builder.WriteString(strings.ToLower(matches[0].Target))
-				} else {
-					builder.WriteString(strarray.TitleCase(matches[0].Target))
+				if matches[0].Distance <= MAXDIST {
+					match = matches[0].Target
+					pass = true
 				}
 			}
 		}
+		if idx > 0 {
+			builder.WriteByte(' ')
+			builder.WriteString(strings.ToLower(match))
+		} else {
+			builder.WriteString(strarray.TitleCase(match))
+		}
+	}
+	if pass {
 		t.Corrected = t.Taxonomy.SpeciesCaps(builder.String())
 	}
 }
