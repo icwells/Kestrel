@@ -69,9 +69,8 @@ func (s *service) stop() {
 
 func (s *service) KillChromeDrivers() {
 	// Kills all remaining chromedriver processes
-	cmd := exec.Command("killall", "-q", s.driver)
-	cmd.Run()
-	/*if err := cmd.Run(); err != nil {
-		panic(err)
-	}*/
+	for _, i := range []string{s.driver, s.browser} {
+		cmd := exec.Command("killall", "-q", i)
+		cmd.Run()
+	}
 }

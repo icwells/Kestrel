@@ -152,7 +152,7 @@ func (s *searcher) dispatchTerm(k string) bool {
 			// Perform selenium search if service is running
 			found = s.getSearchResults(k)
 		}
-		if !found && l != 1 {
+		if !found && !s.terms[k].Scientific && l != 1 {
 			// Remove first word and try again
 			idx := strings.Index(s.terms[k].Term, "%20")
 			s.terms[k].Term = strings.TrimSpace(s.terms[k].Term[idx+3:])

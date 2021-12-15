@@ -73,7 +73,8 @@ func (s *searcher) seleniumSearch(k string) string {
 		if er := browser.Get("https://google.com/"); er == nil {
 			if elem, err := browser.FindElement(selenium.ByName, "q"); err == nil {
 				elem.SendKeys(kestrelutils.PercentDecode(k) + " taxonomy" + selenium.ReturnKey)
-				if ret, err = browser.PageSource(); err != nil {
+				ret, err = browser.PageSource()
+				if err != nil {
 					// Ensure empty return
 					ret = ""
 				}

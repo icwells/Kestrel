@@ -42,7 +42,7 @@ installSelenium () {
 	WD=$(pwd)
 	cd "$GOPATH/src/$SE/vendor"
 	go get -d ./...
-	go run init.go --alsologtostderr
+	go run init.go --alsologtostderr --download_latest --download_browsers
 	cd $WD
 }
 
@@ -84,6 +84,7 @@ helpText () {
 	echo ""
 	echo "all	Installs all depenencies, including TensorFlow, Selenium package, and drivers."
 	echo "download Downloads taxonomy databases (takes several hours)"
+	echo "selenium Downloads newsest Selenium drivers."
 	echo "help	Prints help text and exits."
 	echo ""
 }
@@ -102,7 +103,11 @@ elif [ $1 = "all" ]; then
 	installMain
 elif [ $1 = "download" ]; then
 	downloadDatabases
+elif [ $1 = "selenium" ]; then
+	installSelenium
 elif [ $1 = "help" ]; then
+	helpText
+else 
 	helpText
 fi
 
