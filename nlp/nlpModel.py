@@ -9,8 +9,6 @@ import numpy as np
 from random import shuffle
 import tensorflow as tf
 import tensorflow_hub as hub
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 class Classifier():
 
@@ -26,7 +24,7 @@ class Classifier():
 		self.outfile = "nlpModel"
 		self.test = []
 		self.train = []
-		self.training_size = 10000
+		self.training_size = 5000
 		self.username = args.u
 		self.__connect__()
 		self.__getDataSets__()
