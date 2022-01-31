@@ -93,8 +93,8 @@ class Classifier():
 		hub_layer = hub.KerasLayer(self.hub, input_shape=[], dtype=tf.string, trainable=True)
 		self.model = tf.keras.Sequential([
 			hub_layer,
-			tf.keras.layers.Dense(32),
-			tf.keras.layers.Dense(16, activation='relu'),
+			tf.keras.layers.Dense(32, activation = "elu"),
+			tf.keras.layers.Dense(16, activation='relu')
 			tf.keras.layers.Dense(1, activation="sigmoid")
 		])
 		self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -103,11 +103,11 @@ class Classifier():
 				epochs = self.epochs, 
 				batch_size = 512, 
 				validation_data = (self.test, self.labels_test), 
-				verbose = 2
+				verbose = 1
 		)
-		print(self.model.evaluate(self.test, self.labels_test))
 		self.__plot__(history, "accuracy")
 		self.__plot__(history, "loss")
+		#print(self.model.evaluate(self.test, self.labels_test))
 
 	def save(self):
 		# Stores model in outfile
