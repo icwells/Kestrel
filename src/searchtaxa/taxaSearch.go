@@ -148,9 +148,11 @@ func (s *searcher) dispatchTerm(k string) bool {
 				found = s.getMatch(k, taxa)
 			}
 		}
-		if !found && s.service.err == nil {
-			// Perform selenium search if service is running
-			found = s.getSearchResults(k)
+		if s.service.err == nil {
+			if !found || !s.terms[k].Confirmed {
+				// Perform selenium search if service is running
+				found = s.getSearchResults(k)
+			}
 		}
 		if !found && !s.terms[k].Scientific && l != 1 {
 			// Remove first word and try again

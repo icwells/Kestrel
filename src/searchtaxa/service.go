@@ -54,7 +54,7 @@ func (s *service) startService() {
 	}
 	s.service, s.err = selenium.NewSeleniumService(path.Join(dir, "selenium-server.jar"), s.port, opts...)
 	if s.err != nil {
-		fmt.Println("\t" + s.err)
+		fmt.Printf("\t%v\n", s.err)
 	}
 }
 
