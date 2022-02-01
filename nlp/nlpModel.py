@@ -22,6 +22,7 @@ class Classifier():
 		self.labels_train = []
 		self.model = None
 		self.outfile = "nlpModel"
+		self.plot = "modelPlot.png"
 		self.test = []
 		self.train = []
 		self.training_size = 5000
@@ -94,9 +95,10 @@ class Classifier():
 		self.model = tf.keras.Sequential([
 			hub_layer,
 			tf.keras.layers.Dense(32, activation = "elu"),
-			tf.keras.layers.Dense(16, activation='relu')
+			tf.keras.layers.Dense(16, activation='relu'),
 			tf.keras.layers.Dense(1, activation="sigmoid")
 		])
+		tf.keras.utils.plot_model(self.model, self.plot, show_shapes = True)
 		self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 		print(self.model.summary())
 		history = self.model.fit(self.train, self.labels_train, 

@@ -4,6 +4,7 @@ seleniumLog.txt
 # NLP Model
 nlp/nlpModel/*
 nlp/*.svg
+nlp/modelPlot.png
 
 # Test files
 test/KestrelMissed.csv
