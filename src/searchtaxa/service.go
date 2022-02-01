@@ -46,22 +46,23 @@ func (s *service) getBrowser() (selenium.WebDriver, error) {
 
 func (s *service) startService() {
 	// Initialzes new selenium service
-	var err error
 	dir := path.Join(iotools.GetGOPATH(), "src/github.com/tebeka/selenium/vendor")
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),
 		selenium.Output(s.log),
 		selenium.ChromeDriver(path.Join(dir, "chromedriver")),
 	}
-	s.service, err = selenium.NewSeleniumService(path.Join(dir, "selenium-server.jar"), s.port, opts...)
-	if err != nil {
-		fmt.Println(err)
+	s.service, s.err = selenium.NewSeleniumService(path.Join(dir, "selenium-server.jar"), s.port, opts...)
+	if s.err != nil {
+		fmt.Println("\t" + s.err)
 	}
 }
 
 func (s *service) stop() {
 	// Closes service
-	s.service.Stop()
+	if err := s.service.Stop(); err != nil {
+		fmt.Println(err)
+	}
 	// Flush log before closing
 	s.log.Sync()
 	s.log.Close()
